@@ -1,46 +1,55 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
-using System.Diagnostics;
-using System;
 
-public class After {
-  public class Delay {
-    static Dictionary<int,WaitForSeconds> msCache = new Dictionary<int,WaitForSeconds> ();
+[UsedImplicitly]
+public sealed class After {
+  [UsedImplicitly]
+  public sealed class Delay {
+    private static readonly Dictionary<int, WaitForSeconds> MsCache =
+      new Dictionary<int, WaitForSeconds>();
 
+    // ReSharper disable once InconsistentNaming
     public static IEnumerator ms(int ms) {
-      if (!msCache.ContainsKey(ms)) {
-        msCache [ms] = new WaitForSeconds (ms / 1000.0f);
+      if (!MsCache.ContainsKey(key: ms)) {
+        MsCache[key: ms] = new WaitForSeconds(seconds: ms / 1000.0f);
       }
-      yield return msCache [ms];
+
+      yield return MsCache[key: ms];
     }
 
-    static Dictionary<int,WaitForSeconds> secondsCache = new Dictionary<int,WaitForSeconds> ();
+    private static readonly Dictionary<int, WaitForSeconds> SecondsCache =
+      new Dictionary<int, WaitForSeconds>();
 
+    // ReSharper disable once InconsistentNaming
     public static IEnumerator seconds(int seconds) {
-      if (!secondsCache.ContainsKey(seconds)) {
-        secondsCache [seconds] = new WaitForSeconds ((float)seconds);
+      if (!SecondsCache.ContainsKey(key: seconds)) {
+        SecondsCache[key: seconds] = new WaitForSeconds(seconds: seconds);
       }
-      yield return secondsCache [seconds];
+
+      yield return SecondsCache[key: seconds];
     }
 
-    public static IEnumerator minutes(int minutes) {
-      return seconds(minutes * 60);
-    }
+    [UsedImplicitly]
+    // ReSharper disable once InconsistentNaming
+    public static IEnumerator minutes(int minutes) { return seconds(seconds: minutes * 60); }
   }
 
-  public class Realtime {
-
+  [UsedImplicitly]
+  public sealed class Realtime {
+    // ReSharper disable once InconsistentNaming
     public static IEnumerator ms(int ms) {
-      yield return new WaitForSecondsRealtime (ms / 1000.0f);
+      yield return new WaitForSecondsRealtime(time: ms / 1000.0f);
     }
 
+    // ReSharper disable once InconsistentNaming
     public static IEnumerator seconds(int seconds) {
-      yield return new WaitForSecondsRealtime ((float)seconds);
+      yield return new WaitForSecondsRealtime(time: seconds);
     }
 
-    public static IEnumerator minutes(int minutes) {
-      return seconds(minutes * 60);
-    }
+    // ReSharper disable once InconsistentNaming
+    [UsedImplicitly]
+    public static IEnumerator minutes(int minutes) { return seconds(seconds: minutes * 60); }
   }
 }

@@ -1,40 +1,48 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
-public class Coroutines {
-  Queue<IEnumerator> actions = new Queue<IEnumerator> ();
-  MonoBehaviour owner;
+public sealed class Coroutines {
+  private readonly Queue<IEnumerator> actions = new Queue<IEnumerator>();
+  private          MonoBehaviour      owner;
 
-  public static Coroutines Sequential(MonoBehaviour owner, params IEnumerator[] actions) {
-    return new Coroutines ().start(owner, actions);
+  [NotNull]
+  public static Coroutines Sequential(MonoBehaviour owner, [NotNull] params IEnumerator[] actions) {
+    return new Coroutines().Start(owningBehaviour: owner, actionList: actions);
   }
 
-  Coroutines start(MonoBehaviour owner, params IEnumerator[] actions) {
-    this.owner = owner;
-    Queue(actions);
+  [NotNull]
+  private Coroutines Start(MonoBehaviour                  owningBehaviour,
+                           [NotNull] params IEnumerator[] actionList) {
+    owner = owningBehaviour;
+    Queue(actionList: actionList);
     return this;
   }
 
-  public void Queue(params IEnumerator[] actions) {
-    bool restartProcess = (this.actions.Count == 0);
-    foreach (IEnumerator action in actions) {
-      this.actions.Enqueue(action);
+  public void Queue([NotNull] params IEnumerator[] actionList) {
+    bool restartProcess = actions.Count == 0;
+
+    foreach (IEnumerator action in actionList) {
+      actions.Enqueue(item: action);
     }
+
     if (restartProcess) {
-      owner.StartCoroutine(Process());
+      owner.StartCoroutine(routine: Process());
     }
   }
 
+  [UsedImplicitly]
   public IEnumerator Completed() {
     while (actions.Count > 0) {
       yield return null;
     }
   }
 
-  IEnumerator Process() {
+  private IEnumerator Process() {
     while (actions.Count > 0) {
-      yield return owner.StartCoroutine(actions.Peek());
+      yield return owner.StartCoroutine(routine: actions.Peek());
+
       actions.Dequeue();
     }
   }

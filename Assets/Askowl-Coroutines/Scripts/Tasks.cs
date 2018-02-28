@@ -1,13 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System;
-
+﻿using JetBrains.Annotations;
 #if (!NET_2_0 && !NET_2_0_SUBSET)
 using System.Threading.Tasks;
 #endif
 
-public class Tasks {
+[UsedImplicitly]
+public sealed class Tasks {
   #if (!NET_2_0 && !NET_2_0_SUBSET)
   public static IEnumerator WaitFor(Task task, Action<string> error = null) {
     Task done = null;
