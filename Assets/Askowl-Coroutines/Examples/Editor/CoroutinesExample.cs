@@ -1,64 +1,68 @@
 ﻿using UnityEngine;
-using UnityEngine.TestTools;
 using NUnit.Framework;
 using System.Collections;
-using NUnit.Framework.Internal;
 
-public class CoroutinesExample : MonoBehaviour {
-  Coroutines auth = null;
-  string result = "";
-  bool buttonPressed = false;
+public sealed class CoroutinesExample : MonoBehaviour {
+  private Coroutines auth;
+  private string     result = "";
+  private bool       buttonPressed;
 
-  void Start() {
-    auth = Coroutines.Sequential(this, InitAuth());
-  }
+  private void Start() { auth = Coroutines.Sequential(this, InitAuth()); }
 
+  // ReSharper disable once UnusedMember.Global
   public void ButtonPressed() {
     if (buttonPressed) {
-      Debug.LogWarning("Coroutines Example only works once");
+      Debug.LogWarning(message: "Coroutines Example only works once");
     } else {
       buttonPressed = true;
       auth.Queue(LoginAction(), CheckLoginAction());
     }
   }
 
-  void Update() {
-    if (buttonPressed) {
-      buttonPressed = false;
-      auth.Queue(SendMessageAction(), TestResult());
-    }
+  private void Update() {
+    if (!buttonPressed) return;
+
+    buttonPressed = false;
+    auth.Queue(SendMessageAction(), TestResult());
   }
 
-  IEnumerator TestResult() {
-    Debug.Log("5. Check " + result);
-    Assert.AreEqual("InitAuth LoginAction CheckLoginAction SendMessageAction", result);
+  private IEnumerator TestResult() {
+    Debug.Log(message: "5. Check " + result);
+
+    Assert.AreEqual(
+      expected: "InitAuth LoginAction CheckLoginAction SendMessageAction",
+      actual: result);
+
     yield return null;
-    Debug.Log("6. Done");
+
+    Debug.Log(message: "6. Done");
   }
 
-  IEnumerator InitAuth() {
-    yield return After.Delay.seconds(1);
+  private IEnumerator InitAuth() {
+    yield return After.Delay.seconds(seconds: 1);
+
     result += "InitAuth ";
-    Debug.Log("1. InitAuth");
+    Debug.Log(message: "1. InitAuth");
   }
 
-  IEnumerator LoginAction() {
-    yield return After.Delay.seconds(1);
+  private IEnumerator LoginAction() {
+    yield return After.Delay.seconds(seconds: 1);
+
     result += "LoginAction ";
-    Debug.Log("2. LoginAction");
+    Debug.Log(message: "2. LoginAction");
   }
 
-  IEnumerator CheckLoginAction() {
+  private IEnumerator CheckLoginAction() {
     yield return null;
+
     result += "CheckLoginAction ";
-    Debug.Log("3. CheckLoginAction");
+    Debug.Log(message: "3. CheckLoginAction");
   }
 
-  IEnumerator SendMessageAction() {
+  private IEnumerator SendMessageAction() {
     yield return null;
+
     result += "SendMessageAction";
-    Debug.Log("4. SendMessageAction");
+    Debug.Log(message: "4. SendMessageAction");
   }
-
-
 }

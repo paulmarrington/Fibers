@@ -1,16 +1,13 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.TestTools;
-using NUnit.Framework;
 
 #if (!NET_2_0 && !NET_2_0_SUBSET)
 using System.Threading.Tasks;
 #endif
 
-public class TasksExample {
+public sealed class TasksExample {
   #if (!NET_2_0 && !NET_2_0_SUBSET)
-
   int counter = 0;
 
   // Start an asynchronous task that completes after a time in milliseconds
@@ -34,11 +31,11 @@ public class TasksExample {
 
     Debug.Log("3. All Done");
   }
-  #else
+    #else
   [UnityTest]
   public IEnumerator TasksExampleWithEnumeratorPasses() {
-    Debug.LogWarning("Switch player settings to .NET version 4.0 or better");
-  yield return null;
+    Debug.LogWarning(message: "Switch player settings to .NET version 4.0 or better");
+    yield return null;
   }
   #endif
 }
