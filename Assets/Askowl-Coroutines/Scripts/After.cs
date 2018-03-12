@@ -51,5 +51,17 @@ public sealed class After {
     // ReSharper disable once InconsistentNaming
     [UsedImplicitly]
     public static IEnumerator minutes(int minutes) { return seconds(seconds: minutes * 60); }
+
+    public static TimerClass Timer(int secondsTimeout) { return new TimerClass(secondsTimeout); }
+
+    public sealed class TimerClass {
+      private readonly float endOfTime;
+
+      public TimerClass(int secondsTimeout) {
+        endOfTime = Time.realtimeSinceStartup + secondsTimeout;
+      }
+
+      public bool Running { get { return (Time.realtimeSinceStartup < endOfTime); } }
+    }
   }
 }
