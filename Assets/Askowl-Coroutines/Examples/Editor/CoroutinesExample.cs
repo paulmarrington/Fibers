@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
 using NUnit.Framework;
-using System.Collections;
+using UnityEngine;
 
 public sealed class CoroutinesExample : MonoBehaviour {
   private Coroutines auth;
@@ -39,14 +39,14 @@ public sealed class CoroutinesExample : MonoBehaviour {
   }
 
   private IEnumerator InitAuth() {
-    yield return After.Delay.seconds(seconds: 1);
+    yield return new WaitForSeconds(1);
 
     result += "InitAuth ";
     Debug.Log(message: "1. InitAuth");
   }
 
   private IEnumerator LoginAction() {
-    yield return After.Delay.seconds(seconds: 1);
+    yield return new WaitForSeconds(1);
 
     result += "LoginAction ";
     Debug.Log(message: "2. LoginAction");
