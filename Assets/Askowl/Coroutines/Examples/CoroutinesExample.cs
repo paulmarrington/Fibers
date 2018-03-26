@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using Askowl;
 
 public sealed class CoroutinesExample : MonoBehaviour {
   private Coroutines auth;

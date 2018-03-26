@@ -1,11 +1,13 @@
-﻿using JetBrains.Annotations;
-#if (!NET_2_0 && !NET_2_0_SUBSET)
+﻿#if (!NET_2_0 && !NET_2_0_SUBSET)
 using System.Threading.Tasks;
 #endif
 
-[UsedImplicitly]
-public sealed class Tasks {
-  #if (!NET_2_0 && !NET_2_0_SUBSET)
+namespace Askowl {
+  using JetBrains.Annotations;
+
+  [UsedImplicitly]
+  public sealed class Tasks {
+#if (!NET_2_0 && !NET_2_0_SUBSET)
   public static IEnumerator WaitFor(Task task, Action<string> error = null) {
     Task done = null;
     task.ContinueWith(result => done = result);
@@ -36,7 +38,8 @@ public sealed class Tasks {
     return true;
   }
 
-  public static IEnumerator WaitFor<T>(Task<T> task, Action<T> action, Action<string> error = null) {
+  public static IEnumerator WaitFor<T>(Task<T> task, Action<T> action, Action<string> error =
+ null) {
     Task<T> done = null;
     task.ContinueWith(result => done = result);
     while (done == null)
@@ -45,4 +48,5 @@ public sealed class Tasks {
       action(done.Result);
   }
   #endif
+  }
 }

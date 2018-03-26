@@ -3,54 +3,6 @@
 
 > Read the code in the Examples Folder.
 
-## After
-
-Unity3D uses coroutines to allow separate interests to run with a minimum of overhead. Coroutines have been around as long as any living computer language. In the 1980s Microsoft coined the phrase **cooperative multi-tasking** for early Windows incarnations.
-
-The concept is simple really. All coroutines run in a single thread/core/CPU. Whenever your job has to wait for something it **yield** so that another coroutine can have a go. Coroutines are efficient since the context switch is no different to a function call. Windows 3 could do incredible things (like run Excel) with a tiny amount of RAM and very slow processors.
-
-The downside is that if your coroutine does not yield regularly enough, then the system can stutter and become unresponsive.
-
-Coroutines work because almost every process spends a lot more time waiting than actually doing anything. In the time it takes you to press a key, a computer can do a thousand other things.
-
-To have a coroutine wait for a fixed amount of game time, Unity3D C# use an instance of `WaitForSeconds(float seconds)`.
-
-```C#
-IEnumerator MyCoroutine() {
-  // ... some work
-  yield return new WaitForSeconds(5.0f);
-  // ... some time later
-}
-```
-
-I dislike having to remember "**0.f". I also find creating a new class instance every time I wait annoying. The processing overhead is trivial, but the statement is not very readable.
-
-### After.Delay
-
-```C#
-  yield return After.Delay.seconds(5);
-  // is the same as
-  yield return After.Delay.ms(5000);
-  yield return After.Delay.seconds(120);
-  // is the same as
-  yield return After.Delay.minutes(2);
-```
-
-Isn't that better? Game time is great. Stop the clock and everything freezes to resume when you are ready. Everything has a downside. Disable a component, and the delay returns to nothing, so the coroutine does not continue, even after a reenable.
-
-### After.Realtime
-```C#
-  yield return After.Realtime.seconds(3);
-  // is the same as
-  yield return After.Realtime.ms(3000);
-
-  yield return After.Delay.seconds(300);
-  // is the same as
-  yield return After.Delay.minutes(5);
-```
-
-These use `WaitForSecondsRealtime`. These are great for UI elements but can be an issue for coroutines controlling a game object.
-
 ## Coroutines
 
 Coroutines are much easier to deal with than preemptive multitasking. The can make asynchronous code look sequential.
