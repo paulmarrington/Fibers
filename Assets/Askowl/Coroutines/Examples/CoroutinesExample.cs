@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿#if UNITY_EDITOR
+using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using Askowl;
@@ -67,3 +68,4 @@ public sealed class CoroutinesExample : MonoBehaviour {
     Debug.Log(message: "4. SendMessageAction");
   }
 }
+#endif
