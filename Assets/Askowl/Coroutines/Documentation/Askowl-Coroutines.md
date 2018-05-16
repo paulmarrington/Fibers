@@ -1,4 +1,5 @@
 # Coroutines
+
 [TOC]
 
 > Read the code in the Examples Folder.
@@ -64,9 +65,12 @@ Can you see the problem? If ```Login()``` is called before ```InitAuth()``` comp
 ```
 
 ### Coroutines.Queue
-Here, ```Coroutines.Queue(params IEnumerator[])``` will create a queue of actions that will always be run one after another - in the order injected.
+Here, `Coroutines.Queue(params IEnumerator[])` will create a queue of actions that will always be run one after another - in the order injected.
 
-##Tasks
+### Coroutines.Completed
+Wait for all the currently queued coroutines to complete.
+
+## Tasks
 
 As I have discussed before, Unity3D uses Coroutines to provide a form of multitasking. While it is very efficient, it is not very granular. The refresh rate is typically 60Hz. So, 60 times a second all coroutines that are ready to continue will have access to the CPU until they rerelease it.
 
@@ -110,7 +114,7 @@ This simple example creates a task that runs on a different thread for a specifi
 
 The error action is optional. If not supplied, the error goes to the debug log.
 
-### Tasks.WaitFor<T>
+### Tasks.WaitFor&lt;T>
 If the Task is to return a value, then use the generic version.
 
 ```C#
