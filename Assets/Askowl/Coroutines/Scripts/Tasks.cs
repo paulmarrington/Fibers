@@ -1,4 +1,6 @@
-﻿#if (!NET_2_0 && !NET_2_0_SUBSET)
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
+
+#if (!NET_2_0 && !NET_2_0_SUBSET)
 using System;
 using System.Collections;
 using System.Collections.ObjectModel;
