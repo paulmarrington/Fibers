@@ -6,7 +6,7 @@ A problem occurs when we want functions to occur in a specific order but from di
 
 Some unity packages, specifically FireBase, use C# 4+ Tasks, a preemptive multitasking interface. Anything using Task callbacks must be treated as independent threads with semaphores and the like to protect against data corruption. The Askowl Tasks class converts Task responses into Coroutines so that they fit better and more safely into the Unity system.
 
-[TOC]
+* {:toc}
 
 > Read the code in the Examples Folder.
 
