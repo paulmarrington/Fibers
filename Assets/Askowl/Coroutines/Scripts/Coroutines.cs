@@ -23,8 +23,9 @@ namespace Askowl {
     /// <param name="owner">MonoBehaviour that owns the stream</param>
     /// <param name="actions">Zero or more `IEnumerator` returning coroutine components</param>
     /// <returns>Coroutines reference used to add more actions or wait on completion</returns>
-    public static Coroutines Sequential(MonoBehaviour owner, params IEnumerator[] actions) =>
-      new Coroutines().Start(owner, actions);
+    public static Coroutines Sequential(MonoBehaviour owner, params IEnumerator[] actions) {
+      return new Coroutines().Start(owner, actions);
+    }
 
     private Coroutines Start(MonoBehaviour owningBehaviour, params IEnumerator[] actionList) {
       owner = owningBehaviour;
