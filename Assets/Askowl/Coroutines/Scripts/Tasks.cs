@@ -16,7 +16,7 @@ namespace Askowl {
   /// Convert Task activities to Coroutines to behave well with the rest of Unity
   /// </summary>
   /// <remarks><a href="http://coroutines.marrington.net#tasks">More...</a></remarks>
-  [UsedImplicitly]
+  
   public sealed class Tasks {
 #if (!NET_2_0 && !NET_2_0_SUBSET)
     /// <summary>
@@ -69,7 +69,7 @@ namespace Askowl {
     /// <param name="error">Action to call with a single string parameter on an error in the task</param>
     /// <typeparam name="T"></typeparam>
     /// <returns>Coroutine enabler</returns>
-    [UsedImplicitly]
+    
     public static IEnumerator
       WaitFor<T>(Task<T> task, Action<T> action, Action<string> error = null) {
       Task<T> done = null;

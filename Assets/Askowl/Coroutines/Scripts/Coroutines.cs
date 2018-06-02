@@ -51,7 +51,7 @@ namespace Askowl {
     /// </summary>
     /// <remarks><a href="http://coroutines.marrington.net#coroutinescompleted">More...</a></remarks>
     /// <returns>IEnumerator</returns>
-    [UsedImplicitly]
+    
     public IEnumerator Completed() {
       while (queue.Count > 0) yield return null;
     }
