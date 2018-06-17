@@ -1,7 +1,10 @@
 # Askowl-Coroutines
 ## Future Work
 
-* Plan future work
+* [ ] Update documentation
 
-## Release x.x (month 201x)
+## Release 2018-06
+
+* [ ] review code
+* [ ] run tests
 

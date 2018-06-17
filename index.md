@@ -1,5 +1,1 @@
----
-redirect_to:
-  - /Assets/Askowl/Coroutines/Documentation/Askowl-Coroutines
----
-
+redirect_to:\n  - /Assets/Askowl/Coroutines/Documentation/Askowl-Coroutines
