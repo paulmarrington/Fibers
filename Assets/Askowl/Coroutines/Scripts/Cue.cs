@@ -5,36 +5,39 @@ using UnityEngine;
 
 namespace Askowl {
   public class Cue : MonoBehaviour {
-    public class Fiber : IEnumerable {
-      internal Func<IEnumerator> generator;
+    public static IEnumerator Instance(Func<IEnumerator> fiberGenerator) {
+      if (!generators.ContainsKey(fiberGenerator)) {
+        generators[fiberGenerator] = new FiberGenerator {Generator = fiberGenerator};
+      }
 
-      private LinkedList<IEnumerator> ready = new LinkedList<IEnumerator>();
-      private LinkedList<IEnumerator> inUse = new LinkedList<IEnumerator>();
+      return generators[fiberGenerator].GetEnumerator();
+    }
+
+    public class FiberGenerator : IEnumerable {
+      internal Func<IEnumerator> Generator;
+
+      private LinkedList<IEnumerator>         ready = new LinkedList<IEnumerator>();
+      private Dictionary<IEnumerator, object> inUse = new Dictionary<IEnumerator, object>();
 
       public IEnumerator GetEnumerator() {
-        if (!ready.Empty) {
-          return ready.MoveTo(inUse);
-        }
+        if (ready.Empty) ready.Add(FiberMonitor(Generator()));
+        var fiber = ready.Unlink();
+        inUse[fiber] = ready.Mark;
+        return fiber;
       }
 
-      private IEnumerator NewFiber {
-        get {
-          IEnumerator fiber = generator();
+      private IEnumerator FiberMonitor(IEnumerator fiber) {
+        try {
+          while (fiber.MoveNext()) yield return fiber.Current;
+        } finally {
+          ready.Link(inUse[fiber]);
         }
       }
     }
 
-    private class Generators : Dictionary<Func<IEnumerator>, Fiber> { }
+    private class Generators : Dictionary<Func<IEnumerator>, FiberGenerator> { }
 
     private static Generators generators = new Generators();
-
-    public static void New(Func<IEnumerator> fiberGenerator) {
-      if (!generators.ContainsKey(fiberGenerator)) {
-        generators[fiberGenerator] = new Fiber {generator = fiberGenerator};
-      }
-
-      var fiber = generators[fiberGenerator];
-    }
   }
 }
 /*
