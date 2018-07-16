@@ -1,3 +1,10 @@
-﻿{
-	"name": "Coroutines"
+{
+    "name": "Coroutines",
+    "references": [
+        "Base"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
 }
