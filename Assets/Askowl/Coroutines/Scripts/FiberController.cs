@@ -3,20 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using Askowl.Fibers;
 using UnityEngine;
+using Object = System.Object;
 
 namespace Askowl {
   public class FiberController : MonoBehaviour {
     private void Update() { UpdateAllWorkers(); }
 
     private static void UpdateAllWorkers() {
-      for (var worker = Cue.Workers.First; Cue.Workers.InRange; worker = Cue.Workers.Next) {
-        ProcessFibersInRange(worker: worker);
-      }
-    }
+      for (var worker = Cue.Workers.First; worker != null; worker = worker.Next) {
+        var fibers = worker.Item.Fibers;
 
-    private static void ProcessFibersInRange(Worker worker) {
-      for (var fiber = worker.Fibers.First; worker.Fibers.InRange; fiber = worker.Fibers.Next) {
-        worker.Process(fiber);
+        var fiber = fibers.First;
+
+        while (fiber?.InRange == true) {
+          var next = fiber.Next;
+          worker.Item.Process(fiber);
+          fiber = next;
+        }
       }
     }
   }
@@ -24,132 +27,158 @@ namespace Askowl {
 
 namespace Askowl.Fibers {
   public static class Cue {
-    private static InstanceWorker instanceWorker = new InstanceWorker();
-
-    public static Worker Start(Func<IEnumerator> fiberGenerator, Instance parent = null) {
+    public static Yield NewCoroutine(Func<IEnumerator> fiberGenerator,
+                                     Instances.Node    parent = null) {
       if (!Generators.ContainsKey(fiberGenerator)) {
-        Generators[fiberGenerator] = new Generator {GeneratorFunction = fiberGenerator};
+        Generators[fiberGenerator] = new InstanceWorker {GeneratorFunction = fiberGenerator};
       }
 
-      Generators[fiberGenerator].StartInstance(parent);
-      return instanceWorker;
+      return new Yield<int> {Worker = Generators[fiberGenerator].StartInstance(parent)};
     }
 
-    internal class GeneratorsClass : Dictionary<Func<IEnumerator>, Generator> { }
+    public static Yield<int> Frames(int framesToSkip) {
+      var frames = FramesWorker.Instance(framesToSkip);
+      return frames;
+    }
 
-    internal static readonly GeneratorsClass    Generators = new GeneratorsClass();
-    internal static readonly LinkedList<Worker> Workers    = new LinkedList<Worker>(false);
+    internal static readonly Dictionary<Func<IEnumerator>, InstanceWorker> Generators
+      = new Dictionary<Func<IEnumerator>, InstanceWorker>();
+
+    internal static readonly Workers Workers = new Workers();
+  }
+
+  public class Instance {
+    public IEnumerator    Coroutine;
+    public Instances.Node parent;
+  }
+
+  public class Instances : LinkedList<Instance> { }
+
+  public class Workers : LinkedList<Worker> { }
+
+  public interface Yield {
+    Worker Worker { get; }
+  }
+
+  public struct Yield<T> : Yield {
+    public Worker Worker { get; internal set; }
+    public T      Value;
   }
 
   #region Workers
   #region Worker Support
   public abstract class Worker {
-    public LinkedList<Instance> Fibers;
-    public LinkedList<Instance> Recycled;
+    public Instances Fibers = new Instances(), Recycled = new Instances();
 
     protected static Dictionary<Type, Worker> OnYields = new Dictionary<Type, Worker>();
 
-    public void Process(Instance instance) {
-      Debug.Log($"**** FiberController:53 To Be Done!!! Fibers nor Recycled set from ready");//#DM#// 18 Jul 2018
-      if (instance.running && !Step(instance)) {
+    public void Process(Instances.Node instance) {
+      if (!Step(instance)) {
         AllDone();
-        instance.running = false;
+        instance.MoveTo(Recycled);
       }
     }
 
-    private bool Step(Instance fiber) {
-      if (!fiber.Coroutine.MoveNext()) return false;
+    private bool Step(Instances.Node instance) {
+      var coroutine = instance.Item.Coroutine;
+      if (!coroutine.MoveNext()) return false;
 
-      object returnedResult = fiber.Coroutine.Current;
-      var    worker         = returnedResult as Worker;
-      if (worker != null) return OnYield(worker);
+      object returnedResult = coroutine.Current;
+      var    result         = returnedResult as Yield;
+      if (result != null) return result.Worker.OnYield(result, instance);
 
       var returnedResultType = returnedResult?.GetType();
 
       if ((returnedResultType != null) && OnYields.ContainsKey(returnedResultType)) {
-        return OnYields[returnedResultType].OnYield(returnedResult);
+        return OnYields[returnedResultType].OnYield(returnedResult, instance);
       }
 
-      return OnYield(returnedResult);
+      return OnYield(returnedResult, instance);
     }
 
-    protected virtual bool OnYield(Worker returnedResult) {
-      Debug.Log($"**** FiberController:71 To Be Done!!!"); //#DM#// 18 Jul 2018
-      return true;
-    }
-
-    protected abstract bool OnYield(object returnedResult);
+    protected abstract bool OnYield(object returnedResult, Instances.Node instance);
 
     protected virtual void AllDone() { }
   }
 
   public abstract class Worker<T> : Worker {
-    protected static void Register(Worker<T> me) { OnYields[typeof(T)] = me; }
+    protected static void Register(Worker<T> me) {
+      OnYields[typeof(T)] = me;
+      Cue.Workers.Add(me);
+    }
 
-    protected override bool OnYield(object returnedResult) => OnYield((T) returnedResult);
+    protected override bool OnYield(object returnedResult, Instances.Node instance) =>
+      OnYield(((Yield<T>) returnedResult).Value, instance);
 
-    protected abstract bool OnYield(T returnedResult);
+    protected abstract bool OnYield(T returnedResult, Instances.Node instance);
   }
   #endregion
 
   #region Workers
   internal class InstanceWorker : Worker<Instance> {
-    protected override bool OnYield(Instance returnedResult) => true;
-  }
-  #endregion
+    internal Func<IEnumerator> GeneratorFunction;
 
-  #region Special Workers
+    private Instances.Node instance;
+
+    internal InstanceWorker() { Register(this); }
+
+    public Worker StartInstance(Instances.Node parent) {
+      if (Recycled.Empty) {
+        Recycled.Add(new Instance() {
+          Coroutine = FiberMonitor(GeneratorFunction())
+        });
+      }
+
+      instance             = Recycled.First.MoveTo(Fibers);
+      instance.Item.parent = parent;
+      return this;
+    }
+
+    private IEnumerator FiberMonitor(IEnumerator fiber) {
+      try {
+        while (fiber.MoveNext()) yield return fiber.Current;
+      } finally {
+        instance.MoveTo(Recycled);
+        instance.Item.parent?.MoveTo(instance.Item.parent.lastOwner);
+      }
+    }
+
+    protected override bool OnYield(Instance returnedResult, Instances.Node instance) =>
+      true;
+  }
+
   public class IEnumeratorWorker : Worker<Func<IEnumerator>> {
-    private LinkedList<Instance> waiting = new LinkedList<Instance>(false);
+    private Instances waiting = new Instances();
 
     static IEnumeratorWorker() { Register(new IEnumeratorWorker()); }
 
-    protected override bool OnYield(Func<IEnumerator> returnedResult) {
-      Fibers.MoveTo(waiting);
-      var lastDone = Fibers.Previous;
-      Cue.Start(returnedResult);
+    protected override bool OnYield(Func<IEnumerator> returnedResult, Instances.Node instance) {
+      instance.MoveTo(waiting);
+      Cue.NewCoroutine(fiberGenerator: returnedResult, parent: instance);
+      return true;
+    }
+  }
+
+  public class FramesWorker : Worker<int> {
+    private static FramesWorker framesWorker = new FramesWorker();
+    static FramesWorker() { Register(framesWorker); }
+
+    public FramesWorker() {
+//      Fibers.InRange = ()
+    }
+
+    public static Yield<int> Instance(int framesToSkip) =>
+      new Yield<int> {Worker = framesWorker, Value = framesToSkip};
+
+    protected override bool OnYield(int framesToSkip, Instances.Node instance) {
+      instance.MoveTo(Fibers);
 
       Debug.Log(
-        $"**** FiberController:110 To Be Done -- Restore waiting thread when done!!!"); //#DM#// 18 Jul 2018
+        $"**** FiberController:166 To Be Done -- Add comparator and linked list value"); //#DM#// 19 Jul 2018
 
       return true;
     }
   }
   #endregion
-  #endregion
-
-  #region Generators
-  internal class Generator {
-    internal Func<IEnumerator> GeneratorFunction;
-
-    private LinkedList<Instance> ready = new LinkedList<Instance>(false);
-
-    public Instance StartInstance(Instance parent) {
-      if (ready.Empty) {
-        ready.Add(new Instance() {
-          Coroutine = FiberMonitor(GeneratorFunction(), ready.Mark, parent)
-        });
-      }
-
-      var instance = ready.Unlink();
-      Debug.Log($"**** FiberController:135 To Be Done -- save in Cue.Fibers so it can run");//#DM#// 18 Jul 2018
-      return instance;
-    }
-
-    private IEnumerator FiberMonitor(IEnumerator fiber, object link, Instance parent) {
-      try {
-        while (fiber.MoveNext()) yield return fiber.Current;
-      } finally {
-        Debug.Log($"**** FiberController:142 To Be Done!!! Remove from Fibers");//#DM#// 18 Jul 2018
-        ready.Link(link);
-        if (parent!=null)
-      }
-    }
-  }
-
-  public class Instance {
-    public IEnumerator Coroutine;
-    public bool        running;
-  }
   #endregion
 }
