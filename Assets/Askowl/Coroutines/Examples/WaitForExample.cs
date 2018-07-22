@@ -9,15 +9,15 @@ namespace Askowl.Fibers {
     [UnityTest]
     public IEnumerator CueNewCoroutine() {
       counter = 0;
-      Cue.NewCoroutine(SimpleFiber);
+      WaitFor.Coroutine(SimpleFiber);
       Assert.AreEqual(counter, 0);
       yield return null;
 
       Assert.AreEqual(counter, 1);
-      Assert.IsTrue(Cue.WorkerGenerators.ContainsKey(SimpleFiber));
-      var simpleFiberWorker = Cue.WorkerGenerators[SimpleFiber];
-      Assert.AreEqual(simpleFiberWorker.Fibers.Count,   0);
-      Assert.AreEqual(simpleFiberWorker.Recycled.Count, 1);
+      Assert.IsTrue(WaitFor.WorkerGenerators.ContainsKey(SimpleFiber));
+      var simpleFiberWorker = WaitFor.WorkerGenerators[SimpleFiber];
+      Assert.AreEqual(simpleFiberWorker.Fibers.Count, 0);
+      Assert.AreEqual(InstanceWorker.Recycled.Count,  1);
     }
 
     private IEnumerator SimpleFiber() {

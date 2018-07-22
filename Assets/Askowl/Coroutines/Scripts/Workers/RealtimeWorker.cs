@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 namespace Askowl.Fibers {
-  public static partial class Cue {
+  public static partial class WaitFor {
     public static Yield SecondsRealtime(float seconds) { return RealtimeWorker.Instance(seconds); }
   }
 

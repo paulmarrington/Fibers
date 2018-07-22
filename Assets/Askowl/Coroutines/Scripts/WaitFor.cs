@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace Askowl.Fibers {
-  public static partial class Cue {
+  public static partial class WaitFor {
     private static MonoBehaviour controller;
 
-    public static Yield NewCoroutine(Func<IEnumerator> fiberGenerator,
-                                     Instances.Node    parentNode = null) {
+    public static Yield Coroutine(Func<IEnumerator> fiberGenerator,
+                                  Instances.Node    parentNode = null) {
       if (controller == null) controller = Components.Create<FiberController>("FiberController");
 
       if (!WorkerGenerators.ContainsKey(fiberGenerator)) {

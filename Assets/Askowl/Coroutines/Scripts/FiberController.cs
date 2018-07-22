@@ -11,14 +11,14 @@ namespace Askowl.Fibers {
     private void Update() { UpdateAllWorkers(); }
 
     private static void UpdateAllWorkers() {
-      for (var worker = Cue.Workers.First; worker != null; worker = worker.Next) {
+      for (var worker = WaitFor.Workers.First; worker != null; worker = worker.Next) {
         var fibers = worker.Item.Fibers;
 
         var fiber = fibers.First;
 
         while (fiber?.InRange == true) {
           var next = fiber.Next;
-          worker.Item.Process(fiber);
+          worker.Item.OnUpdate(fiber);
           fiber = next;
         }
       }

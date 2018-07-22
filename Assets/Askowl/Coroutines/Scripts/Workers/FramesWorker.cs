@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 
 namespace Askowl.Fibers {
-  public static partial class Cue {
-    public static Yield Frames(int framesToSkip) { return FramesWorker.Instance(framesToSkip); }
+  public static partial class WaitFor {
+    public static Yield Frames(int framesToSkip) => FramesWorker.Instance(framesToSkip);
   }
 
   public class FramesWorker : Worker<int> {

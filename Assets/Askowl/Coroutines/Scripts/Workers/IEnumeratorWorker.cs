@@ -7,9 +7,9 @@ namespace Askowl.Fibers {
 
     static IEnumeratorWorker() { Register(new IEnumeratorWorker()); }
 
-    protected override bool OnYield(Func<IEnumerator> returnedResult, Instances.Node node) {
+    protected override bool OnYield(Yield<Func<IEnumerator>> returnedResult, Instances.Node node) {
       node.MoveTo(waiting); // moved back when InstanceWorker is done
-      Cue.NewCoroutine(fiberGenerator: returnedResult, parentNode: node);
+      WaitFor.Coroutine(fiberGenerator: returnedResult.Value, parentNode: node);
       return true;
     }
   }
