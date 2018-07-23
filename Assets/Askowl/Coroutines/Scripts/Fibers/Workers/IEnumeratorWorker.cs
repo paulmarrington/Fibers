@@ -9,7 +9,7 @@ namespace Askowl.Fibers {
 
     protected override bool OnYield(Yield<Func<IEnumerator>> returnedResult, Instances.Node node) {
       node.MoveTo(waiting); // moved back when InstanceWorker is done
-      WaitFor.Coroutine(fiberGenerator: returnedResult.Value, parentNode: node);
+      WaitFor.Coroutine(fiberGenerator: returnedResult.Data, parentNode: node);
       return true;
     }
   }

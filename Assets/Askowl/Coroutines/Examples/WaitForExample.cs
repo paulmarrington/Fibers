@@ -17,7 +17,7 @@ namespace Askowl.Fibers {
       Assert.IsTrue(WaitFor.WorkerGenerators.ContainsKey(SimpleFiber));
       var simpleFiberWorker = WaitFor.WorkerGenerators[SimpleFiber];
       Assert.AreEqual(simpleFiberWorker.Fibers.Count, 0);
-      Assert.AreEqual(InstanceWorker.Recycled.Count,  1);
+      Assert.AreEqual(FiberWorker.Recycled.Count,  1);
     }
 
     private IEnumerator SimpleFiber() {
