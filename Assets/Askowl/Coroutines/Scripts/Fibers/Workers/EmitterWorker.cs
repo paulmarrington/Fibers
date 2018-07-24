@@ -9,48 +9,47 @@ namespace Askowl.Fibers {
   public class EmitterWorker : Worker<Emitter> {
     static EmitterWorker() { Register(new EmitterWorker(), processOnUpdate: false); }
 
-    protected override bool OnYield(Yield<Emitter> yield, Instances.Node node) {
-      var emitter = yield.Data;
-      base.OnYield(emitter, node);
-      emitter.Subscribe(new Observer {Worker = this, Node = node, Yield = yield});
+    protected internal override bool OnYield(Fiber fiber) {
+      var emitter = Parameter(fiber);
+      fiber.Node.MoveTo(Fibers);
+      emitter.Subscribe(new Observer {Worker = this, Fiber = fiber});
       return true;
     }
 
     private struct Observer : IObserver {
-      public Yield<Emitter> Yield;
-      public EmitterWorker  Worker;
-      public Instances.Node Node;
+      public EmitterWorker Worker;
+      public Fiber         Fiber;
 
       public void OnNext() {
-        if (Yield.EndRepeatCondition()) OnCompleted();
+        if (Fiber.Yield.EndYieldCondition()) OnCompleted();
       }
 
-      public void OnCompleted() { Worker.OnFinished(Node); }
+      public void OnCompleted() { Worker.OnFinished(Fiber); }
     }
   }
 
   public class EmitterWorker<T> : Worker<Emitter<T>> {
     static EmitterWorker() { Register(new EmitterWorker<T>(), processOnUpdate: false); }
 
-    protected override bool OnYield(Yield<Emitter<T>> yield, Instances.Node node) {
-      var emitter = yield.Data;
-      base.OnYield(emitter, node);
-      emitter.Subscribe(new Observer<T> {Worker = this, Node = node, Yield = yield});
+    protected internal override bool OnYield(Fiber fiber) {
+      var emitter = Parameter(fiber);
+      fiber.Node.MoveTo(Fibers);
+      emitter.Subscribe(new Observer {Worker = this, Fiber = fiber});
       return true;
     }
 
-    private struct Observer<T> : IObserver<T> {
-      public Yield<Emitter<T>> Yield;
-      public EmitterWorker<T>  Worker;
-      public Instances.Node    Node;
+    private struct Observer : IObserver<T> {
+      public EmitterWorker<T> Worker;
+      public Fiber            Fiber;
 
       public void OnError(Exception error) { }
 
       public void OnNext(T value) {
-        if (Yield.EndRepeatCondition()) OnCompleted();
+        Fiber.Result(value);
+        if (Fiber.Yield.EndYieldCondition()) OnCompleted();
       }
 
-      public void OnCompleted() { Worker.OnFinished(Node); }
+      public void OnCompleted() { Worker.OnFinished(Fiber); }
     }
   }
 }

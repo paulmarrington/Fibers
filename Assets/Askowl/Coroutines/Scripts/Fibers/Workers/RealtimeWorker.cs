@@ -8,7 +8,7 @@ namespace Askowl.Fibers {
   public class RealtimeWorker : Worker<float> {
     static RealtimeWorker() { Register(new RealtimeWorker()); }
 
-    protected override bool InRange(Instance ins) => Data(ins) > Time.realtimeSinceStartup;
+    protected override bool InRange(Fiber fiber) => Parameter(fiber) > Time.realtimeSinceStartup;
 
     protected override float SetRange(float seconds) => Time.realtimeSinceStartup + seconds;
   }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine.TestTools;
 using System.Collections;
+using UnityEngine;
 using Assert = UnityEngine.Assertions.Assert;
 
 namespace Askowl.Fibers {
@@ -7,17 +8,17 @@ namespace Askowl.Fibers {
     private int counter;
 
     [UnityTest]
-    public IEnumerator CueNewCoroutine() {
+    public IEnumerator WaitForCoroutine() {
       counter = 0;
       WaitFor.Coroutine(SimpleFiber);
       Assert.AreEqual(counter, 0);
-      yield return null;
+      yield return null; // Unity coroutine here
 
       Assert.AreEqual(counter, 1);
       Assert.IsTrue(WaitFor.WorkerGenerators.ContainsKey(SimpleFiber));
       var simpleFiberWorker = WaitFor.WorkerGenerators[SimpleFiber];
-      Assert.AreEqual(simpleFiberWorker.Fibers.Count, 0);
-      Assert.AreEqual(FiberWorker.Recycled.Count,  1);
+      Assert.AreEqual(simpleFiberWorker.Fibers.Count,   0, "Expecting fiber to have been released");
+      Assert.AreEqual(simpleFiberWorker.Recycled.Count, 1, "Expecting fiber to be back in Recycled");
     }
 
     private IEnumerator SimpleFiber() {

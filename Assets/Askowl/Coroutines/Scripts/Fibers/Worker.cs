@@ -12,48 +12,41 @@ namespace Askowl.Fibers {
 
     protected internal abstract void OnUpdate(Fiber fiber);
 
-    protected internal abstract bool OnYield(object returnedResult, Fiber fiber);
+    protected internal abstract bool OnYield(Fiber fiber);
 
-    protected virtual void OnFinished(Fiber fiber) { }
+    protected internal virtual void OnFinished(Fiber fiber) { }
   }
 
   public class Worker<T> : Worker {
     private static Worker<T> workerInstance;
 
     protected static void Register(Worker<T> me, bool processOnUpdate = true) {
+      me.Fibers.Name      = $"{me.GetType().Name}:{typeof(T).Name}";
       workerInstance      = me;
       OnYields[typeof(T)] = me;
-      if (processOnUpdate) WaitFor.Workers.Add(me);
+      if (processOnUpdate) FiberController.UpdateWorkers.Add(me);
     }
 
-    internal static Yield<T> Instance(T value) =>
-      new Yield<T>(worker: workerInstance, data: workerInstance.SetRange(value));
+    internal static Yield Instance(T value) =>
+      new Yield(worker: workerInstance, yieldParam: workerInstance.SetRange(value));
 
     protected virtual T SetRange(T value) => value;
 
-//    protected T        Data(Instance<T>    instance)          => ((Yield<T>) instance.Data).Value;
-//    protected void     Data(Instance<T>    instance, T value) => ((Yield<T>) instance.Data).Value = value;
-//    protected Yield<T> Yield(Instance<T>   instance)             => (Yield<T>) instance.Data;
-//    protected Yield<T> Data(Instances.Node node)                 => ((Yield<T>) node.Item.Data);
-//    protected void     Data(Instances.Node node, Yield<T> value) => node.Item.Data = value;
-
     internal Worker() { Fibers.InRange = InRange; }
 
-    protected virtual bool InRange(Fiber fiber) => false;
+    protected virtual bool InRange(Fiber fiber) => true;
 
     protected internal override void OnUpdate(Fiber fiber) {
-      if (repeatsdone) OnFinished(fiber);
+      if (fiber.Yield.EndYieldCondition()) OnFinished(fiber);
     }
 
-    protected virtual bool OnYield(Yield<T> yield, Fiber fiber) {
+    protected internal override bool OnYield(Fiber fiber) {
       fiber.Node.MoveTo(Fibers);
-      Data(node, yield);
       return true;
     }
 
-    protected internal override bool OnYield(object returnedResult, Fiber fiber) =>
-      OnYield((Yield<T>) returnedResult, fiber);
+    protected T Parameter(Fiber fiber) { return fiber.Yield.Parameter<T>(); }
 
-    protected override void OnFinished(Fiber fiber) => fiber.Node.MoveBack();
+    protected internal override void OnFinished(Fiber fiber) => fiber.Node.MoveBack();
   }
 }

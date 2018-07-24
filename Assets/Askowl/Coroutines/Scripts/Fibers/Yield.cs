@@ -1,37 +1,41 @@
-﻿//using System;
-//
-//namespace Askowl.Fibers {
-//  public interface Yield {
-//    Worker Worker { get; }
-//  }
-//
-//  public struct Yield<T> : Yield {
-//    public Worker     Worker { get; internal set; }
-//    public Func<bool> EndRepeatCondition;
-//    public T          Data { get { return data; } set { data = value; } }
-//
-//    private T data;
-//
-//    public Yield(Worker worker, T data) {
-//      Worker             = worker;
-//      this.data          = data;
-//      EndRepeatCondition = () => true;
-//    }
-//
-//    public Yield<T> Repeat(int countdown) {
-//      EndRepeatCondition = () => (countdown-- == 0);
-//      return this;
-//    }
-//
-//    public Yield<T> Until(Func<bool> condition) {
-//      EndRepeatCondition = condition;
-//      return this;
-//    }
-//
-//    public Yield<T> While(Func<bool> condition) {
-//      EndRepeatCondition = () => !condition();
-//      return this;
-//    }
-//  }
-//}
+﻿using System;
 
+namespace Askowl.Fibers {
+  public struct Yield {
+    public Worker     Worker { get; }
+    public Func<bool> EndYieldCondition;
+
+    public T Parameter<T>() {
+      try {
+        return (T) parameter;
+      } catch {
+        return default(T);
+      }
+    }
+
+    public void Parameter(object value) => parameter = value;
+
+    private object parameter;
+
+    public Yield(Worker worker, object yieldParam) {
+      Worker            = worker;
+      parameter         = yieldParam;
+      EndYieldCondition = () => true;
+    }
+
+    public Yield Repeat(int countdown) {
+      EndYieldCondition = () => (countdown-- == 0);
+      return this;
+    }
+
+    public Yield Until(Func<bool> condition) {
+      EndYieldCondition = condition;
+      return this;
+    }
+
+    public Yield While(Func<bool> condition) {
+      EndYieldCondition = () => !condition();
+      return this;
+    }
+  }
+}

@@ -8,10 +8,10 @@ namespace Askowl.Fibers {
   public class SecondsWorker : Worker<float> {
     static SecondsWorker() { Register(new SecondsWorker()); }
 
-    protected override bool InRange(Instance instance) {
-      float time = Data(instance);
+    protected override bool InRange(Fiber fiber) {
+      float time = Parameter(fiber);
       time -= Time.deltaTime;
-      Data(instance, time);
+      fiber.Yield.Parameter(value: time);
       return time > 0;
     }
   }

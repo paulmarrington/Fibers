@@ -1,23 +1,28 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 
 namespace Askowl.Fibers {
-  public struct Fiber {
-    public IEnumerator Coroutine;
-    public Fibers.Node Node;
-    public Fibers.Node ParentNode;
+  public class Fibers : LinkedList<Fiber> { }
 
-    public T Data<T>() {
+  public struct Fiber {
+    public IEnumerator Coroutine  { get; set; }
+    public FiberWorker Worker     { get; set; }
+    public Fibers.Node Node       { get; set; }
+    public Fibers.Node ParentNode { get; set; }
+    public object      YieldValue;
+
+    public Yield Yield => (Yield) YieldValue;
+
+    public T Result<T>() {
       try {
-        return (T) data;
+        return (T) result;
       } catch {
         return default(T);
       }
     }
 
-    public void Data(object value) => data = value;
+    public void Result(object value) => result = value;
 
-    private object data;
+    private object result;
   }
-
-  public class Fibers : LinkedList<Fiber> { }
 }

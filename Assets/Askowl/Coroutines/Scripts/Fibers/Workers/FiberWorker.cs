@@ -1,57 +1,67 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Askowl.Fibers {
   public class FiberWorker : Worker<Fiber> {
-    public static Fibers Recycled = new Fibers();
+    public Fibers Recycled = new Fibers() {Name = "Recycled Fibers"};
 
-    internal Func<IEnumerator> GeneratorFunction;
+    internal readonly Func<IEnumerator> GeneratorFunction;
 
-    internal FiberWorker() { Register(this); }
+    internal FiberWorker(Func<IEnumerator> generatorFunction) {
+      GeneratorFunction = generatorFunction;
+      Register(this);
+      Fibers.Name   = $"{Fibers.Name}:{GeneratorFunction.Method.Name}";
+      Recycled.Name = $"Recycler for {Fibers.Name}";
+    }
 
     public Fiber StartInstance(Fibers.Node parentNode) {
+      Fibers.Node node;
+
       if (Recycled.Empty) {
-        var fiber = new Fiber();
-        Recycled.Add(fiber);
-        fiber.Coroutine = FiberMonitor(GeneratorFunction(), fiber);
+        node                = Recycled.Add(new Fiber());
+        node.Item.Coroutine = FiberMonitor(GeneratorFunction(), node);
       }
 
-      var node = Recycled.First.MoveTo(Fibers);
+      node                 = Recycled.First.MoveTo(Fibers);
       node.Item.Node       = node;
       node.Item.ParentNode = parentNode;
       return node.Item;
     }
 
-    private IEnumerator FiberMonitor(IEnumerator coroutine, Fiber fiber) {
+    private IEnumerator FiberMonitor(IEnumerator coroutine, Fibers.Node node) {
       try {
         while (coroutine.MoveNext()) yield return coroutine.Current;
       } finally {
-        fiber.Node.MoveTo(Recycled);
-        fiber.ParentNode?.MoveBack();
+        node.MoveTo(Recycled);
+        node.Item.ParentNode?.MoveBack();
       }
     }
 
     protected internal override void OnUpdate(Fiber fiber) {
-      if (!Step(fiber)) {
-        OnFinished(fiber);
-        fiber.Node.MoveTo(Recycled);
-      }
+      if (!Step(fiber)) OnFinished(fiber);
     }
+
+    protected internal override void OnFinished(Fiber fiber) { }
 
     private bool Step(Fiber fiber) {
       if (!fiber.Coroutine.MoveNext()) return false;
 
-      var yield = fiber.Coroutine.Current as Yield;
-      if (yield != null) return yield.Worker.OnYield(yield, fiber);
+      fiber.YieldValue = fiber.Coroutine.Current;
+
+      if (fiber.Coroutine.Current is Yield) {
+        return fiber.Yield.Worker.OnYield(fiber);
+      }
 
       var returnedResultType = fiber.Coroutine.Current?.GetType();
 
       if ((returnedResultType != null) && OnYields.ContainsKey(returnedResultType)) {
-        return OnYields[returnedResultType].OnYield(fiber.Coroutine.Current, fiber);
+        return OnYields[returnedResultType].OnYield(fiber);
       }
 
-      return OnYield(fiber.Coroutine.Current, fiber);
+      Debug.LogWarning("It is bad form to use `Yield null` to skip a frame");
+      return OnYield(fiber);
     }
   }
 }
