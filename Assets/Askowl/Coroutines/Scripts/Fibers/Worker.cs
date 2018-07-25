@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Askowl.Fibers {
   public class Workers : LinkedList<Worker> { }
@@ -18,21 +19,21 @@ namespace Askowl.Fibers {
   }
 
   public class Worker<T> : Worker {
-    private static Worker<T> workerInstance;
+    public static Worker<T> Instance = new Worker<T>();
 
-    protected static void Register(Worker<T> me, bool processOnUpdate = true) {
-      me.Fibers.Name      = $"{me.GetType().Name}:{typeof(T).Name}";
-      workerInstance      = me;
-      OnYields[typeof(T)] = me;
-      if (processOnUpdate) FiberController.UpdateWorkers.Add(me);
+    protected Worker() {
+      Fibers.InRange      = InRange;
+      Fibers.Name         = $"{GetType().Name}:{typeof(T).Name}";
+      OnYields[typeof(T)] = this;
+      if (AddToUpdate) FiberController.UpdateWorkers.Add(this);
     }
 
-    internal static Yield Instance(T value) =>
-      new Yield(worker: workerInstance, yieldParam: workerInstance.SetRange(value));
+    protected virtual bool AddToUpdate => false;
+
+    public virtual Yield Yield(T value) =>
+      new Yield(worker: this, yieldParam: SetRange(value));
 
     protected virtual T SetRange(T value) => value;
-
-    internal Worker() { Fibers.InRange = InRange; }
 
     protected virtual bool InRange(Fiber fiber) => true;
 

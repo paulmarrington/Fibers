@@ -2,11 +2,11 @@
 
 namespace Askowl.Fibers {
   public static partial class WaitFor {
-    public static Yield Frames(int framesToSkip) => FramesWorker.Instance(framesToSkip);
+    public static Yield Frames(int framesToSkip) => FramesWorker.Instance.Yield(framesToSkip);
   }
 
   public class FramesWorker : Worker<int> {
-    static FramesWorker() { Register(new FramesWorker()); }
+    protected override bool AddToUpdate => true;
 
     protected override bool InRange(Fiber fiber) => Parameter(fiber) > Time.frameCount;
 

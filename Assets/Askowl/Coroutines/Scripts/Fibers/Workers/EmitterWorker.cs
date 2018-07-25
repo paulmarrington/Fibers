@@ -2,12 +2,12 @@
 
 namespace Askowl.Fibers {
   public static partial class WaitFor {
-    public static Yield Emitter(Emitter       emitter) => EmitterWorker.Instance(emitter);
-    public static Yield Emitter<T>(Emitter<T> emitter) => EmitterWorker<T>.Instance(emitter);
+    public static Yield Emitter(Emitter       emitter) => EmitterWorker.Instance.Yield(emitter);
+    public static Yield Emitter<T>(Emitter<T> emitter) => EmitterWorker<T>.Instance.Yield(emitter);
   }
 
   public class EmitterWorker : Worker<Emitter> {
-    static EmitterWorker() { Register(new EmitterWorker(), processOnUpdate: false); }
+//    public static EmitterWorker Instance = new EmitterWorker {processOnUpdate = false};
 
     protected internal override bool OnYield(Fiber fiber) {
       var emitter = Parameter(fiber);
@@ -29,7 +29,7 @@ namespace Askowl.Fibers {
   }
 
   public class EmitterWorker<T> : Worker<Emitter<T>> {
-    static EmitterWorker() { Register(new EmitterWorker<T>(), processOnUpdate: false); }
+//    public static EmitterWorker<T> Instance = new EmitterWorker<T> {processOnUpdate = false};
 
     protected internal override bool OnYield(Fiber fiber) {
       var emitter = Parameter(fiber);

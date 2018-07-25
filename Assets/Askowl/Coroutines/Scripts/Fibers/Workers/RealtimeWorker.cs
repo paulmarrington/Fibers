@@ -2,11 +2,11 @@
 
 namespace Askowl.Fibers {
   public static partial class WaitFor {
-    public static Yield SecondsRealtime(float seconds) { return RealtimeWorker.Instance(seconds); }
+    public static Yield SecondsRealtime(float seconds) => RealtimeWorker.Instance.Yield(seconds);
   }
 
   public class RealtimeWorker : Worker<float> {
-    static RealtimeWorker() { Register(new RealtimeWorker()); }
+    protected override bool AddToUpdate => true;
 
     protected override bool InRange(Fiber fiber) => Parameter(fiber) > Time.realtimeSinceStartup;
 

@@ -24,5 +24,7 @@ namespace Askowl.Fibers {
     public void Result(object value) => result = value;
 
     private object result;
+
+    public override string ToString() => $"{Node}";
   }
 }

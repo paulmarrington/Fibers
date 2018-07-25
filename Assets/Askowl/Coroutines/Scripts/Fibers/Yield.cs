@@ -23,6 +23,11 @@ namespace Askowl.Fibers {
       EndYieldCondition = () => true;
     }
 
+    public Yield Repeating() {
+      EndYieldCondition = () => false;
+      return this;
+    }
+
     public Yield Repeat(int countdown) {
       EndYieldCondition = () => (countdown-- == 0);
       return this;

@@ -9,11 +9,11 @@ namespace Askowl.Fibers {
 
     internal readonly Func<IEnumerator> GeneratorFunction;
 
-    internal FiberWorker(Func<IEnumerator> generatorFunction) {
+    internal FiberWorker(Func<IEnumerator> generatorFunction, Workers updateQueue) : base() {
       GeneratorFunction = generatorFunction;
-      Register(this);
-      Fibers.Name   = $"{Fibers.Name}:{GeneratorFunction.Method.Name}";
-      Recycled.Name = $"Recycler for {Fibers.Name}";
+      Fibers.Name       = $"{Fibers.Name}:{GeneratorFunction.Method.Name}";
+      Recycled.Name     = $"Recycler for {Fibers.Name}";
+      updateQueue.Add(this);
     }
 
     public Fiber StartInstance(Fibers.Node parentNode) {
@@ -24,9 +24,9 @@ namespace Askowl.Fibers {
         node.Item.Coroutine = FiberMonitor(GeneratorFunction(), node);
       }
 
-      node                 = Recycled.First.MoveTo(Fibers);
-      node.Item.Node       = node;
-      node.Item.ParentNode = parentNode;
+      node                  = Recycled.First.MoveTo(Fibers);
+      node.Item.Node        = node;
+      node.Item.ParentNode  = parentNode;
       return node.Item;
     }
 
