@@ -17,21 +17,22 @@ namespace Askowl.Fibers {
 
     private static void UpdateAllWorkers(Workers workers) {
       for (var workerNode = workers.First; workerNode != null; workerNode = workerNode.Next) {
-        var fiberNode = workerNode.Item.Fibers.First;
+        var worker        = workerNode.Item;
+        var coroutineNode = worker.Coroutines.First;
 
-        if (fiberNode != null) {
-          while (fiberNode?.InRange == true) {
-            var next  = fiberNode.Next;
-            var fiber = fiberNode.Item;
-            workerNode.Item.OnUpdate(fiber);
-            fiberNode = next;
+        if (coroutineNode != null) {
+          while (coroutineNode?.InRange == true) {
+            var next = coroutineNode.Next;
+            Debug.Log($"**** FiberController:25 fiberNode={coroutineNode.Owner}"); //#DM#//
+            worker.OnUpdate(coroutineNode.Item);
+            coroutineNode = next;
           }
         }
       }
     }
 
-    public static readonly Workers UpdateWorkers     = new Workers() {Name = "Update Workers"};
-    public static readonly Workers LateUpdateWorkers  = new Workers() {Name  = "LateUpdate Workers"};
-    public static readonly Workers FixedUpdateWorkers = new Workers() {Name  = "FixedUpdate Workers"};
+    public static readonly Workers UpdateWorkers      = new Workers() {Name = "Update Workers"};
+    public static readonly Workers LateUpdateWorkers  = new Workers() {Name = "LateUpdate Workers"};
+    public static readonly Workers FixedUpdateWorkers = new Workers() {Name = "FixedUpdate Workers"};
   }
 }

@@ -1,67 +1,64 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Askowl.Fibers {
   public class FiberWorker : Worker<Fiber> {
+    public Fibers Active   = new Fibers() {Name = "Active Fibers"};
     public Fibers Recycled = new Fibers() {Name = "Recycled Fibers"};
 
     internal readonly Func<IEnumerator> GeneratorFunction;
 
     internal FiberWorker(Func<IEnumerator> generatorFunction, Workers updateQueue) : base() {
       GeneratorFunction = generatorFunction;
-      Fibers.Name       = $"{Fibers.Name}:{GeneratorFunction.Method.Name}";
-      Recycled.Name     = $"Recycler for {Fibers.Name}";
+      Coroutines.Name   = $"{Coroutines.Name}:{GeneratorFunction.Method.Name}";
+      Recycled.Name     = $"Recycler for {Coroutines.Name}";
       updateQueue.Add(this);
     }
 
-    public Fiber StartInstance(Fibers.Node parentNode) {
-      Fibers.Node node;
-
+    public Coroutine StartInstance(Coroutine parent) {
       if (Recycled.Empty) {
-        node                = Recycled.Add(new Fiber());
-        node.Item.Coroutine = FiberMonitor(GeneratorFunction(), node);
+        Recycled.Add(new Fiber {Worker = this, Enumerator = GeneratorFunction()});
       }
 
-      node                  = Recycled.First.MoveTo(Fibers);
-      node.Item.Node        = node;
-      node.Item.ParentNode  = parentNode;
-      return node.Item;
+      var node = Recycled.First.MoveTo(Active);
+      coroutine.Node       = node;
+      coroutine.ParentNode = parent;
+      return coroutine;
     }
 
-    private IEnumerator FiberMonitor(IEnumerator coroutine, Fibers.Node node) {
+    private IEnumerator FiberMonitor(IEnumerator enumerator, Fibers.Node node) {
       try {
-        while (coroutine.MoveNext()) yield return coroutine.Current;
+        while (enumerator.MoveNext()) yield return enumerator.Current;
       } finally {
         node.MoveTo(Recycled);
-        node.Item.ParentNode?.MoveBack();
+        coroutine.ParentNode?.MoveBack();
       }
     }
 
-    protected internal override void OnUpdate(Fiber fiber) {
-      if (!Step(fiber)) OnFinished(fiber);
+    protected internal override void OnUpdate(Coroutines.Node node) {
+      if (!Step(node)) OnFinished(node);
     }
 
-    protected internal override void OnFinished(Fiber fiber) { }
+    protected internal override void OnFinished(Coroutine coroutine) { }
 
-    private bool Step(Fiber fiber) {
-      if (!fiber.Coroutine.MoveNext()) return false;
+    private bool Step(Coroutines.Node node) {
+      if (!node.Item.Coroutine.MoveNext()) return false;
 
-      fiber.YieldValue = fiber.Coroutine.Current;
+      node.Item.YieldValue = node.Item.Coroutine.Current;
 
-      if (fiber.Coroutine.Current is Yield) {
-        return fiber.Yield.Worker.OnYield(fiber);
+      if (node.Item.Coroutine.Current is Yield) {
+        return node.Item.Yield.Worker.OnYield(node);
       }
 
-      var returnedResultType = fiber.Coroutine.Current?.GetType();
+      var returnedResultType = node.Item.Coroutine.Current?.GetType();
 
       if ((returnedResultType != null) && OnYields.ContainsKey(returnedResultType)) {
-        return OnYields[returnedResultType].OnYield(fiber);
+        return OnYields[returnedResultType].OnYield(node);
       }
 
       Debug.LogWarning("It is bad form to use `Yield null` to skip a frame");
-      return OnYield(fiber);
+      return OnYield(node);
     }
   }
 }

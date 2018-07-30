@@ -7,29 +7,53 @@ namespace Askowl.Fibers {
   public static partial class WaitFor {
     private static MonoBehaviour controller;
 
-    public static Fiber Updates(Func<IEnumerator> fiberGenerator, Fibers.Node parentNode = null) =>
-      CreateCoroutine(FiberController.UpdateWorkers, fiberGenerator, parentNode);
+    public static Coroutine Updates(Func<IEnumerator> fiberGenerator, Fibers.Node parentNode = null) =>
+      StartInstance(fiberGenerator, () => new FiberWorker(fiberGenerator, FiberController.UpdateWorkers), parentNode);
 
-    public static Fiber LateUpdates(Func<IEnumerator> fiberGenerator, Fibers.Node parentNode = null) =>
-      CreateCoroutine(FiberController.LateUpdateWorkers, fiberGenerator, parentNode);
+    public static Coroutine Updates(Action action, Fibers.Node parentNode = null) =>
+      StartInstance(action, () => new FiberWorker(FiberGenerator(action), FiberController.UpdateWorkers), parentNode);
 
-    public static Fiber FixedUpdates(Func<IEnumerator> fiberGenerator, Fibers.Node parentNode = null) =>
-      CreateCoroutine(FiberController.FixedUpdateWorkers, fiberGenerator, parentNode);
+    public static Coroutine Updates(Func<object> func, Fibers.Node parentNode = null) =>
+      StartInstance(func, () => new FiberWorker(FiberGenerator(func), FiberController.UpdateWorkers), parentNode);
 
-    #region Common
-    private static Fiber CreateCoroutine(Workers     updateQueue, Func<IEnumerator> fiberGenerator,
-                                         Fibers.Node parentNode = null) {
+    public static Coroutine LateUpdates(Func<IEnumerator> generator, Fibers.Node parentNode = null) =>
+      StartInstance(generator, () => new FiberWorker(generator, FiberController.LateUpdateWorkers), parentNode);
+
+    public static Coroutine FixedUpdates(Func<IEnumerator> generator, Fibers.Node parentNode = null) =>
+      StartInstance(generator, () => new FiberWorker(generator, FiberController.FixedUpdateWorkers), parentNode);
+
+    #region Private Support Code
+    private static Coroutine StartInstance(object key, Func<FiberWorker> newGenerator, Fibers.Node parentNode) {
       if (controller == null) controller = Components.Create<FiberController>("FiberController");
 
-      if (!WorkerGenerators.ContainsKey(fiberGenerator)) {
-        WorkerGenerators[fiberGenerator] = new FiberWorker(fiberGenerator, updateQueue);
-      }
+      if (!WorkerGenerators.ContainsKey(key)) WorkerGenerators[key] = newGenerator();
 
-      return WorkerGenerators[fiberGenerator].StartInstance(parentNode);
+      var node = WorkerGenerators[key].StartInstance(parentNode);
+      return new Coroutine {Worker = WorkerGenerators[key], Node = node, ParentNode = parentNode};
     }
+
+    private static Func<IEnumerator> FiberGenerator(Action fiberAction) {
+      return delegate {
+        fiberAction();
+        return EmptyCoroutine();
+      };
+    }
+
+    private static Func<IEnumerator> FiberGenerator(Func<object> fiberAction) {
+      return delegate {
+        fiberAction();
+        return EmptyCoroutine();
+      };
+    }
+
+    private static IEnumerator EmptyCoroutine() { yield break; }
     #endregion
 
-    public static readonly Dictionary<Func<IEnumerator>, FiberWorker> WorkerGenerators
-      = new Dictionary<Func<IEnumerator>, FiberWorker>();
+    public static readonly Dictionary<object, FiberWorker> WorkerGenerators = new Dictionary<object, FiberWorker>();
+  }
+
+  public static class MonoBehaviourExtensions {
+    public static Coroutine Fiber(this MonoBehaviour _, Func<IEnumerator> generator) => WaitFor.Updates(generator);
+    public static Coroutine Fiber(this MonoBehaviour _, Action            generator) => WaitFor.Updates(generator);
   }
 }

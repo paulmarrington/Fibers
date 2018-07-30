@@ -7,49 +7,49 @@ namespace Askowl.Fibers {
   }
 
   public class EmitterWorker : Worker<Emitter> {
-//    public static EmitterWorker Instance = new EmitterWorker {processOnUpdate = false};
+    public static EmitterWorker Instance = new EmitterWorker();
 
-    protected internal override bool OnYield(Fiber fiber) {
-      var emitter = Parameter(fiber);
-      fiber.Node.MoveTo(Fibers);
-      emitter.Subscribe(new Observer {Worker = this, Fiber = fiber});
+    protected internal override bool OnYield(Coroutine coroutine) {
+      var emitter = Parameter(coroutine);
+      coroutine.Node.MoveTo(Fibers);
+      emitter.Subscribe(new Observer {Worker = this, Coroutine = coroutine});
       return true;
     }
 
     private struct Observer : IObserver {
       public EmitterWorker Worker;
-      public Fiber         Fiber;
+      public Coroutine     Coroutine;
 
       public void OnNext() {
-        if (Fiber.Yield.EndYieldCondition()) OnCompleted();
+        if (Coroutine.Yield.EndYieldCondition(Coroutine)) OnCompleted();
       }
 
-      public void OnCompleted() { Worker.OnFinished(Fiber); }
+      public void OnCompleted() { Worker.OnFinished(Coroutine); }
     }
   }
 
   public class EmitterWorker<T> : Worker<Emitter<T>> {
-//    public static EmitterWorker<T> Instance = new EmitterWorker<T> {processOnUpdate = false};
+    public static EmitterWorker<T> Instance = new EmitterWorker<T>();
 
-    protected internal override bool OnYield(Fiber fiber) {
-      var emitter = Parameter(fiber);
-      fiber.Node.MoveTo(Fibers);
-      emitter.Subscribe(new Observer {Worker = this, Fiber = fiber});
+    protected internal override bool OnYield(Coroutine coroutine) {
+      var emitter = Parameter(coroutine);
+      coroutine.Node.MoveTo(Fibers);
+      emitter.Subscribe(new Observer {Worker = this, Coroutine = coroutine});
       return true;
     }
 
     private struct Observer : IObserver<T> {
       public EmitterWorker<T> Worker;
-      public Fiber            Fiber;
+      public Coroutine        Coroutine;
 
       public void OnError(Exception error) { }
 
       public void OnNext(T value) {
-        Fiber.Result(value);
-        if (Fiber.Yield.EndYieldCondition()) OnCompleted();
+        Coroutine.Fiber.Result(value);
+        if (Coroutine.Yield.EndYieldCondition(Coroutine)) OnCompleted();
       }
 
-      public void OnCompleted() { Worker.OnFinished(Fiber); }
+      public void OnCompleted() { Worker.OnFinished(Coroutine); }
     }
   }
 }

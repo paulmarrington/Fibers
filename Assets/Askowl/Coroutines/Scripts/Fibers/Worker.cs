@@ -7,47 +7,49 @@ namespace Askowl.Fibers {
   public class Workers : LinkedList<Worker> { }
 
   public abstract class Worker {
-    public Fibers Fibers = new Fibers();
+    public Coroutines Coroutines;
 
     protected static Dictionary<Type, Worker> OnYields = new Dictionary<Type, Worker>();
 
-    protected internal abstract void OnUpdate(Fiber fiber);
+    protected internal abstract void OnUpdate(Coroutine coroutine);
 
-    protected internal abstract bool OnYield(Fiber fiber);
+    protected virtual bool InRange(Coroutines.Node node) => InRange(node.Item);
 
-    protected internal virtual void OnFinished(Fiber fiber) { }
+    protected virtual bool InRange(Coroutine coroutine) => true;
+
+    protected internal abstract bool OnYield(Coroutine coroutine);
+
+    protected internal virtual void OnFinished(Coroutine coroutine) { }
   }
 
   public class Worker<T> : Worker {
-    public static Worker<T> Instance = new Worker<T>();
-
     protected Worker() {
-      Fibers.InRange      = InRange;
-      Fibers.Name         = $"{GetType().Name}:{typeof(T).Name}";
+      Coroutines          = new Coroutines {Name = $"{GetType().Name}:{typeof(T).Name}", InRange = InRange};
       OnYields[typeof(T)] = this;
       if (AddToUpdate) FiberController.UpdateWorkers.Add(this);
     }
 
     protected virtual bool AddToUpdate => false;
 
-    public virtual Yield Yield(T value) =>
-      new Yield(worker: this, yieldParam: SetRange(value));
+//    public virtual Yield Yield(T value) =>
+//      new Yield(SetRange(value));
 
     protected virtual T SetRange(T value) => value;
 
-    protected virtual bool InRange(Fiber fiber) => true;
-
-    protected internal override void OnUpdate(Fiber fiber) {
-      if (fiber.Yield.EndYieldCondition()) OnFinished(fiber);
+    protected internal override void OnUpdate(Coroutine coroutine) {
+      coroutine.Result(coroutine.Yield.Action(coroutine));
+      if (coroutine.Yield.EndYieldCondition(coroutine)) OnFinished(coroutine);
     }
 
-    protected internal override bool OnYield(Fiber fiber) {
-      fiber.Node.MoveTo(Fibers);
+    protected internal override bool OnYield(Coroutine coroutine) {
+      coroutine.Node.MoveTo(Coroutines);
       return true;
     }
 
-    protected T Parameter(Fiber fiber) { return fiber.Yield.Parameter<T>(); }
+    protected T Parameter(Coroutine coroutine) => coroutine.Yield.Parameter<T>();
 
-    protected internal override void OnFinished(Fiber fiber) => fiber.Node.MoveBack();
+    protected void Parameter(Coroutine coroutine, T value) { coroutine.Yield.Parameter(value); }
+
+    protected internal override void OnFinished(Coroutine coroutine) => coroutine.Node.MoveBack();
   }
 }
