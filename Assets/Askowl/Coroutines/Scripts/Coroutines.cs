@@ -12,7 +12,7 @@ namespace Askowl {
   /// You could write code with lines of `yield return stepCoroutine()` or you could use this helper class.
   /// </summary>
   /// <remarks><a href="http://coroutines.marrington.net#coroutines-1">More...</a></remarks>
-  public sealed class Coroutines1 {
+  public sealed class Coroutines {
     private readonly Queue<IEnumerator> queue = new Queue<IEnumerator>();
     private          MonoBehaviour      owner;
 
@@ -23,11 +23,11 @@ namespace Askowl {
     /// <param name="owner">MonoBehaviour that owns the stream</param>
     /// <param name="actions">Zero or more `IEnumerator` returning coroutine components</param>
     /// <returns>Coroutines reference used to add more actions or wait on completion</returns>
-    public static Coroutines1 Sequential(MonoBehaviour owner, params IEnumerator[] actions) {
-      return new Coroutines1().Start(owner, actions);
+    public static Coroutines Sequential(MonoBehaviour owner, params IEnumerator[] actions) {
+      return new Coroutines().Start(owner, actions);
     }
 
-    private Coroutines1 Start(MonoBehaviour owningBehaviour, params IEnumerator[] actionList) {
+    private Coroutines Start(MonoBehaviour owningBehaviour, params IEnumerator[] actionList) {
       owner = owningBehaviour;
       Queue(actionList);
       return this;

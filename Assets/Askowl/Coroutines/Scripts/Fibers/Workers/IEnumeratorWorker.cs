@@ -3,21 +3,30 @@ using System.Collections;
 using UnityEngine;
 
 namespace Askowl.Fibers {
-  public static partial class WaitFor {
-    public static Yield Coroutine(Func<IEnumerator> coroutine) => IEnumeratorWorker.Instance.Yield(coroutine);
-    public static Yield Fiber(Func<IEnumerator>     coroutine) => IEnumeratorWorker.Instance.Yield(coroutine);
+  public partial class Fiber {
+    public Fiber Coroutine(Func<IEnumerator> coroutine, int framesBetweenChecks = 1) =>
+      IEnumeratorWorker.Load(this, coroutine, framesBetweenChecks);
   }
 
   public class IEnumeratorWorker : Worker<Func<IEnumerator>> {
-    public static IEnumeratorWorker Instance = new IEnumeratorWorker();
-    protected override bool AddToUpdate => true;
+    private int  framesBetweenChecks; //#TBD#
+    private bool coroutineDone;
 
-    private Fibers waiting = new Fibers();
+    static IEnumeratorWorker() { new IEnumeratorWorker().Prepare("Fiber.IEnumerator Worker"); }
 
-    protected internal override bool OnYield(Coroutine coroutine) {
-      coroutine.Node.MoveTo(waiting); // moved back when InstanceWorker is done
-      WaitFor.Updates(fiberGenerator: Parameter(coroutine.Yield), parentNode: coroutine);
-      return true;
+    protected override Func<IEnumerator> Parse(Func<IEnumerator> data, object[] more) {
+      framesBetweenChecks = (int) more[0];
+      coroutineDone       = false;
+      Fiber.controller.StartCoroutine(Wrapper());
+      return data;
     }
+
+    IEnumerator Wrapper() {
+      yield return data();
+
+      coroutineDone = true;
+    }
+
+    protected override bool InRange() => !coroutineDone;
   }
 }

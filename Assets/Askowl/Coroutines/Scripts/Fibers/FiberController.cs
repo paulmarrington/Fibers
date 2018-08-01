@@ -9,30 +9,14 @@ namespace Askowl.Fibers {
   public partial class FiberController : MonoBehaviour {
     private void Start() { DontDestroyOnLoad(gameObject); }
 
-    private void Update() { UpdateAllWorkers(UpdateWorkers); }
+    private void Update() { UpdateAllWorkers(Fiber.UpdateQueues); }
 
-    private void LateUpdate() { UpdateAllWorkers(LateUpdateWorkers); }
+    private void LateUpdate() { UpdateAllWorkers(Fiber.LateUpdateQueues); }
 
-    private void FixedUpdate() { UpdateAllWorkers(FixedUpdateWorkers); }
+    private void FixedUpdate() { UpdateAllWorkers(Fiber.FixedUpdateQueues); }
 
-    private static void UpdateAllWorkers(Workers workers) {
-      for (var workerNode = workers.First; workerNode != null; workerNode = workerNode.Next) {
-        var worker        = workerNode.Item;
-        var coroutineNode = worker.Coroutines.First;
-
-        if (coroutineNode != null) {
-          while (coroutineNode?.InRange == true) {
-            var next = coroutineNode.Next;
-            Debug.Log($"**** FiberController:25 fiberNode={coroutineNode.Owner}"); //#DM#//
-            worker.OnUpdate(coroutineNode.Item);
-            coroutineNode = next;
-          }
-        }
-      }
+    private static void UpdateAllWorkers(Fiber.FiberQueues queue) {
+      queue.Walk((fibersNode) => fibersNode.Item.Walk((node) => node.Item.OnUpdate()));
     }
-
-    public static readonly Workers UpdateWorkers      = new Workers() {Name = "Update Workers"};
-    public static readonly Workers LateUpdateWorkers  = new Workers() {Name = "LateUpdate Workers"};
-    public static readonly Workers FixedUpdateWorkers = new Workers() {Name = "FixedUpdate Workers"};
   }
 }

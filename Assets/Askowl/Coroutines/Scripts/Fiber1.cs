@@ -5,15 +5,15 @@ namespace Askowl.Fibers {
   /// Used by all fiber workers to keep a list of fibers of interest.
   public class Coroutines : LinkedList<Coroutine> { }
 
-  public class Fibers : LinkedList<Fiber> { }
+  public class Fibers1 : LinkedList<Fiber> { }
 
   /// <summary>
   /// Core information when a fiber is registered. Put in a recycling queue
   /// when not actively being used. Lives while programming is running.
   /// </summary>
-  public struct Fiber {
+  public struct Fiber1 {
     public IEnumerator Enumerator;
-    public FiberWorker Worker;
+//    public FiberWorker Worker;
 
 //    public object      YieldValue;
 //

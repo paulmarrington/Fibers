@@ -1,55 +1,35 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿namespace Askowl.Fibers {
+  public class Worker<T> {
+    protected T     data;
+    protected Fiber fiber;
 
-namespace Askowl.Fibers {
-  public class Workers : LinkedList<Worker> { }
+    protected Fibers updateQueue = Fiber.OnUpdatesQueue;
+//    protected Func<object, T> ParseData;
 
-  public abstract class Worker {
-    public Coroutines Coroutines;
+    public void Prepare(string name, Fibers updateQueue = null) {
+      instance             = this;
+      instance.updateQueue = Fiber.OnUpdatesQueue;
 
-    protected static Dictionary<Type, Worker> OnYields = new Dictionary<Type, Worker>();
-
-    protected internal abstract void OnUpdate(Coroutine coroutine);
-
-    protected virtual bool InRange(Coroutines.Node node) => InRange(node.Item);
-
-    protected virtual bool InRange(Coroutine coroutine) => true;
-
-    protected internal abstract bool OnYield(Coroutine coroutine);
-
-    protected internal virtual void OnFinished(Coroutine coroutine) { }
-  }
-
-  public class Worker<T> : Worker {
-    protected Worker() {
-      Coroutines          = new Coroutines {Name = $"{GetType().Name}:{typeof(T).Name}", InRange = InRange};
-      OnYields[typeof(T)] = this;
-      if (AddToUpdate) FiberController.UpdateWorkers.Add(this);
+      fibers = new Fibers {
+        Name       = name,
+        InRange    = (t) => InRange(),
+        OnComplete = (t) => OnComplete()
+      };
     }
 
-    protected virtual bool AddToUpdate => false;
+    protected virtual T    Parse(T naked)                => naked;
+    protected virtual T    Parse(T naked, object[] more) => (T) naked;
+    protected virtual bool InRange()    => true;
+    protected virtual void OnComplete() => fiber.Node.MoveTo(updateQueue);
 
-//    public virtual Yield Yield(T value) =>
-//      new Yield(SetRange(value));
-
-    protected virtual T SetRange(T value) => value;
-
-    protected internal override void OnUpdate(Coroutine coroutine) {
-      coroutine.Result(coroutine.Yield.Action(coroutine));
-      if (coroutine.Yield.EndYieldCondition(coroutine)) OnFinished(coroutine);
+    public static Fiber Load(Fiber fiber, T data, params object[] parameters) {
+      instance.data  = instance.Parse(data, parameters);
+      instance.fiber = fiber;
+      fiber.Node.MoveTo(fibers);
+      return fiber;
     }
 
-    protected internal override bool OnYield(Coroutine coroutine) {
-      coroutine.Node.MoveTo(Coroutines);
-      return true;
-    }
-
-    protected T Parameter(Coroutine coroutine) => coroutine.Yield.Parameter<T>();
-
-    protected void Parameter(Coroutine coroutine, T value) { coroutine.Yield.Parameter(value); }
-
-    protected internal override void OnFinished(Coroutine coroutine) => coroutine.Node.MoveBack();
+    protected static Worker<T> instance;
+    private static   Fibers    fibers;
   }
 }

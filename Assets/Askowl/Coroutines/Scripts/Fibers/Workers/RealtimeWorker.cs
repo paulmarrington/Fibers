@@ -1,17 +1,13 @@
 ﻿using UnityEngine;
 
 namespace Askowl.Fibers {
-  public static partial class WaitFor {
-    public static Yield SecondsRealtime(float  seconds) => RealtimeWorker.Instance.Yield(seconds);
-    public static Yield SecondsRealtime(double seconds) => RealtimeWorker.Instance.Yield((float) seconds);
-  }
+  public partial class Fiber {
+    public Fiber WaitForSecondsRealtime(float seconds) => RealtimeWorker.Load(fiber: this, data: seconds);
 
-  public class RealtimeWorker : Worker<float> {
-    public static      RealtimeWorker Instance = new RealtimeWorker();
-    protected override bool           AddToUpdate => true;
-
-    protected override bool InRange(Fibers.Node node) => Parameter(node) > Time.realtimeSinceStartup;
-
-    protected override float SetRange(float seconds) => Time.realtimeSinceStartup + seconds;
+    public class RealtimeWorker : Worker<float> {
+      static RealtimeWorker() { new RealtimeWorker().Prepare("Fiber.WaitForRealtimeSeconds Worker"); }
+      protected override float Parse(float seconds) => Time.realtimeSinceStartup + seconds;
+      protected override bool  InRange()            => data >= Time.realtimeSinceStartup;
+    }
   }
 }

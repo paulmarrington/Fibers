@@ -1,55 +1,52 @@
 ﻿using System;
 
 namespace Askowl.Fibers {
-  public static partial class WaitFor {
-    public static Yield Emitter(Emitter       emitter) => EmitterWorker.Instance.Yield(emitter);
-    public static Yield Emitter<T>(Emitter<T> emitter) => EmitterWorker<T>.Instance.Yield(emitter);
+  public partial class Fiber {
+    public Fiber Emitter(Emitter emitter) => EmitterWorker.Load(this, emitter);
+
+    public Fiber Emitter<T>(Emitter<T> emitter, Action<T> actionOnResult) =>
+      EmitterWorker<T>.Load(this, emitter, actionOnResult);
   }
 
   public class EmitterWorker : Worker<Emitter> {
-    public static EmitterWorker Instance = new EmitterWorker();
+    static EmitterWorker() { new EmitterWorker().Prepare("Fiber Emitter Worker"); }
 
-    protected internal override bool OnYield(Coroutine coroutine) {
-      var emitter = Parameter(coroutine);
-      coroutine.Node.MoveTo(Fibers);
-      emitter.Subscribe(new Observer {Worker = this, Coroutine = coroutine});
-      return true;
+    protected override Emitter Parse(Emitter emitter) {
+      emitter.Subscribe(new Observer {Worker = this});
+      return emitter;
     }
 
     private struct Observer : IObserver {
       public EmitterWorker Worker;
-      public Coroutine     Coroutine;
 
       public void OnNext() {
-        if (Coroutine.Yield.EndYieldCondition(Coroutine)) OnCompleted();
+        if (Worker.fiber.EndCondition()) OnCompleted();
       }
 
-      public void OnCompleted() { Worker.OnFinished(Coroutine); }
+      public void OnCompleted() { Worker.OnComplete(); }
     }
   }
 
   public class EmitterWorker<T> : Worker<Emitter<T>> {
-    public static EmitterWorker<T> Instance = new EmitterWorker<T>();
+    static EmitterWorker() { new EmitterWorker().Prepare("Fiber Emitter T Worker"); }
 
-    protected internal override bool OnYield(Coroutine coroutine) {
-      var emitter = Parameter(coroutine);
-      coroutine.Node.MoveTo(Fibers);
-      emitter.Subscribe(new Observer {Worker = this, Coroutine = coroutine});
-      return true;
+    protected override Emitter<T> Parse(Emitter<T> emitter, object[] more) {
+      emitter.Subscribe(new Observer {Worker = this, actionOnResult = (Action<T>) more[0]});
+      return emitter;
     }
 
     private struct Observer : IObserver<T> {
       public EmitterWorker<T> Worker;
-      public Coroutine        Coroutine;
+      public Action<T>        actionOnResult;
 
       public void OnError(Exception error) { }
 
       public void OnNext(T value) {
-        Coroutine.Fiber.Result(value);
-        if (Coroutine.Yield.EndYieldCondition(Coroutine)) OnCompleted();
+        actionOnResult(value);
+        if (Worker.fiber.EndCondition()) OnCompleted();
       }
 
-      public void OnCompleted() { Worker.OnFinished(Coroutine); }
+      public void OnCompleted() { Worker.OnComplete(); }
     }
   }
 }
