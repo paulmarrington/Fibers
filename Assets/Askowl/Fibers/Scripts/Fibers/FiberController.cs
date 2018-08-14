@@ -2,7 +2,6 @@
 using System.Collections;
 using Askowl.Fibers;
 using UnityEngine;
-using UnityEngine.Experimental.UIElements.StyleEnums;
 using Object = System.Object;
 
 namespace Askowl.Fibers {
