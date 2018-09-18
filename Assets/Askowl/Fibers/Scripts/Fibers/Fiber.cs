@@ -1,40 +1,52 @@
-﻿using System;
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 namespace Askowl.Fibers {
-  public class Fibers : LinkedList<Fiber> { }
+  using System;
 
+  /// <a href=""></a>
+  // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
-    public Fibers.Node Node;
-    public Fibers      UpdateQueue;
-    public Func<bool>  EndCondition;
+    /// <a href=""></a>
+    /// <inheritdoc />
+    public class Queue : LinkedList<Fiber> {
+      /// <inheritdoc />
+      public Queue(string name = null) : base(name) { }
+    }
 
-    private readonly Action<Fiber>[][] actions = new Action<Fiber>[100][];
+    /// <a href=""></a>
+    public delegate void Action(Fiber fiber);
+
+    /// <a href=""></a>
+    public LinkedList<Fiber>.Node Node;
+
+    /// <a href=""></a>
+    public Queue UpdateQueue;
+
+//    /// <a href=""></a>
+//    public Func<bool> EndCondition;
+    private readonly Action[][] actions = new Action[128][];
 
     private int currentAction, actionCount, currentActionList, actionListCount;
 
-    public Fiber Do(params Action<Fiber>[] moreActions) {
+    /// <a href=""></a>
+    public Fiber Do(params Action[] moreActions) {
       if (moreActions.Length == 0) return this;
 
       if (actionListCount >= actions.Length) {
-        throw new OverflowException($"More that {this.actions.Length} action lists for Fiber on {Node.Owner.Name}");
+        throw new OverflowException(
+          $"More that {actions.Length} action lists for Fiber on {Node.Owner.Name}");
       }
 
       actions[actionListCount++] = moreActions;
       return this;
     }
 
-    protected internal bool OnUpdate() {
-      var action = Next();
-
-      if (action == null) { }
-      return true;
-    }
-
-    private Action<Fiber> Next() {
+    /// <a href=""></a>
+    protected internal void OnUpdate() {
       if (currentAction >= actionCount) {
         if (currentActionList == actionListCount) {
-          Node.MoveTo(Recycled);
-          return null;
+          Node.Recycle();
+          return;
         }
 
         currentActionList = (currentActionList + 1) % actions.Length;
@@ -42,7 +54,7 @@ namespace Askowl.Fibers {
         actionCount       = actions[currentActionList].Length;
       }
 
-      return actions[currentActionList][currentAction++];
+      actions[currentActionList][currentAction++](this);
     }
   }
 }

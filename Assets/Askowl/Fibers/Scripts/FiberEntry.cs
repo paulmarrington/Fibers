@@ -1,27 +1,29 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using NUnit.Framework.Internal;
-using UnityEngine;
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 namespace Askowl.Fibers {
+  using UnityEngine;
+
+  // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
+    /// <a href=""></a>
     public static MonoBehaviour controller;
 
-    public static Fiber Start(params Action<Fiber>[] actions) => Start(OnUpdatesQueue, actions);
+    /// <a href=""></a>
+    public static Fiber Start(params Action[] actions) => Start(OnUpdatesQueue, actions);
 
-    public static Fiber OnUpdates(params Action<Fiber>[] actions) => Start(OnUpdatesQueue, actions);
+    /// <a href=""></a>
+    public static Fiber OnUpdates(params Action[] actions) => Start(OnUpdatesQueue, actions);
 
-    public static Fiber OnLateUpdates(params Action<Fiber>[] actions) => Start(OnLateUpdatesQueue, actions);
+    /// <a href=""></a>
+    public static Fiber OnLateUpdates(params Action[] actions) => Start(OnLateUpdatesQueue, actions);
 
-    public static Fiber OnFixedUpdates(params Action<Fiber>[] actions) => Start(OnFixedUpdatesQueue, actions);
+    /// <a href=""></a>
+    public static Fiber OnFixedUpdates(params Action[] actions) => Start(OnFixedUpdatesQueue, actions);
 
-    private static Fiber Start(Fibers updateQueue, params Action<Fiber>[] actions) {
+    private static Fiber Start(Queue updateQueue, params Action[] actions) {
       if (controller == null) controller = Components.Create<FiberController>("FiberController");
 
-      if (Recycled.Empty) Recycled.Add(new Fiber());
-
-      var node  = Recycled.MoveTo(updateQueue);
+      var node  = updateQueue.Fetch();
       var fiber = node.Item;
       fiber.UpdateQueue = updateQueue;
       fiber.Node        = node;
@@ -29,23 +31,31 @@ namespace Askowl.Fibers {
       return fiber;
     }
 
-    private static readonly  Fibers Recycled            = new Fibers {Name = "Idle Fibers"};
-    internal static readonly Fibers OnUpdatesQueue      = Enqueue("Update Fibers",      UpdateQueues);
-    internal static readonly Fibers OnLateUpdatesQueue  = Enqueue("LateUpdate Fibers",  LateUpdateQueues);
-    internal static readonly Fibers OnFixedUpdatesQueue = Enqueue("FixedUpdate Fibers", FixedUpdateQueues);
+    // Linked list of queues that are linked lists of fibers - accessed by FiberController OnUpdate
+    internal static readonly FiberQueues UpdateQueues      = new FiberQueues("Update Fibers");
+    internal static readonly FiberQueues LateUpdateQueues  = new FiberQueues("LateUpdate Fibers");
+    internal static readonly FiberQueues FixedUpdateQueues = new FiberQueues("FixedUpdate Fibers");
 
-    public static Fibers Enqueue(string name) => Enqueue(name, UpdateQueues);
+    // Linked list of fibers
+    internal static readonly Queue OnUpdatesQueue      = Enqueue("Update Fibers",      UpdateQueues);
+    internal static readonly Queue OnLateUpdatesQueue  = Enqueue("LateUpdate Fibers",  LateUpdateQueues);
+    internal static readonly Queue OnFixedUpdatesQueue = Enqueue("FixedUpdate Fibers", FixedUpdateQueues);
 
-    private static Fibers Enqueue(string name, FiberQueues fiberQueues) {
-      var fibers = new Fibers {Name = name};
+    /// <a href=""></a>
+    public static Queue Enqueue(string name) => Enqueue(name, UpdateQueues);
+
+    private static Queue Enqueue(string name, FiberQueues fiberQueues) {
+      var fibers = new Queue(name);
       fiberQueues.Add(fibers);
       return fibers;
     }
 
-    public class FiberQueues : LinkedList<Fibers> { }
-
-    internal static readonly FiberQueues UpdateQueues      = new FiberQueues {Name = "Update Fibers"};
-    internal static readonly FiberQueues LateUpdateQueues  = new FiberQueues {Name = "LateUpdate Fibers"};
-    internal static readonly FiberQueues FixedUpdateQueues = new FiberQueues {Name = "FixedUpdate Fibers"};
+    /// <a href=""></a>
+    /// <inheritdoc />
+    public class FiberQueues : LinkedList<Queue> {
+      /// <a href=""></a>
+      /// <inheritdoc />
+      public FiberQueues(string name = null) : base(name) { }
+    }
   }
 }

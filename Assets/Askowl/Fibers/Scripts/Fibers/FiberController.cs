@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections;
-using Askowl.Fibers;
-using UnityEngine;
-using Object = System.Object;
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 namespace Askowl.Fibers {
-  public partial class FiberController : MonoBehaviour {
+  using UnityEngine;
+
+  /// <a href=""></a>
+  /// <inheritdoc />
+  public class FiberController : MonoBehaviour {
     private void Start() { DontDestroyOnLoad(gameObject); }
 
     private void Update() { UpdateAllWorkers(Fiber.UpdateQueues); }
@@ -15,7 +15,9 @@ namespace Askowl.Fibers {
     private void FixedUpdate() { UpdateAllWorkers(Fiber.FixedUpdateQueues); }
 
     private static void UpdateAllWorkers(Fiber.FiberQueues queue) {
-      queue.Walk((fibersNode) => fibersNode.Item.Walk((node) => node.Item.OnUpdate()));
+      for (var fibers = queue.First; fibers != null; fibers = fibers.Next) {
+        for (var fiber = fibers.Item.First; fiber != null; fiber = fiber.Next) fiber.Item.OnUpdate();
+      }
     }
   }
 }

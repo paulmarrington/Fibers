@@ -1,35 +1,49 @@
-﻿namespace Askowl.Fibers {
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
+
+namespace Askowl.Fibers {
+  /// <a href=""></a>
   public class Worker<T> {
-    protected T     data;
+    /// <a href=""></a>
+    protected T data;
+
+    /// <a href=""></a>
     protected Fiber fiber;
 
-    protected Fibers updateQueue = Fiber.OnUpdatesQueue;
-//    protected Func<object, T> ParseData;
+    /// <a href=""></a>
+    protected Fiber.Queue UpdateQueue = Fiber.OnUpdatesQueue;
 
-    public void Prepare(string name, Fibers updateQueue = null) {
+    /// <a href=""></a>
+    public void Prepare(string name, Fiber.Queue updateQueue = null) {
       instance             = this;
-      instance.updateQueue = Fiber.OnUpdatesQueue;
+      instance.UpdateQueue = updateQueue ?? Fiber.OnUpdatesQueue;
 
-      fibers = new Fibers {
-        Name       = name,
-        //#TBD# InRange    = (t) => InRange(),
-        OnComplete = (t) => OnComplete()
-      };
+      queue = new Fiber.Queue(name) { CompareItem = CompareItem, DeactivateItem = DeactivateItem };
     }
 
-    protected virtual T    Parse(T naked)                => naked;
-    protected virtual T    Parse(T naked, object[] more) => (T) naked;
-    protected virtual bool InRange()    => true;
-    protected virtual void OnComplete() => fiber.Node.MoveTo(updateQueue);
+    /// <a href=""></a>
+    protected virtual void DeactivateItem(LinkedList<Fiber>.Node node) => node.MoveTo(UpdateQueue);
 
+    /// <a href=""></a>
+    protected virtual int CompareItem(LinkedList<Fiber>.Node left, LinkedList<Fiber>.Node right) => 0;
+
+    /// <a href=""></a>
+    protected virtual T Parse(T naked) => naked;
+
+    /// <a href=""></a>
+    protected virtual T Parse(T naked, object[] more) => naked;
+
+    /// <a href=""></a>
     public static Fiber Load(Fiber fiber, T data, params object[] parameters) {
       instance.data  = instance.Parse(data, parameters);
       instance.fiber = fiber;
-      fiber.Node.MoveTo(fibers);
+      fiber.Node.MoveTo(queue);
       return fiber;
     }
 
+    /// <a href=""></a>
     protected static Worker<T> instance;
-    private static   Fibers    fibers;
+
+    // ReSharper disable once StaticMemberInGenericType
+    private static Fiber.Queue queue;
   }
 }
