@@ -1,7 +1,8 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-namespace Askowl.Fibers {
+namespace Askowl {
   using System;
+  using System.Collections;
 
   /// <a href=""></a>
   // ReSharper disable once ClassNeverInstantiated.Global
@@ -39,6 +40,11 @@ namespace Askowl.Fibers {
 
       actions[actionListCount++] = moreActions;
       return this;
+    }
+
+    /// <a href=""></a>
+    public IEnumerator AsCoroutine() {
+      yield return null; //#TBD#//
     }
 
     /// <a href=""></a>

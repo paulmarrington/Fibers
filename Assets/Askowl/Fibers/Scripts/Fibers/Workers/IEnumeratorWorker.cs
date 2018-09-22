@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Askowl.Fibers {
   public partial class Fiber {
-    public Fiber Coroutine(Func<IEnumerator> coroutine, int framesBetweenChecks = 1) =>
+    public Fiber FIXME_Coroutine(Func<IEnumerator> coroutine, int framesBetweenChecks = 1) =>
       IEnumeratorWorker.Load(this, coroutine, framesBetweenChecks);
   }
 

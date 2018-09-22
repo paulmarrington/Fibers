@@ -1,6 +1,6 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-namespace Askowl.Fibers {
+namespace Askowl {
   using UnityEngine;
 
   /// <a href=""></a>

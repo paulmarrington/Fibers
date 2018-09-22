@@ -2,24 +2,24 @@
 
 using UnityEngine;
 
-namespace Askowl.Fibers {
+namespace Askowl {
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
     /// <a href=""></a>
     public Fiber WaitForSeconds(float seconds) => SecondsWorker.Load(fiber: this, data: seconds);
-  }
 
-  /// <a href=""></a>
-  /// <inheritdoc />
-  public class SecondsWorker : Worker<float> {
-    static SecondsWorker() { new SecondsWorker().Prepare("Fiber.WaitForSeconds Worker"); }
-
+    /// <a href=""></a>
     /// <inheritdoc />
-    protected override int CompareItem(LinkedList<Fiber>.Node left, LinkedList<Fiber>.Node right) =>
-      data.CompareTo(Time.time);
+    public class SecondsWorker : Worker<float> {
+      static SecondsWorker() { new SecondsWorker().Prepare("Fiber.WaitForSeconds Worker"); }
 
-    /// <a href="">Set `data` tom game end time in seconds</a>
-    /// <inheritdoc />
-    protected override float Parse(float seconds) => Time.time + seconds;
+      /// <inheritdoc />
+      protected override int CompareItem(LinkedList<Fiber>.Node left, LinkedList<Fiber>.Node right) =>
+        data.CompareTo(Time.time);
+
+      /// <a href="">Set `data` tom game end time in seconds</a>
+      /// <inheritdoc />
+      protected override float Parse(float seconds) => Time.time + seconds;
+    }
   }
 }
