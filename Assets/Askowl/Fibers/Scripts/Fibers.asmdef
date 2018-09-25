@@ -1,5 +1,5 @@
 {
-    "name": "Coroutines",
+    "name": "Fibers",
     "references": [
         "Able"
     ],

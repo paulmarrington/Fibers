@@ -2,7 +2,7 @@
     "name": "Tests",
     "references": [
         "Able",
-        "Coroutines"
+        "Fibers"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
