@@ -64,16 +64,16 @@ namespace Askowl {
 
     #region Fiber Instantiation
     /// <a href=""></a>
-    public static Fiber Start(Action[] actions) => Start(OnUpdatesQueue, actions);
+    public static Fiber Start => PlaceOnUpdateQueue(OnUpdatesQueue);
 
     /// <a href=""></a>
-    public static Fiber OnUpdates(Action[] actions) => Start(OnUpdatesQueue, actions);
+    public static Fiber OnUpdates(Action[] actions) => PlaceOnUpdateQueue(OnUpdatesQueue);
 
     /// <a href=""></a>
-    public static Fiber OnLateUpdates(Action[] actions) => Start(OnLateUpdatesQueue, actions);
+    public static Fiber OnLateUpdates(Action[] actions) => PlaceOnUpdateQueue(OnLateUpdatesQueue);
 
     /// <a href=""></a>
-    public static Fiber OnFixedUpdates(Action[] actions) => Start(OnFixedUpdatesQueue, actions);
+    public static Fiber OnFixedUpdates(Action[] actions) => PlaceOnUpdateQueue(OnFixedUpdatesQueue);
 
     /// <a href=""></a>
     private Queue.Node node;
@@ -81,14 +81,13 @@ namespace Askowl {
     /// <a href=""></a>
     public Queue UpdateQueue;
 
-    private static Fiber Start(Queue updateQueue, Action[] actions) {
+    private static Fiber PlaceOnUpdateQueue(Queue updateQueue) {
       if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
 
       var node  = updateQueue.Fetch();
       var fiber = node.Item;
       fiber.UpdateQueue = updateQueue;
       fiber.node        = node;
-      fiber.Do(actions);
       return fiber;
     }
     #endregion

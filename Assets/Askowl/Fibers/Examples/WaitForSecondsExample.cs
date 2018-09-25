@@ -29,7 +29,7 @@ namespace Askowl.Examples {
       start = Time.realtimeSinceStartup;
 
       yield return Fiber
-                  .Start(stepOne, stepTwo)
+                  .Start(stepOne).Do(stepTwo)
                   .WaitForSeconds(0.2f)
                   .Do(stepThree)
                   .AsCoroutine();
