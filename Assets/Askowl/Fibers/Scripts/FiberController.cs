@@ -8,16 +8,14 @@ namespace Askowl {
   public class FiberController : MonoBehaviour {
     private void Start() { DontDestroyOnLoad(gameObject); }
 
-    private void Update() { UpdateAllWorkers(Fiber.UpdateQueues); }
+    private void Update() { UpdateAllWorkers(Fiber.Queue.Update); }
 
-    private void LateUpdate() { UpdateAllWorkers(Fiber.LateUpdateQueues); }
+    private void LateUpdate() { UpdateAllWorkers(Fiber.Queue.LateUpdate); }
 
-    private void FixedUpdate() { UpdateAllWorkers(Fiber.FixedUpdateQueues); }
+    private void FixedUpdate() { UpdateAllWorkers(Fiber.Queue.FixedUpdate); }
 
-    private static void UpdateAllWorkers(Fiber.FiberQueues queue) {
-      for (var fibers = queue.First; fibers != null; fibers = fibers.Next) {
-        for (var fiber = fibers.Item.First; fiber != null; fiber = fiber.Next) fiber.Item.OnUpdate();
-      }
+    private static void UpdateAllWorkers(Fiber.Queue queue) {
+      for (var fiber = queue.First; fiber != null; fiber = fiber.Next) fiber.Item.OnUpdate(fiber.Item);
     }
   }
 }

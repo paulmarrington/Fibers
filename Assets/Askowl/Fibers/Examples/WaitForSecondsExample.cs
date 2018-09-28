@@ -6,8 +6,7 @@ namespace Askowl.Examples {
   using UnityEngine;
   using UnityEngine.TestTools;
 
-  /// Using <see cref="Askowl.Fibers" />
-  /// <inheritdoc />
+  /// Using <see cref="Askowl.Fibers" /><inheritdoc />
   public class WaitForSecondsExample : PlayModeTests {
     private string SceneName = "Fiber Examples";
     private float  start;
@@ -28,11 +27,11 @@ namespace Askowl.Examples {
 
       start = Time.realtimeSinceStartup;
 
-      yield return Fiber
-                  .Start(stepOne).Do(stepTwo)
-                  .WaitForSeconds(0.2f)
-                  .Do(stepThree)
-                  .AsCoroutine();
+      yield return Fiber.Start.Do(stepOne)
+                        .Do(stepTwo)
+                        .WaitForSeconds(0.2f)
+                        .Do(stepThree)
+                        .AsCoroutine();
 
       CheckElapsed(0.7f);
     }
@@ -42,9 +41,7 @@ namespace Askowl.Examples {
     public IEnumerator WaitForSecondsRealtime() {
       void stepOne(Fiber fiber) { fiber.WaitForSecondsRealtime(0.3f); }
 
-      void stepTwo(Fiber fiber) {
-        CheckElapsed(0.3f);
-      }
+      void stepTwo(Fiber fiber) { CheckElapsed(0.3f); }
 
       void stepThree(Fiber fiber) { CheckElapsed(0.5f); }
 
@@ -52,11 +49,12 @@ namespace Askowl.Examples {
 
       start = Time.realtimeSinceStartup;
 
-      yield return Fiber
-                  .Start(stepOne, stepTwo)
-                  .WaitForSecondsRealtime(0.2f)
-                  .Do(stepThree)
-                  .AsCoroutine();
+      yield return Fiber.Start
+                        .Do(stepOne)
+                        .Do(stepTwo)
+                        .WaitForSecondsRealtime(0.2f)
+                        .Do(stepThree)
+                        .AsCoroutine();
 
       CheckElapsed(0.5f);
     }
