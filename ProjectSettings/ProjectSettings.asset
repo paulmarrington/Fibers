@@ -487,7 +487,7 @@ PlayerSettings:
   webGLLinkerTarget: 0
   webGLThreadsSupport: 0
   scriptingDefineSymbols:
-    1: Coroutines;AskowlCoroutines
+    1: Coroutines;AskowlCoroutines;Fibers
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}

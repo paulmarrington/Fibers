@@ -7,12 +7,11 @@ namespace Askowl {
 
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber WaitForSeconds(float seconds) =>
-      SecondsWorker.Instance(fiber: this, data: Time.time + seconds);
+    public Fiber WaitForSeconds(float seconds) => SecondsWorker.Instance(fiber: this, data: Time.time + seconds);
 
     /// <a href=""></a>
-    public Fiber WaitForSecondsRealtime(float seconds) =>
-      RealtimeWorker.Instance(fiber: this, data: Time.realtimeSinceStartup + seconds);
+    public Fiber WaitForSecondsRealtime(float seconds) => RealtimeWorker.Instance(
+      fiber: this, data: Time.realtimeSinceStartup + seconds);
 
     private class SecondsWorker : BaseTimeWorker {
       protected override float TimeNow => Time.time;
@@ -29,7 +28,7 @@ namespace Askowl {
 
       public override bool NoMore => Data > TimeNow;
 
-      public override void Update() { Cache<BaseTimeWorker>.Dispose(this); }
+      public override void Step() { Unload(); }
     }
   }
 }

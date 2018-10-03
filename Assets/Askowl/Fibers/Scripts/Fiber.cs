@@ -15,47 +15,39 @@ namespace Askowl {
       internal static readonly Queue FixedUpdate = new Queue { Name = "Fixed Update Fibers" };
     }
 
-    #region Controller Support
     internal static MonoBehaviour Controller;
-    private         Action        onUpdate;
-
-    /// <a href="">Called by FiberController on each Unity Update to work through the list</a>
-//    public void OnUpdate() {
-//      if (actions.Empty) { node.Recycle(); }
-//      else { actions.Pull().Item(this); }
-//    }
-    #endregion
+    internal        Action        Update;
 
     #region Fiber Instantiation
     private LinkedList<Fiber>.Node node;
 
     /// <a href=""></a>
-    public static Fiber Start => OnUpdate(Queue.Update);
-    /// <a href=""></a>
-    public static Fiber OnUpdates => OnUpdate(Queue.Update);
-    /// <a href=""></a>
-    public static Fiber OnLateUpdates => OnUpdate(Queue.LateUpdate);
-    /// <a href=""></a>
-    public static Fiber OnFixedUpdates => OnUpdate(Queue.FixedUpdate);
-
-    private static Fiber OnUpdate(Queue updateQueue, Action action) {
-      if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
-
-      var node  = updateQueue.GetRecycledOrNew();
-      var fiber = node.Item;
-      fiber.node     = node;
-      fiber.onUpdate = action;
-      return fiber;
+    public static Fiber Start {
+      get {
+        var newFiber = StartWithAction(
+          (fiber) => {
+            if (fiber.action.Previous == null) {
+              fiber.node.Recycle();
+              fiber.Finished();
+            }
+            else { (fiber.action = fiber.action.Previous).Item(fiber); }
+          });
+        newFiber.actions = Cache<ActionList>.Instance;
+        newFiber.action  = null;
+        return newFiber;
+      }
     }
 
-    private static Fiber OnUpdate(Queue updateQueue) {
-      var newFiber = OnUpdate(
-        updateQueue, (fiber) => {
-          if (fiber.actions.Empty) { fiber.node.Recycle(); }
-          else { fiber.actions.Pull().Item(fiber); }
-        });
-      newFiber.actions = Cache<ActionList>.Instance;
-      return newFiber;
+    private static Fiber StartWithAction(Action action) {
+      if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
+
+      var node  = Queue.Update.GetRecycledOrNew();
+      var fiber = node.Item;
+      fiber.node        = node;
+      fiber.Update      = action;
+      fiber.repeatCount = -1;
+      fiber.from        = null;
+      return fiber;
     }
     #endregion
 
@@ -66,22 +58,84 @@ namespace Askowl {
     // ReSharper disable once ClassNeverInstantiated.Local
     private class ActionList : LinkedList<Action> { }
 
-    private ActionList actions;
+    private ActionList              actions;
+    private LinkedList<Action>.Node action;
 
     /// <a href=""></a>
-    public void Dispose() { Cache<ActionList>.Dispose(actions); }
+    public void Dispose() {
+      Cache<ActionList>.Dispose(actions);
+      idler?.Dispose();
+    }
     #endregion
 
     #region Things we can do with Fibers
     /// <a href=""></a>
-    public Fiber Do(Action action) {
-      actions.Add(action);
+    public Fiber OnUpdates => MoveTo(Queue.Update);
+    /// <a href=""></a>
+    public Fiber OnFixedUpdates => MoveTo(Queue.Update);
+    /// <a href=""></a>
+    public Fiber OnLateUpdates => MoveTo(Queue.Update);
+
+    private Fiber MoveTo(Queue queue) {
+      node.MoveTo(queue);
       return this;
     }
 
     /// <a href=""></a>
+    public Fiber Do(Action nextAction) {
+      actions.Add(nextAction);                    // No there is at least one on the list
+      Restart();                                  // In case were were idling
+      return (action == null) ? ToBegin() : this; // sets action and always return this
+    }
+
+    /// <a href=""></a>
+    public Fiber Begin {
+      get {
+        from = this;
+        return Start;
+      }
+    }
+
+    /// <a href=""></a>
+    public Fiber Break() => Finished();
+
+    /// <a href=""></a>
+    public Fiber End => Finished();
+    /// <a href=""></a>
+    public Fiber Again => ToBegin();
+
+    /// <a href=""></a>
+    public Fiber Repeat(int count) {
+      if (repeatCount        < 0) { repeatCount = count; }
+      else if (--repeatCount == 0) return Finished();
+
+      return ToBegin();
+    }
+
+    private Fiber ToBegin() {
+      action = actions.Last;
+      return this;
+    }
+
+    private Fiber Finished() => from ?? this;
+
+    private Fiber from;
+    private int   repeatCount;
+
+    /// <a href=""></a>
+    public Fiber Idle => Emitter(idler ?? (idler = Askowl.Emitter.Instance));
+
+    /// <a href=""></a>
+    public void Restart() => idler?.Fire();
+
+    private Emitter idler;
+
+    /// <a href=""></a>
     public IEnumerator AsCoroutine() {
-      yield return null; //#TBD#//
+      bool done;
+      void allDone(Fiber fiber) => done = true;
+      Do(allDone);
+      for (done = false; done != true;) yield return null;
     }
     #endregion
   }

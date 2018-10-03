@@ -15,7 +15,7 @@ namespace Askowl {
     private void FixedUpdate() { UpdateAllWorkers(Fiber.Queue.FixedUpdate); }
 
     private static void UpdateAllWorkers(Fiber.Queue queue) {
-      for (var fiber = queue.First; fiber != null; fiber = fiber.Next) fiber.Item.OnUpdate(fiber.Item);
+      for (var node = queue.First; node != null; node = node.Next) node.Item.Update(fiber: node.Item);
     }
   }
 }

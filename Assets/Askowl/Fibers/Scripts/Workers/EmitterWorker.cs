@@ -1,52 +1,65 @@
-﻿using System;
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-namespace Askowl.Fibers {
+// ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
+
+namespace Askowl {
+  using System;
+
   public partial class Fiber {
-    public Fiber Emitter(Emitter emitter) => EmitterWorker.Load(this, emitter);
+    /// <a href=""></a>
+    public Fiber Emitter(Emitter emitter) => EmitterWorker.Instance(this, emitter);
 
-    public Fiber Emitter<T>(Emitter<T> emitter, Action<T> actionOnResult) =>
-      EmitterWorker<T>.Load(this, emitter, actionOnResult);
-  }
+    /// <a href=""></a>
+    public Fiber Emitter<T>(Emitter<T> emitter, Action<T> actionOnResult) => EmitterWorker<T>.Instance(
+      this, new EmitterWorker<T>.Payload { Emitter = emitter, OnResult = actionOnResult });
 
-  public class EmitterWorker : Worker<Emitter> {
-    static EmitterWorker() { new EmitterWorker().Prepare("Fiber Emitter Worker"); }
+    private class EmitterWorker : Worker<Emitter> {
+      static EmitterWorker() => NeedsUpdates = false;
+      private            IDisposable subscription;
+      protected override void        Prepare() { subscription = Data.Subscribe(new Observer { Owner = this }); }
 
-    protected override Emitter Parse(Emitter emitter) {
-      emitter.Subscribe(new Observer {Worker = this});
-      return emitter;
-    }
-
-    private struct Observer : IObserver {
-      public EmitterWorker Worker;
-
-      public void OnNext() {
-        if (Worker.fiber.EndCondition()) OnCompleted();
+      private struct Observer : IObserver {
+        public EmitterWorker Owner;
+        public void          OnNext()      => Owner.Unload();
+        public void          OnCompleted() { }
       }
 
-      public void OnCompleted() { Worker.OnComplete(); }
-    }
-  }
-
-  public class EmitterWorker<T> : Worker<Emitter<T>> {
-    static EmitterWorker() { new EmitterWorker().Prepare("Fiber Emitter T Worker"); }
-
-    protected override Emitter<T> Parse(Emitter<T> emitter, object[] more) {
-      emitter.Subscribe(new Observer {Worker = this, actionOnResult = (Action<T>) more[0]});
-      return emitter;
+      public override void Dispose() {
+        subscription.Dispose();
+        base.Dispose();
+      }
     }
 
-    private struct Observer : IObserver<T> {
-      public EmitterWorker<T> Worker;
-      public Action<T>        actionOnResult;
-
-      public void OnError(Exception error) { }
-
-      public void OnNext(T value) {
-        actionOnResult(value);
-        if (Worker.fiber.EndCondition()) OnCompleted();
+    private class EmitterWorker<T> : Worker<EmitterWorker<T>.Payload> {
+      /// <a href=""></a>
+      public struct Payload {
+        internal Emitter<T> Emitter;
+        internal Action<T>  OnResult;
       }
 
-      public void OnCompleted() { Worker.OnComplete(); }
+      static EmitterWorker() => NeedsUpdates = false;
+      private IDisposable subscription;
+
+      protected override void Prepare() {
+        subscription = Data.Emitter.Subscribe(new Observer { Owner = this, ActionOnResult = Data.OnResult });
+      }
+
+      private struct Observer : IObserver<T> {
+        public EmitterWorker<T> Owner;
+        public Action<T>        ActionOnResult;
+        public void             OnError(Exception error) { }
+        public void             OnCompleted()            { }
+
+        public void OnNext(T value) {
+          ActionOnResult(value);
+          Owner.Unload();
+        }
+      }
+
+      public override void Dispose() {
+        subscription.Dispose();
+        base.Dispose();
+      }
     }
   }
 }

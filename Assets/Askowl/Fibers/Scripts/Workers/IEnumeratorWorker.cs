@@ -1,32 +1,51 @@
-﻿using System;
-using System.Collections;
-using UnityEngine;
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-namespace Askowl.Fibers {
+// ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
+
+namespace Askowl {
+  using System.Collections;
+  using UnityEngine;
+
   public partial class Fiber {
-    public Fiber FIXME_Coroutine(Func<IEnumerator> coroutine, int framesBetweenChecks = 1) =>
-      IEnumeratorWorker.Load(this, coroutine, framesBetweenChecks);
-  }
+    /// <a href=""></a>
+    public Fiber Coroutine(int framesBetweenChecks, IEnumerator enumerator) => IEnumeratorWorker.Instance(
+      this
+    , new IEnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = Time.frameCount + framesBetweenChecks });
 
-  public class IEnumeratorWorker : Worker<Func<IEnumerator>> {
-    private int  framesBetweenChecks; //#TBD#
-    private bool coroutineDone;
+    /// <a href=""></a>
+    public Fiber Coroutine(IEnumerator enumerator) => IEnumeratorWorker.Instance(
+      this, new IEnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = Time.frameCount });
 
-    static IEnumeratorWorker() { new IEnumeratorWorker().Prepare("Fiber.IEnumerator Worker"); }
+    /// <a href=""></a> <inheritdoc />
+    private class IEnumeratorWorker : Worker<IEnumeratorWorker.Payload> {
+      /// <a href=""></a>
+      public struct Payload {
+        internal IEnumerator Enumerator;
+        internal int         SkipFrames;
+      }
 
-    protected override Func<IEnumerator> Parse(Func<IEnumerator> data, object[] more) {
-      framesBetweenChecks = (int) more[0];
-      coroutineDone       = false;
-      Fiber.controller.StartCoroutine(Wrapper());
-      return data;
+      protected override int CompareTo(Worker other) =>
+        Data.SkipFrames.CompareTo((other as IEnumeratorWorker)?.Data.SkipFrames);
+
+      public override bool NoMore => Data.SkipFrames > Time.frameCount;
+
+      public override void Step() {
+        if (Data.Enumerator.MoveNext()) {
+          switch (Data.Enumerator.Current) {
+            case IEnumerator coroutine:
+              Fiber.Coroutine(coroutine);
+              break;
+            case float seconds:
+              Fiber.WaitForSeconds(seconds);
+              break;
+            case int frames:
+              Fiber.SkipFrames(frames);
+              break;
+            case null: break; // step again on next frame
+          }
+        }
+        else { Unload(); }
+      }
     }
-
-    IEnumerator Wrapper() {
-      yield return data();
-
-      coroutineDone = true;
-    }
-
-    protected override bool InRange() => !coroutineDone;
   }
 }

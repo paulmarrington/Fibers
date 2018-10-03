@@ -1,16 +1,27 @@
-﻿using System;
-using UnityEngine;
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-namespace Askowl.Fibers {
+// ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
+
+namespace Askowl {
+  using UnityEngine;
+
   public partial class Fiber {
-    public Fiber NextFrame()                  => FrameWorker.Load(fiber: this, data: 0);
-    public Fiber NextUpdate()                 => FrameWorker.Load(fiber: this, data: 0);
-    public Fiber SkipFrames(int framesToSkip) => FrameWorker.Load(fiber: this, data: framesToSkip);
-  }
+    /// <a href=""></a>
+    public Fiber NextFrame => FrameWorker.Instance(fiber: this, Time.frameCount);
 
-  public class FrameWorker : Worker<int> {
-    static FrameWorker() { new FrameWorker().Prepare("Fiber.Frame Worker"); }
-    protected override int  Parse(int framesToSkip) => Time.frameCount + framesToSkip;
-    protected override bool InRange()               => data >= Time.frameCount;
+    /// <a href=""></a>
+    public Fiber NextUpdate => FrameWorker.Instance(fiber: this, Time.frameCount);
+
+    /// <a href=""></a>
+    public Fiber SkipFrames(int framesToSkip) =>
+      FrameWorker.Instance(fiber: this, data: Time.frameCount + framesToSkip);
+
+    private class FrameWorker : Worker<int> {
+      protected override int CompareTo(Worker other) => Data.CompareTo((other as FrameWorker)?.Data);
+
+      public override bool NoMore => Data > Time.frameCount;
+
+      public override void Step() { Unload(); }
+    }
   }
 }
