@@ -15,8 +15,9 @@ namespace Askowl {
       internal static readonly Queue FixedUpdate = new Queue { Name = "Fixed Update Fibers" };
     }
 
-    internal static MonoBehaviour Controller;
-    internal        Action        Update;
+    private static  Log.EventRecorder debug = Log.Events("Debug");
+    internal static MonoBehaviour     Controller;
+    internal        Action            Update;
 
     #region Fiber Instantiation
     private LinkedList<Fiber>.Node node;
@@ -26,6 +27,7 @@ namespace Askowl {
       get {
         var newFiber = StartWithAction(
           (fiber) => {
+            if (fiber.action.Previous != null) debug(fiber.action.Previous.Item.GetType().Name);
             if (fiber.action.Previous == null) {
               fiber.node.Recycle();
               fiber.Finished();
@@ -38,13 +40,13 @@ namespace Askowl {
       }
     }
 
-    private static Fiber StartWithAction(Action action) {
+    private static Fiber StartWithAction(Action onUpdate) {
       if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
 
       var node  = Queue.Update.GetRecycledOrNew();
       var fiber = node.Item;
       fiber.node        = node;
-      fiber.Update      = action;
+      fiber.Update      = onUpdate;
       fiber.repeatCount = -1;
       fiber.from        = null;
       return fiber;
@@ -83,6 +85,7 @@ namespace Askowl {
 
     /// <a href=""></a>
     public Fiber Do(Action nextAction) {
+      debug("DO");
       actions.Add(nextAction);                    // No there is at least one on the list
       Restart();                                  // In case were were idling
       return (action == null) ? ToBegin() : this; // sets action and always return this
