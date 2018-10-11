@@ -12,41 +12,33 @@ namespace Askowl.Examples {
     /// <a href=""></a>
     [UnityTest] public IEnumerator BeginEnd() {
       counter = 0;
-      yield return Fiber.Start.Do(IncrementCounter).Begin.Do(IncrementCounter).End.AsCoroutine();
+      yield return Fiber.Start.Do(IncrementCounter).Begin.Do(IncrementCounter).End.Do(IncrementCounter).AsCoroutine();
 
-      Assert.AreEqual(2, counter);
+      Assert.AreEqual(3, counter);
     }
 
     /// <a href=""></a>
     [UnityTest] public IEnumerator NoBegin() {
       counter = 0;
-      yield return Fiber.Start.Do(IncrementCounter).End.AsCoroutine();
+      yield return Fiber.Start.Do(IncrementCounter).End.Do(IncrementCounter).AsCoroutine();
 
-      Assert.AreEqual(1, counter);
-    }
-
-    /// <a href=""></a>
-    [UnityTest] public IEnumerator BeginBreakEnd() {
-      counter = 0;
-      yield return Fiber.Start.Begin.Break().Do(IncrementCounter).End.AsCoroutine();
-
-      Assert.AreEqual(1, counter); // Doesn't do one after `Break`
+      Assert.AreEqual(2, counter);
     }
 
     /// <a href=""></a>
     [UnityTest] public IEnumerator BeginBreakAgain() {
       counter = 0;
-      yield return Fiber.Start.Begin.Do(IncrementCounter).Do(Escape).Again.AsCoroutine();
+      yield return Fiber.Start.Begin.Do(IncrementCounter).Do(Escape).Again.Do(IncrementCounter).AsCoroutine();
 
-      Assert.AreEqual(6, counter);
+      Assert.AreEqual(7, counter);
     }
 
     /// <a href=""></a>
     [UnityTest] public IEnumerator BeginRepeat() {
       counter = 0;
-      yield return Fiber.Start.Begin.Do(IncrementCounter).Do(Escape).Again.AsCoroutine();
+      yield return Fiber.Start.Begin.Do(IncrementCounter).Repeat(5).Do(IncrementCounter).AsCoroutine();
 
-      Assert.AreEqual(6, counter);
+      Assert.AreEqual(7, counter);
     }
 
     private void Escape(Fiber fiber) {

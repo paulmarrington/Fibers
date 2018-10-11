@@ -23,7 +23,10 @@ namespace Askowl.Examples {
   }
 
   internal class CustomTypeWorkerClass : Fiber.Worker<int> {
-    public static bool Disposed;
+    public static      CustomTypeWorkerClass Instance  => Cache<CustomTypeWorkerClass>.Instance;
+    protected override void                  Recycle() { Cache<CustomTypeWorkerClass>.Dispose(this); }
+    public static      bool                  Disposed;
+    protected override void                  Prepare() { }
 
     protected override int CompareTo(Fiber.Worker other) => Data.CompareTo((other as CustomTypeWorkerClass)?.Data);
 
@@ -53,6 +56,12 @@ namespace Askowl.Examples {
 
   /// <a href=""></a> <inheritdoc />
   public class CustomObjectWorkerClass : Fiber.Worker<CustomObjectWorkerClass.Payload> {
+    public static      CustomObjectWorkerClass Instance  => Cache<CustomObjectWorkerClass>.Instance;
+    protected override void                    Recycle() { Cache<CustomObjectWorkerClass>.Dispose(this); }
+
+    /// <a href=""></a> <inheritdoc />
+    protected override void Prepare() { }
+
     /// <a href=""></a>
     public struct Payload {
       /// <a href=""></a>
@@ -63,7 +72,8 @@ namespace Askowl.Examples {
   /// <a href=""></a>
   public static class CustomFiberExtensions {
     /// <a href=""></a>
-    public static Fiber CustomTypeWorker(this Fiber fiber, int seed) => CustomTypeWorkerClass.Instance(fiber, seed);
+    public static Fiber CustomTypeWorker(this Fiber fiber, int seed) =>
+      CustomTypeWorkerClass.Instance.Load(fiber, seed);
 
     /// <a href=""></a>
     public static Fiber UpdateCustomType(this Fiber fiber) {
@@ -76,6 +86,6 @@ namespace Askowl.Examples {
 
     /// <a href=""></a>
     public static Fiber CustomObjectWorker(this Fiber fiber, CustomObjectWorkerClass.Payload payload) =>
-      CustomObjectWorkerClass.Instance(fiber, payload);
+      CustomObjectWorkerClass.Instance.Load(fiber, payload);
   }
 }

@@ -13,9 +13,9 @@ namespace Askowl.Examples {
     /// <a href=""></a>
     [UnityTest] public IEnumerator WaitForFrames() {
       int start = frame = Time.frameCount;
-      yield return Fiber.Start.NextFrame.Do(Check).NextUpdate.Do(Check).SkipFrames(5).Do(Check).AsCoroutine();
+      yield return Fiber.Start.Do(Check).SkipFrames(5).Do(Check).AsCoroutine();
 
-      Assert.AreEqual(start + 7, Time.frameCount);
+      Assert.AreEqual(start + 6, Time.frameCount);
     }
 
     private void Check(Fiber fiber) {

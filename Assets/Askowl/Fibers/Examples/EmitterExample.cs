@@ -13,11 +13,14 @@ namespace Askowl.Examples {
     private int          emitterFiredValue;
     private Fiber        idlingFiber;
 
+    private void Wait200ms(Fiber fiber) => fiber.WaitForSecondsRealtime(0.2f);
+
     /// <a href=""></a>
     [UnityTest] public IEnumerator IdleRestart() {
       emitterFired = false;
       idlingFiber  = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
-      yield return Fiber.Start.WaitForSecondsRealtime(0.2f).NextUpdate.Do(RestartIdle).AsCoroutine();
+      Assert.IsFalse(emitterFired);
+      yield return Fiber.Start.Do(Wait200ms).Do(RestartIdle).AsCoroutine();
 
       Assert.IsTrue(emitterFired);
     }
@@ -26,13 +29,18 @@ namespace Askowl.Examples {
     [UnityTest] public IEnumerator IdleDo() {
       emitterFired = false;
       idlingFiber  = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
-      yield return Fiber.Start.WaitForSecondsRealtime(0.2f).AsCoroutine();
+
+      Log.Debug($"Idling {idlingFiber} {emitterFired}"); //#DM#//
 
       Assert.IsFalse(emitterFired);
-      idlingFiber.Do(Nothing);
-      yield return Fiber.Start.NextFrame.AsCoroutine();
+      yield return Fiber.Start.Do(Wait200ms).AsCoroutine();
+      Log.Debug($"After 200ms {emitterFired}"); //#DM#//
 
-      Assert.IsTrue(emitterFired);
+      Assert.IsFalse(emitterFired); // telling another Fiber to do something leaves others idling
+//      idlingFiber.Restart.Do(Nothing);        // telling it to do something kicks it out of idling
+//      yield return Fiber.Start.AsCoroutine(); // another way to wait for a frame
+//
+//      Assert.IsTrue(emitterFired);
     }
 
     /// <a href=""></a>
@@ -40,7 +48,7 @@ namespace Askowl.Examples {
       using (emitter = Askowl.Emitter.Instance) {
         emitterFired = false;
         Fiber.Start.Emitter(emitter).Do(SetEmitterFiredFlag);
-        yield return Fiber.Start.WaitForSecondsRealtime(0.2f).NextUpdate.Do(Fire).AsCoroutine();
+        yield return Fiber.Start.WaitForSecondsRealtime(0.2f).Do(Fire).AsCoroutine();
 
         Assert.IsTrue(emitterFired);
       }
@@ -51,7 +59,7 @@ namespace Askowl.Examples {
       using (emitterInt = Emitter<int>.Instance) {
         emitterFiredValue = 0;
         Fiber.Start.Emitter(emitterInt, SetEmitterInt);
-        yield return Fiber.Start.WaitForSecondsRealtime(0.2f).NextUpdate.Do(FireInt).AsCoroutine();
+        yield return Fiber.Start.WaitForSecondsRealtime(0.2f).Do(FireInt).AsCoroutine();
 
         Assert.AreEqual(22, emitterFiredValue);
       }
@@ -61,7 +69,7 @@ namespace Askowl.Examples {
     private void SetEmitterFiredFlag(Fiber fiber) => emitterFired = true;
     private void Fire(Fiber                fiber) => emitter.Fire();
     private void FireInt(Fiber             fiber) => emitterInt.Fire(22);
-    private void RestartIdle(Fiber         fiber) => idlingFiber.Restart();
+    private void RestartIdle(Fiber         fiber) => idlingFiber.Restart.Do(Nothing);
     private void Nothing(Fiber             fiber) { }
   }
 }

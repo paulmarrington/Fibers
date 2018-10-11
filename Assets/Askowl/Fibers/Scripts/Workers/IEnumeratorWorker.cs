@@ -8,21 +8,28 @@ namespace Askowl {
 
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber Coroutine(int framesBetweenChecks, IEnumerator enumerator) => IEnumeratorWorker.Instance(
-      this
-    , new IEnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = Time.frameCount + framesBetweenChecks });
+    public Fiber Coroutine(int framesBetweenChecks, IEnumerator enumerator) =>
+      IEnumeratorWorker.Instance.Load(this, LoadPayload(enumerator, framesBetweenChecks));
+
+    private static IEnumeratorWorker.Payload LoadPayload(IEnumerator e, int f) => new IEnumeratorWorker.Payload {
+      Enumerator = e, SkipFrames = Time.frameCount + f
+    };
 
     /// <a href=""></a>
-    public Fiber Coroutine(IEnumerator enumerator) => IEnumeratorWorker.Instance(
-      this, new IEnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = Time.frameCount });
+    public Fiber Coroutine(IEnumerator enumerator) => IEnumeratorWorker.Instance.Load(this, LoadPayload(enumerator, 0));
 
     /// <a href=""></a> <inheritdoc />
     private class IEnumeratorWorker : Worker<IEnumeratorWorker.Payload> {
+      public static      IEnumeratorWorker Instance  => Cache<IEnumeratorWorker>.Instance;
+      protected override void              Recycle() { Cache<IEnumeratorWorker>.Dispose(this); }
+
       /// <a href=""></a>
       public struct Payload {
         internal IEnumerator Enumerator;
         internal int         SkipFrames;
       }
+
+      protected override void Prepare() { }
 
       protected override int CompareTo(Worker other) =>
         Data.SkipFrames.CompareTo((other as IEnumeratorWorker)?.Data.SkipFrames);
@@ -44,7 +51,7 @@ namespace Askowl {
             case null: break; // step again on next frame
           }
         }
-        else { Unload(); }
+        else { Dispose(); }
       }
     }
   }

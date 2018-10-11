@@ -35,10 +35,7 @@ namespace Askowl {
     public Worker worker;
 
     /// <a href=""></a> <inheritdoc />
-    public class Worker<T> : Worker {
-      /// <a href=""></a>
-      public static Fiber Instance(Fiber fiber, T data) => Cache<Worker<T>>.Instance.Load(fiber, data);
-
+    public abstract class Worker<T> : Worker {
       /// <a href=""></a>
       public T Data;
 
@@ -48,19 +45,26 @@ namespace Askowl {
         Data         = data;
         Fiber        = fiber;
         fiber.worker = this;
-        Fiber.node.MoveTo(Queue);
         Prepare();
+        fiber.node.MoveTo(Queue);
+
+        Log.Debug($"Load {From}=>{Queue}"); //#DM#//
+
         return fiber;
       }
 
       /// <a href=""></a>
-      protected virtual void Prepare() { }
+      protected abstract void Prepare();
 
       /// <a href=""></a>
-      protected void Unload() { Cache<Worker<T>>.Dispose(this); }
+      protected abstract void Recycle();
 
       /// <a href=""></a> <inheritdoc />
-      public override void Dispose() { Fiber.node.MoveTo(From); }
+      public override void Dispose() {
+        Log.Debug($"Dispose {Queue}=>{From}"); //#DM#//
+        Fiber.node.MoveTo(From);
+        Recycle();
+      }
 
       // ReSharper disable once StaticMemberInGenericType
       internal static readonly Queue Queue = new Queue { CompareItem = Compare, DeactivateItem = Deactivate };
@@ -72,8 +76,13 @@ namespace Askowl {
         if (!NeedsUpdates) return;
 
         StartWithAction(
-          (fiber) => {
-            for (var node = Queue.First; node?.Item.worker.NoMore == false; node = node.Next) node.Item.worker.Step();
+          fiber => {
+            var node = Queue.First;
+            while (node?.Item.worker.NoMore == false) {
+              var next = node.Next; // save in case Step() calls dispose
+              node.Item.worker.Step();
+              node = next;
+            }
           });
       }
     }

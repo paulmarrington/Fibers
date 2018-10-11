@@ -15,9 +15,9 @@ namespace Askowl {
       internal static readonly Queue FixedUpdate = new Queue { Name = "Fixed Update Fibers" };
     }
 
-    private static  Log.EventRecorder debug = Log.Events("Debug");
-    internal static MonoBehaviour     Controller;
-    internal        Action            Update;
+//    private static  Log.EventRecorder debug = Log.Events("Debug");
+    internal static MonoBehaviour Controller;
+    internal        Action        Update;
 
     #region Fiber Instantiation
     private LinkedList<Fiber>.Node node;
@@ -26,15 +26,14 @@ namespace Askowl {
     public static Fiber Start {
       get {
         var newFiber = StartWithAction(
-          (fiber) => {
-            if (fiber.action.Previous != null) debug(fiber.action.Previous.Item.GetType().Name);
-            if (fiber.action.Previous == null) {
-              fiber.node.Recycle();
-              fiber.Finished();
-            }
+          fiber => {
+            if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
             else { (fiber.action = fiber.action.Previous).Item(fiber); }
           });
         newFiber.actions = Cache<ActionList>.Instance;
+
+        Log.Debug($"Start {newFiber.actions}"); //#DM#//
+
         newFiber.action  = null;
         return newFiber;
       }
@@ -45,16 +44,15 @@ namespace Askowl {
 
       var node  = Queue.Update.GetRecycledOrNew();
       var fiber = node.Item;
-      fiber.node        = node;
-      fiber.Update      = onUpdate;
-      fiber.repeatCount = -1;
-      fiber.from        = null;
+      fiber.node   = node;
+      fiber.Update = onUpdate;
+      fiber.caller = null;
       return fiber;
     }
     #endregion
 
     #region Fiber Action Support
-    /// <a href=""></a>
+    /// <a href=""></a> //#TBD#//
     public delegate void Action(Fiber fiber);
 
     // ReSharper disable once ClassNeverInstantiated.Local
@@ -66,7 +64,9 @@ namespace Askowl {
     /// <a href=""></a>
     public void Dispose() {
       Cache<ActionList>.Dispose(actions);
-      idler?.Dispose();
+      waitingOnCallee?.Dispose();
+//      idler?.Dispose();
+      repeats.Dispose();
     }
     #endregion
 
@@ -85,58 +85,96 @@ namespace Askowl {
 
     /// <a href=""></a>
     public Fiber Do(Action nextAction) {
-      debug("DO");
-      actions.Add(nextAction);                    // No there is at least one on the list
-      Restart();                                  // In case were were idling
-      return (action == null) ? ToBegin() : this; // sets action and always return this
+      actions.Add(nextAction);    // No there is at least one on the list
+      return PrepareFiberToRun(); // sets action and always return this
     }
+
+    private Fiber PrepareFiberToRun() {
+      // add an empty start action so that action.Previous points to last valid action
+      if (action == null) action = actions.Add(DoNothing).MoveToEndOf(actions);
+      return this;
+    }
+
+    private static void DoNothing(Fiber fiber) { }
 
     /// <a href=""></a>
     public Fiber Begin {
       get {
-        from = this;
-        return Start;
+        Fiber parent = PrepareFiberToRun().StartCall;
+        Fiber child  = Start;
+        child.caller = parent;
+        return child;
       }
     }
 
     /// <a href=""></a>
-    public Fiber Break() => Finished();
+//    public Fiber Idle => (idler = Begin).caller; // put fiber on call waiting queue
+    public Fiber Idle {
+      get {
+        Log.Debug($"Idle {actions}"); //#DM#//
+        idler = Begin;
+        return this;
+      }
+    }
 
     /// <a href=""></a>
-    public Fiber End => Finished();
+    public Fiber Restart => idler?.EndCallee(ReturnFromCallee);
+
     /// <a href=""></a>
-    public Fiber Again => ToBegin();
+    public void Break() => action = actions.First;
+
+    /// <a href=""></a>
+    public Fiber End => EndCallee(ReturnFromCallee);
+
+    /// <a href=""></a>
+    public Fiber Again => EndCallee(ToBegin);
 
     /// <a href=""></a>
     public Fiber Repeat(int count) {
-      if (repeatCount        < 0) { repeatCount = count; }
-      else if (--repeatCount == 0) return Finished();
-
-      return ToBegin();
+      repeats.Start(-(count + 1));
+      return EndCallee(Repeat);
     }
 
-    private Fiber ToBegin() {
-      action = actions.Last;
-      return this;
+    private Fiber EndCallee(Action endCalleeAction) {
+      Do(endCalleeAction);
+      return caller ?? this;
     }
 
-    private Fiber Finished() => from ?? this;
+    private static void Repeat(Fiber fiber) {
+      fiber.repeats.Next();
+      if (!fiber.repeats.Reached(0)) { ToBegin(fiber); } // loop back
+      else { ReturnFromCallee(fiber); }                  // all done
+    }
 
-    private Fiber from;
-    private int   repeatCount;
+    private static void ToBegin(Fiber fiber) => fiber.action = fiber.actions.Last;
 
-    /// <a href=""></a>
-    public Fiber Idle => Emitter(idler ?? (idler = Askowl.Emitter.Instance));
+    private Fiber       caller, idler;
+    private CounterFifo repeats = CounterFifo.Instance;
 
-    /// <a href=""></a>
-    public void Restart() => idler?.Fire();
+//    /// <a href=""></a>
+//    public Fiber Idle => Emitter(idler ?? (idler = Askowl.Emitter.Instance));
 
-    private Emitter idler;
+    private Fiber StartCall => Emitter(waitingOnCallee ?? (waitingOnCallee = Askowl.Emitter.Instance));
+
+//    private Emitter idler;
+    private Emitter waitingOnCallee;
+
+    private static void ReturnFromCallee(Fiber callee) {
+      Log.Debug($"ReturnFromCallee {callee.actions}, caller={callee.caller?.actions}"); //#DM#//
+
+      var caller = callee.caller;
+      if (caller == null) return;
+
+      caller.waitingOnCallee.Fire();
+      callee.node.Recycle();
+    }
 
     /// <a href=""></a>
     public IEnumerator AsCoroutine() {
       bool done;
+
       void allDone(Fiber fiber) => done = true;
+
       Do(allDone);
       for (done = false; done != true;) yield return null;
     }

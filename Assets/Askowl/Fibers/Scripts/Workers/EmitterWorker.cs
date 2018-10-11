@@ -7,21 +7,29 @@ namespace Askowl {
 
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber Emitter(Emitter emitter) => EmitterWorker.Instance(this, emitter);
+    public Fiber Emitter(Emitter emitter) => EmitterWorker.Instance.Load(this, emitter);
 
     /// <a href=""></a>
-    public Fiber Emitter<T>(Emitter<T> emitter, Action<T> actionOnResult) => EmitterWorker<T>.Instance(
-      this, new EmitterWorker<T>.Payload { Emitter = emitter, OnResult = actionOnResult });
+    public Fiber Emitter<T>(Emitter<T> emitter, Action<T> actionOnResult) {
+      var emitterWorker = EmitterWorker<T>.Instance;
+      return emitterWorker.Load(this, new EmitterWorker<T>.Payload { Emitter = emitter, OnResult = actionOnResult });
+    }
 
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;
-      private            IDisposable subscription;
-      protected override void        Prepare() { subscription = Data.Subscribe(new Observer { Owner = this }); }
+
+      public static      EmitterWorker Instance  => Cache<EmitterWorker>.Instance;
+      protected override void          Recycle()  => Cache<EmitterWorker>.Dispose(this);
+      protected override void          Prepare() => subscription = Data.Subscribe(new Observer { Owner = this });
+
+      private IDisposable subscription;
 
       private struct Observer : IObserver {
         public EmitterWorker Owner;
-        public void          OnNext()      => Owner.Unload();
-        public void          OnCompleted() { }
+
+        public void OnNext() => Owner.Dispose();
+
+        public void OnCompleted() { }
       }
 
       public override void Dispose() {
@@ -38,11 +46,14 @@ namespace Askowl {
       }
 
       static EmitterWorker() => NeedsUpdates = false;
+
+      public static   EmitterWorker<T> Instance => Cache<EmitterWorker<T>>.Instance;
+      protected override void             Recycle() { Cache<EmitterWorker<T>>.Dispose(this); }
+
       private IDisposable subscription;
 
-      protected override void Prepare() {
-        subscription = Data.Emitter.Subscribe(new Observer { Owner = this, ActionOnResult = Data.OnResult });
-      }
+      protected override void Prepare() => subscription =
+        Data.Emitter.Subscribe(new Observer { Owner = this, ActionOnResult = Data.OnResult });
 
       private struct Observer : IObserver<T> {
         public EmitterWorker<T> Owner;
@@ -52,7 +63,7 @@ namespace Askowl {
 
         public void OnNext(T value) {
           ActionOnResult(value);
-          Owner.Unload();
+          Owner.Recycle();
         }
       }
 

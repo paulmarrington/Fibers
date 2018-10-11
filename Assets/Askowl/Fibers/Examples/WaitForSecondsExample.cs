@@ -1,5 +1,7 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+// ReSharper disable InconsistentNaming
+
 namespace Askowl.Examples {
   using System.Collections;
   using NUnit.Framework;
@@ -8,57 +10,47 @@ namespace Askowl.Examples {
 
   /// Using <see cref="Askowl.Fibers" /><inheritdoc />
   public class WaitForSecondsExample : PlayModeTests {
-    private string SceneName = "Fiber Examples";
-    private float  start;
+    private float start;
 
     /// <a href="">Using <see cref="Fiber.WaitForSeconds"/></a>
-    [UnityTest]
-    public IEnumerator WaitForSeconds() {
-      void stepOne(Fiber fiber) { fiber.WaitForSeconds(0.3f); }
-
-      void stepTwo(Fiber fiber) {
-        CheckElapsed(0.3f);
-        fiber.WaitForSeconds(0.1f);
+    [UnityTest] public IEnumerator WaitForSeconds() {
+      void checkElapsed(float seconds) {
+        Assert.AreEqual(seconds + Time.deltaTime, Time.timeSinceLevelLoad - start, 0.05f);
+        start = Time.timeSinceLevelLoad + Time.deltaTime;
       }
 
-      void stepThree(Fiber fiber) { CheckElapsed(0.7f); }
+      void setStartTime(Fiber fiber) => start = Time.timeSinceLevelLoad;
+      void wait300ms(Fiber    fiber) => fiber.WaitForSeconds(0.3f);
+      void check300ms(Fiber   fiber) => checkElapsed(0.3f);
 
-      yield return LoadScene(SceneName);
-
-      start = Time.realtimeSinceStartup;
-
-      yield return Fiber.Start.Do(stepOne)
-                        .Do(stepTwo)
-                        .WaitForSeconds(0.2f)
-                        .Do(stepThree)
+      yield return Fiber.Start
+                        .Begin
+                        .Do(setStartTime)
+                        .Do(wait300ms)
+                        .Do(check300ms)
+                        .Repeat(5)
                         .AsCoroutine();
-
-      CheckElapsed(0.7f);
     }
 
     /// <a href="">Using <see cref="Fiber.WaitForSecondsRealtime"/></a>
-    [UnityTest]
-    public IEnumerator WaitForSecondsRealtime() {
-      void stepOne(Fiber fiber) { fiber.WaitForSecondsRealtime(0.3f); }
+    [UnityTest] public IEnumerator WaitForSecondsRealtime() {
+      void checkElapsed(float seconds) {
+        Assert.AreEqual(seconds + Time.unscaledDeltaTime, Time.realtimeSinceStartup - start, 0.05f);
+        start = Time.realtimeSinceStartup;
+      }
 
-      void stepTwo(Fiber fiber) { CheckElapsed(0.3f); }
-
-      void stepThree(Fiber fiber) { CheckElapsed(0.5f); }
-
-      yield return LoadScene(SceneName);
-
-      start = Time.realtimeSinceStartup;
+      void setStartTime(Fiber fiber) => start = Time.realtimeSinceStartup;
+      void check300ms(Fiber   fiber) => checkElapsed(0.3f);
 
       yield return Fiber.Start
-                        .Do(stepOne)
-                        .Do(stepTwo)
-                        .WaitForSecondsRealtime(0.2f)
-                        .Do(stepThree)
+                        .Begin
+                        .Do(setStartTime)
+                        .WaitForSecondsRealtime(0.3f)
+                        .Do(check300ms)
+                        .Repeat(5)
                         .AsCoroutine();
 
-      CheckElapsed(0.5f);
+      checkElapsed(0);
     }
-
-    private void CheckElapsed(float seconds) { Assert.AreEqual(seconds, Time.realtimeSinceStartup - start, 0.01f); }
   }
 }
