@@ -20,7 +20,7 @@ namespace Askowl {
 
       public static      EmitterWorker Instance  => Cache<EmitterWorker>.Instance;
       protected override void          Recycle()  => Cache<EmitterWorker>.Dispose(this);
-      protected override void          Prepare() => subscription = Data.Subscribe(new Observer { Owner = this });
+      protected override void          Prepare() => subscription = Seed.Subscribe(new Observer { Owner = this });
 
       private IDisposable subscription;
 
@@ -53,7 +53,7 @@ namespace Askowl {
       private IDisposable subscription;
 
       protected override void Prepare() => subscription =
-        Data.Emitter.Subscribe(new Observer { Owner = this, ActionOnResult = Data.OnResult });
+        Seed.Emitter.Subscribe(new Observer { Owner = this, ActionOnResult = Seed.OnResult });
 
       private struct Observer : IObserver<T> {
         public EmitterWorker<T> Owner;

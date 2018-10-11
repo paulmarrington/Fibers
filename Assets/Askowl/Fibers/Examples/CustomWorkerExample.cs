@@ -15,7 +15,7 @@ namespace Askowl.Examples {
       using (var fiber = Fiber.Start) {
         yield return fiber.CustomTypeWorker(3).UpdateCustomType().UpdateCustomType().AsCoroutine();
 
-        Assert.AreEqual(5, ((CustomTypeWorkerClass) fiber.worker).Data);
+        Assert.AreEqual(5, ((CustomTypeWorkerClass) fiber.worker).Seed);
         Assert.AreEqual(5, fiber.GetCustomValue());
       }
       Assert.IsTrue(CustomTypeWorkerClass.Disposed);
@@ -28,14 +28,14 @@ namespace Askowl.Examples {
     public static      bool                  Disposed;
     protected override void                  Prepare() { }
 
-    protected override int CompareTo(Fiber.Worker other) => Data.CompareTo((other as CustomTypeWorkerClass)?.Data);
+    protected override int CompareTo(Fiber.Worker other) => Seed.CompareTo((other as CustomTypeWorkerClass)?.Seed);
 
-    public override bool NoMore => Data >= 5;
+    public override bool NoMore => Seed >= 5;
 
-    public override void Step() { Data++; }
+    public override void Step() { Seed++; }
 
     public override void Dispose() {
-      Data = 0;
+      Seed = 0;
       base.Dispose();
     }
 
@@ -48,7 +48,7 @@ namespace Askowl.Examples {
         var seed = new CustomObjectWorkerClass.Payload { A = 5, B = 6 };
         yield return fiber.CustomObjectWorker(seed).AsCoroutine();
 
-        payload = ((CustomObjectWorkerClass) fiber.worker).Data;
+        payload = ((CustomObjectWorkerClass) fiber.worker).Seed;
       }
       Assert.AreEqual(11, payload.A + payload.B);
     }
@@ -77,12 +77,12 @@ namespace Askowl.Examples {
 
     /// <a href=""></a>
     public static Fiber UpdateCustomType(this Fiber fiber) {
-      ((CustomTypeWorkerClass) fiber.worker).Data++;
+      ((CustomTypeWorkerClass) fiber.worker).Seed++;
       return fiber;
     }
 
     /// <a href=""></a>
-    public static int GetCustomValue(this Fiber fiber) => ((CustomTypeWorkerClass) fiber.worker).Data;
+    public static int GetCustomValue(this Fiber fiber) => ((CustomTypeWorkerClass) fiber.worker).Seed;
 
     /// <a href=""></a>
     public static Fiber CustomObjectWorker(this Fiber fiber, CustomObjectWorkerClass.Payload payload) =>

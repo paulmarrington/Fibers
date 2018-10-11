@@ -29,18 +29,13 @@ namespace Askowl.Examples {
     [UnityTest] public IEnumerator IdleDo() {
       emitterFired = false;
       idlingFiber  = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
-
-      Log.Debug($"Idling {idlingFiber} {emitterFired}"); //#DM#//
-
       Assert.IsFalse(emitterFired);
       yield return Fiber.Start.Do(Wait200ms).AsCoroutine();
-      Log.Debug($"After 200ms {emitterFired}"); //#DM#//
+      Assert.IsFalse(emitterFired);           // telling another Fiber to do something leaves others idling
+      idlingFiber.Restart.Do(Nothing);        // telling it to do something kicks it out of idling
+      yield return Fiber.Start.AsCoroutine(); // another way to wait for a frame
 
-      Assert.IsFalse(emitterFired); // telling another Fiber to do something leaves others idling
-//      idlingFiber.Restart.Do(Nothing);        // telling it to do something kicks it out of idling
-//      yield return Fiber.Start.AsCoroutine(); // another way to wait for a frame
-//
-//      Assert.IsTrue(emitterFired);
+      Assert.IsTrue(emitterFired);
     }
 
     /// <a href=""></a>

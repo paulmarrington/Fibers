@@ -26,7 +26,7 @@ namespace Askowl.Examples {
       yield return Fiber.Start
                         .Begin
                         .Do(setStartTime)
-                        .Do(wait300ms)
+                        .WaitForSeconds(0.3f)
                         .Do(check300ms)
                         .Repeat(5)
                         .AsCoroutine();

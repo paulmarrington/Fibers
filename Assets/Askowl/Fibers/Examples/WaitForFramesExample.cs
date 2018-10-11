@@ -8,19 +8,21 @@ namespace Askowl.Examples {
 
   /// <a href=""></a>
   public class WaitForFramesExample {
-    private int frame;
-
     /// <a href=""></a>
     [UnityTest] public IEnumerator WaitForFrames() {
-      int start = frame = Time.frameCount;
-      yield return Fiber.Start.Do(Check).SkipFrames(5).Do(Check).AsCoroutine();
+      var frame = 0;
+      void reset(Fiber _) => frame = Time.frameCount + 1;
 
-      Assert.AreEqual(start + 6, Time.frameCount);
-    }
+      void check(int expected) {
+        int elapsedFrames = Time.frameCount - frame;
+        Assert.AreEqual(expected, elapsedFrames);
+        frame = Time.frameCount;
+      }
 
-    private void Check(Fiber fiber) {
-      Assert.Greater(Time.frameCount, frame);
-      frame = Time.frameCount;
+      void check0(Fiber  _) => check(0);
+      void check10(Fiber _) => check(10);
+
+      yield return Fiber.Start.Do(reset).Do(check0).SkipFrames(10).Do(check10).AsCoroutine();
     }
   }
 }

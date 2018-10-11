@@ -31,9 +31,6 @@ namespace Askowl {
             else { (fiber.action = fiber.action.Previous).Item(fiber); }
           });
         newFiber.actions = Cache<ActionList>.Instance;
-
-        Log.Debug($"Start {newFiber.actions}"); //#DM#//
-
         newFiber.action  = null;
         return newFiber;
       }
@@ -108,17 +105,15 @@ namespace Askowl {
     }
 
     /// <a href=""></a>
-//    public Fiber Idle => (idler = Begin).caller; // put fiber on call waiting queue
-    public Fiber Idle {
+    public Fiber Idle => PrepareFiberToRun().StartCall;
+
+    /// <a href=""></a>
+    public Fiber Restart {
       get {
-        Log.Debug($"Idle {actions}"); //#DM#//
-        idler = Begin;
+        waitingOnCallee.Fire();
         return this;
       }
     }
-
-    /// <a href=""></a>
-    public Fiber Restart => idler?.EndCallee(ReturnFromCallee);
 
     /// <a href=""></a>
     public void Break() => action = actions.First;
@@ -136,6 +131,8 @@ namespace Askowl {
     }
 
     private Fiber EndCallee(Action endCalleeAction) {
+      void nothing(Fiber _) { }
+      if (actions.Count <= 2) Do(nothing); // otherwise termination gets in before activation
       Do(endCalleeAction);
       return caller ?? this;
     }
@@ -160,8 +157,6 @@ namespace Askowl {
     private Emitter waitingOnCallee;
 
     private static void ReturnFromCallee(Fiber callee) {
-      Log.Debug($"ReturnFromCallee {callee.actions}, caller={callee.caller?.actions}"); //#DM#//
-
       var caller = callee.caller;
       if (caller == null) return;
 
@@ -179,5 +174,8 @@ namespace Askowl {
       for (done = false; done != true;) yield return null;
     }
     #endregion
+
+    /// <a href=""></a> //#TBD#// <inheritdoc />
+    public override string ToString() => $"{node.Owner.Name}-{actions.Name}";
   }
 }

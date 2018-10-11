@@ -37,20 +37,21 @@ namespace Askowl {
     /// <a href=""></a> <inheritdoc />
     public abstract class Worker<T> : Worker {
       /// <a href=""></a>
-      public T Data;
+      public T Seed;
 
-      /// <a href=""></a>
+      /// <a href="">Load happens when we are building up a list of actions</a>
       public Fiber Load(Fiber fiber, T data) {
-        From         = (Queue) fiber.node.Owner;
-        Data         = data;
-        Fiber        = fiber;
+        From  = (Queue) fiber.node.Owner;
+        Seed  = data;
+        Fiber = fiber;
+        // ActivateWorker happens when we are executing all the actions in sequence
+        return fiber.Do(ActivateWorker);
+      }
+
+      private void ActivateWorker(Fiber fiber) {
         fiber.worker = this;
         Prepare();
         fiber.node.MoveTo(Queue);
-
-        Log.Debug($"Load {From}=>{Queue}"); //#DM#//
-
-        return fiber;
       }
 
       /// <a href=""></a>
@@ -61,7 +62,6 @@ namespace Askowl {
 
       /// <a href=""></a> <inheritdoc />
       public override void Dispose() {
-        Log.Debug($"Dispose {Queue}=>{From}"); //#DM#//
         Fiber.node.MoveTo(From);
         Recycle();
       }

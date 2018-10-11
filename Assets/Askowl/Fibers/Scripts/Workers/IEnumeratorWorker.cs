@@ -32,13 +32,13 @@ namespace Askowl {
       protected override void Prepare() { }
 
       protected override int CompareTo(Worker other) =>
-        Data.SkipFrames.CompareTo((other as IEnumeratorWorker)?.Data.SkipFrames);
+        Seed.SkipFrames.CompareTo((other as IEnumeratorWorker)?.Seed.SkipFrames);
 
-      public override bool NoMore => Data.SkipFrames > Time.frameCount;
+      public override bool NoMore => Seed.SkipFrames > Time.frameCount;
 
       public override void Step() {
-        if (Data.Enumerator.MoveNext()) {
-          switch (Data.Enumerator.Current) {
+        if (Seed.Enumerator.MoveNext()) {
+          switch (Seed.Enumerator.Current) {
             case IEnumerator coroutine:
               Fiber.Coroutine(coroutine);
               break;
