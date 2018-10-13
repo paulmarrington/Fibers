@@ -8,18 +8,20 @@ namespace Askowl {
 
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber Coroutine(int framesBetweenChecks, IEnumerator enumerator) =>
-      IEnumeratorWorker.Instance.Load(this, LoadPayload(enumerator, framesBetweenChecks));
-
-    private static IEnumeratorWorker.Payload LoadPayload(IEnumerator e, int f) => new IEnumeratorWorker.Payload {
-      Enumerator = e, SkipFrames = Time.frameCount + f
-    };
+    public Fiber Coroutine(IEnumerator enumerator) => LoadWithPayload(enumerator, 0);
 
     /// <a href=""></a>
-    public Fiber Coroutine(IEnumerator enumerator) => IEnumeratorWorker.Instance.Load(this, LoadPayload(enumerator, 0));
+    public Fiber Coroutine(int framesBetweenChecks, IEnumerator enumerator) =>
+      LoadWithPayload(enumerator, framesBetweenChecks);
+
+    private Fiber LoadWithPayload(IEnumerator enumerator, int skipFrames) {
+      var payload = new IEnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = skipFrames };
+      return IEnumeratorWorker.Instance.Load(this, payload);
+    }
 
     /// <a href=""></a> <inheritdoc />
     private class IEnumeratorWorker : Worker<IEnumeratorWorker.Payload> {
+//      static IEnumeratorWorker() => NeedsUpdates = false;
       public static      IEnumeratorWorker Instance  => Cache<IEnumeratorWorker>.Instance;
       protected override void              Recycle() { Cache<IEnumeratorWorker>.Dispose(this); }
 
@@ -29,14 +31,18 @@ namespace Askowl {
         internal int         SkipFrames;
       }
 
+      private int nextStepFrame;
+
       protected override void Prepare() { }
 
       protected override int CompareTo(Worker other) =>
         Seed.SkipFrames.CompareTo((other as IEnumeratorWorker)?.Seed.SkipFrames);
 
-      public override bool NoMore => Seed.SkipFrames > Time.frameCount;
-
       public override void Step() {
+        if (Time.frameCount < nextStepFrame) return;
+
+        nextStepFrame = Time.frameCount + Seed.SkipFrames;
+
         if (Seed.Enumerator.MoveNext()) {
           switch (Seed.Enumerator.Current) {
             case IEnumerator coroutine:
@@ -46,7 +52,10 @@ namespace Askowl {
               Fiber.WaitForSeconds(seconds);
               break;
             case int frames:
-              Fiber.SkipFrames(frames);
+              nextStepFrame = Time.frameCount + frames;
+              break;
+            case YieldInstruction yieldInstruction:
+              Log.Error($"YieldInstruction {Seed.Enumerator.Current.GetType()} only works with Unity coroutines");
               break;
             case null: break; // step again on next frame
           }

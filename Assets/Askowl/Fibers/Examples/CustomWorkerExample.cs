@@ -15,7 +15,7 @@ namespace Askowl.Examples {
       using (var fiber = Fiber.Start) {
         yield return fiber.CustomTypeWorker(3).UpdateCustomType().UpdateCustomType().AsCoroutine();
 
-        Assert.AreEqual(5, ((CustomTypeWorkerClass) fiber.worker).Seed);
+        Assert.AreEqual(5, ((CustomTypeWorkerClass) fiber.Workers.Top).Seed);
         Assert.AreEqual(5, fiber.GetCustomValue());
       }
       Assert.IsTrue(CustomTypeWorkerClass.Disposed);
@@ -48,7 +48,7 @@ namespace Askowl.Examples {
         var seed = new CustomObjectWorkerClass.Payload { A = 5, B = 6 };
         yield return fiber.CustomObjectWorker(seed).AsCoroutine();
 
-        payload = ((CustomObjectWorkerClass) fiber.worker).Seed;
+        payload = ((CustomObjectWorkerClass) fiber.Workers.Top).Seed;
       }
       Assert.AreEqual(11, payload.A + payload.B);
     }
@@ -77,12 +77,12 @@ namespace Askowl.Examples {
 
     /// <a href=""></a>
     public static Fiber UpdateCustomType(this Fiber fiber) {
-      ((CustomTypeWorkerClass) fiber.worker).Seed++;
+      ((CustomTypeWorkerClass) fiber.Workers.Top).Seed++;
       return fiber;
     }
 
     /// <a href=""></a>
-    public static int GetCustomValue(this Fiber fiber) => ((CustomTypeWorkerClass) fiber.worker).Seed;
+    public static int GetCustomValue(this Fiber fiber) => ((CustomTypeWorkerClass) fiber.Workers.Top).Seed;
 
     /// <a href=""></a>
     public static Fiber CustomObjectWorker(this Fiber fiber, CustomObjectWorkerClass.Payload payload) =>

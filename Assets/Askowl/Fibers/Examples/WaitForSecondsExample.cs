@@ -20,7 +20,6 @@ namespace Askowl.Examples {
       }
 
       void setStartTime(Fiber fiber) => start = Time.timeSinceLevelLoad;
-      void wait300ms(Fiber    fiber) => fiber.WaitForSeconds(0.3f);
       void check300ms(Fiber   fiber) => checkElapsed(0.3f);
 
       yield return Fiber.Start

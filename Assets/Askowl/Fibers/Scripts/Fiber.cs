@@ -27,14 +27,18 @@ namespace Askowl {
       get {
         var newFiber = StartWithAction(
           fiber => {
+            fiber.running = true;
             if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
             else { (fiber.action = fiber.action.Previous).Item(fiber); }
           });
         newFiber.actions = Cache<ActionList>.Instance;
         newFiber.action  = null;
+        newFiber.running = false;
         return newFiber;
       }
     }
+
+    private bool running;
 
     private static Fiber StartWithAction(Action onUpdate) {
       if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
@@ -151,7 +155,12 @@ namespace Askowl {
 //    /// <a href=""></a>
 //    public Fiber Idle => Emitter(idler ?? (idler = Askowl.Emitter.Instance));
 
-    private Fiber StartCall => Emitter(waitingOnCallee ?? (waitingOnCallee = Askowl.Emitter.Instance));
+    private Fiber StartCall {
+      get {
+        running = false;
+        return Emitter(waitingOnCallee ?? (waitingOnCallee = Askowl.Emitter.Instance));
+      }
+    }
 
 //    private Emitter idler;
     private Emitter waitingOnCallee;
@@ -160,6 +169,7 @@ namespace Askowl {
       var caller = callee.caller;
       if (caller == null) return;
 
+      callee.caller = null;
       caller.waitingOnCallee.Fire();
       callee.node.Recycle();
     }
