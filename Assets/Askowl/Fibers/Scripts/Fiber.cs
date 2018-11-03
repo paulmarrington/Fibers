@@ -29,13 +29,21 @@ namespace Askowl {
           fiber => {
             fiber.running = true;
             if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
-            else { (fiber.action = fiber.action.Previous).Item(fiber); }
+            else { fiber.SetAction("Call", fiber.action.Previous).Item(fiber); }
           });
         newFiber.actions = Cache<ActionList>.Instance;
-        newFiber.action  = null;
+        newFiber.SetAction("Start", null);
         newFiber.running = false;
         return newFiber;
       }
+    }
+
+    private LinkedList<Action>.Node SetAction(string reason, LinkedList<Action>.Node nextAction) {
+      action = nextAction;
+      #if UNITY_EDITOR
+      if (Debugging) Log.Debug($"Fiber: {reason,10} for {this}");
+      #endif
+      return action;
     }
 
     private bool running;
@@ -64,9 +72,9 @@ namespace Askowl {
 
     /// <a href=""></a>
     public void Dispose() {
+      actions.Dispose();
       Cache<ActionList>.Dispose(actions);
       waitingOnCallee?.Dispose();
-//      idler?.Dispose();
       repeats.Dispose();
     }
     #endregion
@@ -85,18 +93,25 @@ namespace Askowl {
     }
 
     /// <a href=""></a>
-    public Fiber Do(Action nextAction) {
-      actions.Add(nextAction);    // No there is at least one on the list
+    public Fiber Do(Action nextAction, string actionsText = "Actions") {
+      actions.Add(nextAction); // Now there is at least one on the list
+      #if UNITY_EDITOR
+      if (Debugging) Log.Debug($"Fiber: {actionsText,10} for {this}");
+      #endif
       return PrepareFiberToRun(); // sets action and always return this
     }
 
+    /// <a href=""></a> //#TBD#//
+    public static bool Debugging = false;
+
     private Fiber PrepareFiberToRun() {
       // add an empty start action so that action.Previous points to last valid action
-      if (action == null) action = actions.Add(DoNothing).MoveToEndOf(actions);
+      if (action == null) SetAction("PrepToRun", actions.Add(start).MoveToEndOf(actions));
       return this;
     }
 
-    private static void DoNothing(Fiber fiber) { }
+    // ReSharper disable once InconsistentNaming
+    private static void start(Fiber fiber) { }
 
     /// <a href=""></a>
     public Fiber Begin {
@@ -120,7 +135,7 @@ namespace Askowl {
     }
 
     /// <a href=""></a>
-    public void Break() => action = actions.First;
+    public void Break() => SetAction("Break", actions.First);
 
     /// <a href=""></a>
     public Fiber End => EndCallee(ReturnFromCallee);
@@ -135,8 +150,8 @@ namespace Askowl {
     }
 
     private Fiber EndCallee(Action endCalleeAction) {
-      void nothing(Fiber _) { }
-      if (actions.Count <= 2) Do(nothing); // otherwise termination gets in before activation
+      void endCalleeFiller(Fiber _) { }
+      if (actions.Count <= 2) Do(endCalleeFiller); // otherwise termination gets in before activation
       Do(endCalleeAction);
       return caller ?? this;
     }
@@ -147,13 +162,10 @@ namespace Askowl {
       else { ReturnFromCallee(fiber); }                  // all done
     }
 
-    private static void ToBegin(Fiber fiber) => fiber.action = fiber.actions.Last;
+    private static void ToBegin(Fiber fiber) => fiber.SetAction("To-Being", fiber.actions.Last);
 
     private Fiber       caller, idler;
     private CounterFifo repeats = CounterFifo.Instance;
-
-//    /// <a href=""></a>
-//    public Fiber Idle => Emitter(idler ?? (idler = Askowl.Emitter.Instance));
 
     private Fiber StartCall {
       get {
@@ -162,30 +174,46 @@ namespace Askowl {
       }
     }
 
-//    private Emitter idler;
     private Emitter waitingOnCallee;
 
     private static void ReturnFromCallee(Fiber callee) {
       var caller = callee.caller;
-      if (caller == null) return;
-
-      callee.caller = null;
-      caller.waitingOnCallee.Fire();
+      if (caller != null) {
+        callee.caller = null;
+        caller.waitingOnCallee.Fire();
+      }
       callee.node.Recycle();
     }
 
     /// <a href=""></a>
     public IEnumerator AsCoroutine() {
       bool done;
-
-      void allDone(Fiber fiber) => done = true;
-
-      Do(allDone);
+      void yield(Fiber fiber) => done = true;
+      Do(yield);
       for (done = false; done != true;) yield return null;
     }
     #endregion
 
+    #region Debugging
     /// <a href=""></a> //#TBD#// <inheritdoc />
-    public override string ToString() => $"{node.Owner.Name}-{actions.Name}";
+    public override string ToString() {
+      string worker = Workers.Empty ? "none" : $"{Workers.Top}";
+      return $"{ActionNames} (Worker: {worker} // Owner: {node.Owner.Name} // Home: {node.Home.Name})";
+    }
+
+    private string ActionNames {
+      get {
+        var array = new string[actions.Count];
+        // ReSharper disable once LocalVariableHidesMember
+        var node = actions.Last;
+
+        for (var idx = 0; idx < array.Length; node = node.Previous, idx++) {
+          string name = node.Item.Method.Name;
+          array[idx] = (node == action) ? $"[{name}]" : name;
+        }
+        return Csv.ToString(array);
+      }
+    }
+    #endregion
   }
 }

@@ -13,7 +13,6 @@ namespace Askowl {
     public Fiber WaitForSecondsRealtime(float seconds) => RealtimeWorker.Instance.Load(fiber: this, seconds);
 
     private class SecondsWorker : BaseTimeWorker {
-//      protected override void           Prepare() => EndTime = Seed + Time.time - 2 * Time.deltaTime;
       protected override void Prepare() { EndTime = Seed + Time.time - 2 * Time.deltaTime; }
 
       public static      BaseTimeWorker Instance  => Cache<SecondsWorker>.Instance;

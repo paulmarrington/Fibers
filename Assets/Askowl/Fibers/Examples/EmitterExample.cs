@@ -13,26 +13,30 @@ namespace Askowl.Examples {
     private int          emitterFiredValue;
     private Fiber        idlingFiber;
 
-    private void Wait200ms(Fiber fiber) => fiber.WaitForSecondsRealtime(0.2f);
+    private void Wait300ms(Fiber fiber) => fiber.WaitForSecondsRealtime(0.3f);
 
     /// <a href=""></a>
     [UnityTest] public IEnumerator IdleRestart() {
-      emitterFired = false;
-      idlingFiber  = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
-      Assert.IsFalse(emitterFired);
-      yield return Fiber.Start.Do(Wait200ms).Do(RestartIdle).AsCoroutine();
+      using (var idleFiber = Fiber.Start) {
+        emitterFired = false;
+        idlingFiber  = idleFiber.Idle.Do(SetEmitterFiredFlag);
+        Assert.IsFalse(emitterFired);
+        using (var restartFiber = Fiber.Start) yield return restartFiber.Do(Wait300ms).Do(RestartIdle).AsCoroutine();
 
-      Assert.IsTrue(emitterFired);
+        Assert.IsTrue(emitterFired);
+      }
     }
 
     /// <a href=""></a>
     [UnityTest] public IEnumerator IdleDo() {
-      emitterFired = false;
-      idlingFiber  = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
+      Fiber.Debugging = true;
+      emitterFired    = false;
+      var idleFiber = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
       Assert.IsFalse(emitterFired);
-      yield return Fiber.Start.Do(Wait200ms).AsCoroutine();
+      yield return Fiber.Start.Do(Wait300ms).AsCoroutine();
+
       Assert.IsFalse(emitterFired);           // telling another Fiber to do something leaves others idling
-      idlingFiber.Restart.Do(Nothing);        // telling it to do something kicks it out of idling
+      idleFiber.Restart.Do(Nothing);          // telling it to do something kicks it out of idling
       yield return Fiber.Start.AsCoroutine(); // another way to wait for a frame
 
       Assert.IsTrue(emitterFired);

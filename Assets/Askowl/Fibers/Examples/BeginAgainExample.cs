@@ -18,14 +18,6 @@ namespace Askowl.Examples {
     }
 
     /// <a href=""></a>
-    [UnityTest] public IEnumerator NoBegin() {
-      counter = 0;
-      yield return Fiber.Start.Do(IncrementCounter).End.Do(IncrementCounter).AsCoroutine();
-
-      Assert.AreEqual(2, counter);
-    }
-
-    /// <a href=""></a>
     [UnityTest] public IEnumerator BeginBreakAgain() {
       counter = 0;
       yield return Fiber.Start.Begin.Do(IncrementCounter).Do(Escape).Again.Do(IncrementCounter).AsCoroutine();

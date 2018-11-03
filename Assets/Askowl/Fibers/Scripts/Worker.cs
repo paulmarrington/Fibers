@@ -17,7 +17,12 @@ namespace Askowl {
       /// <a href=""></a>
       internal Queue From;
 
-      private protected static void Deactivate(LinkedList<Fiber>.Node node) => node.MoveTo(node.Item.Workers.Top.From);
+//      private protected static void Deactivate(LinkedList<Fiber>.Node node) => node.MoveTo(node.Item.Workers.Top.From);
+      private protected static void Deactivate(LinkedList<Fiber>.Node node) {
+        Log.Debug($"{node.Item.Workers.Top} => {node.Item.Workers.Top.From}"); //#DM#//
+
+        node.MoveTo(node.Item.Workers.Top.From);
+      }
 
       private protected static int Compare(LinkedList<Fiber>.Node left, LinkedList<Fiber>.Node right) =>
         left.Item.Workers.Top.CompareTo(right.Item.Workers.Top);
@@ -33,18 +38,9 @@ namespace Askowl {
 
       /// <a href=""></a> //#TBD#//
       public string Name;
-      private protected static string Uid;
 
       /// <a href=""></a> //#TBD#//
       public override string ToString() => Name;
-
-      /// <a href=""></a> //#TBD#//
-      protected void ActivateWorker(Fiber fiber) {
-        fiber.Workers.Push(this);
-        From = (Queue) fiber.node.Owner;
-        Prepare();
-        fiber.node.MoveTo(Queue);
-      }
 
       /// <a href=""></a>
       protected abstract void Prepare();
@@ -54,9 +50,39 @@ namespace Askowl {
 
       /// <a href="">Deactivate worker</a> <inheritdoc />
       public virtual void Dispose() {
+        Log.Debug($"Dispose {this} => {From}"); //#DM#//
+
         Fiber.node.MoveTo(From);
         Fiber.Workers.Pop();
         Recycle();
+      }
+    }
+
+    /// <a href=""></a> <inheritdoc />
+    public abstract class Worker<T> : Worker {
+      /// <a href=""></a>
+      public T Seed;
+
+      /// <a href="">Load happens when we are building up a list of actions</a>
+      public Fiber Load(Fiber fiber, T data) {
+        Name  = $"{GetType()}-{Uid += 1}";
+        Seed  = data;
+        Fiber = fiber;
+        // ActivateWorker happens when we are executing all the actions in sequence
+        if (fiber.running) { ActivateWorker(fiber); }
+        else { fiber.Do(ActivateWorker, Name); }
+        return fiber;
+      }
+
+      private protected static int Uid;
+
+      /// <a href=""></a> //#TBD#//
+      protected void ActivateWorker(Fiber fiber) {
+        fiber.Workers.Push(this);
+        From = (Queue) fiber.node.Owner;
+        Prepare();
+        Log.Debug($"ActivateWorker {fiber} => {Queue}"); //#DM#//
+        fiber.node.MoveTo(Queue);
       }
 
       // ReSharper disable once StaticMemberInGenericType
@@ -77,23 +103,6 @@ namespace Askowl {
               node = next;
             }
           });
-      }
-    }
-
-    /// <a href=""></a> <inheritdoc />
-    public abstract class Worker<T> : Worker {
-      /// <a href=""></a>
-      public T Seed;
-
-      /// <a href="">Load happens when we are building up a list of actions</a>
-      public Fiber Load(Fiber fiber, T data) {
-        Name  = $"{GetType()}-{Uid += 1}";
-        Seed  = data;
-        Fiber = fiber;
-        // ActivateWorker happens when we are executing all the actions in sequence
-        if (fiber.running) { ActivateWorker(fiber); }
-        else { fiber.Do(ActivateWorker); }
-        return fiber;
       }
     }
   }
