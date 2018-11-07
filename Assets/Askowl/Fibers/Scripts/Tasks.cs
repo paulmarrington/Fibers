@@ -1,30 +1,15 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-#if (!NET_2_0 && !NET_2_0_SUBSET)
-using System;
-using System.Collections;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using UnityEngine;
-
-#endif
-
 namespace Askowl {
-  using JetBrains.Annotations;
+  using System;
+  using System.Collections;
+  using System.Collections.ObjectModel;
+  using System.Threading.Tasks;
+  using UnityEngine;
 
-  /// <summary>
-  /// Convert Task activities to Coroutines to behave well with the rest of Unity
-  /// </summary>
-  /// <remarks><a href="http://coroutines.marrington.net#tasks">More...</a></remarks>
-  public sealed class Tasks {
-#if (!NET_2_0 && !NET_2_0_SUBSET)
-    /// <summary>
-    /// WaitFor is a coroutines step that will complete when the task is complete.
-    /// </summary>
-    /// <remarks><a href="http://coroutines.marrington.net#taskswaitfor">More...</a></remarks>
-    /// <param name="task">C# Task</param>
-    /// <param name="error">Action to call with a single string parameter on an error in the task</param>
-    /// <returns>Coroutine enabler</returns>
+  /// <a href="">Convert Task activities to Coroutines to behave well with the rest of Unity</a> //#TBD#//
+  public static class Tasks {
+    /// <a href="">WaitFor is a coroutines step that will complete when the task is complete</a> //#TBD#//
     public static IEnumerator WaitFor(Task task, Action<string> error = null) {
       Task done = null;
       task.ContinueWith(result => done = result);
@@ -38,7 +23,8 @@ namespace Askowl {
       if (task.IsCanceled) {
         SendError(error, "Cancelled");
         return true;
-      } else if (task.IsFaulted) {
+      }
+      else if (task.IsFaulted) {
         string fault = "";
 
         // ReSharper disable once PossibleNullReferenceException
@@ -59,15 +45,7 @@ namespace Askowl {
       error(message);
     }
 
-    /// <summary>
-    /// WaitFor is a coroutines step that will complete when Task&lt;T> is complete.
-    /// </summary>
-    /// <remarks><a href="http://coroutines.marrington.net#taskswaitfort">More...</a></remarks>
-    /// <param name="task">C# Task</param>
-    /// <param name="action">Action to call on success, passing result in T</param>
-    /// <param name="error">Action to call with a single string parameter on an error in the task</param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns>Coroutine enabler</returns>
+    /// <a href="">WaitFor is a coroutines step that will complete when <see cref="Task{TResult}"/> is complete.</a> //#TBD#//
     public static IEnumerator
       WaitFor<T>(Task<T> task, Action<T> action, Action<string> error = null) {
       Task<T> done = null;
@@ -77,6 +55,5 @@ namespace Askowl {
 
       if (!SendError(error, done)) action(done.Result);
     }
-#endif
   }
 }

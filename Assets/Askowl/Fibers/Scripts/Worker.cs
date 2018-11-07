@@ -18,11 +18,7 @@ namespace Askowl {
       internal Queue From;
 
 //      private protected static void Deactivate(LinkedList<Fiber>.Node node) => node.MoveTo(node.Item.Workers.Top.From);
-      private protected static void Deactivate(LinkedList<Fiber>.Node node) {
-        Log.Debug($"{node.Item.Workers.Top} => {node.Item.Workers.Top.From}"); //#DM#//
-
-        node.MoveTo(node.Item.Workers.Top.From);
-      }
+      private protected static void Deactivate(LinkedList<Fiber>.Node node) => node.MoveTo(node.Item.Workers.Top.From);
 
       private protected static int Compare(LinkedList<Fiber>.Node left, LinkedList<Fiber>.Node right) =>
         left.Item.Workers.Top.CompareTo(right.Item.Workers.Top);
@@ -50,8 +46,6 @@ namespace Askowl {
 
       /// <a href="">Deactivate worker</a> <inheritdoc />
       public virtual void Dispose() {
-        Log.Debug($"Dispose {this} => {From}"); //#DM#//
-
         Fiber.node.MoveTo(From);
         Fiber.Workers.Pop();
         Recycle();
@@ -81,7 +75,6 @@ namespace Askowl {
         fiber.Workers.Push(this);
         From = (Queue) fiber.node.Owner;
         Prepare();
-        Log.Debug($"ActivateWorker {fiber} => {Queue}"); //#DM#//
         fiber.node.MoveTo(Queue);
       }
 
