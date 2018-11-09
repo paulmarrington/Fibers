@@ -22,15 +22,16 @@ namespace Askowl {
     #region Fiber Instantiation
     private LinkedList<Fiber>.Node node;
 
+    private static void OnUpdate(Fiber fiber) {
+      fiber.running = true;
+      if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
+      else { fiber.SetAction("Call", fiber.action.Previous).Item(fiber); }
+    }
+
     /// <a href=""></a>
     public static Fiber Start {
       get {
-        var newFiber = StartWithAction(
-          fiber => {
-            fiber.running = true;
-            if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
-            else { fiber.SetAction("Call", fiber.action.Previous).Item(fiber); }
-          });
+        var newFiber = StartWithAction(OnUpdate);
         newFiber.actions = Cache<ActionList>.Instance;
         newFiber.SetAction("Start", null);
         newFiber.running = false;

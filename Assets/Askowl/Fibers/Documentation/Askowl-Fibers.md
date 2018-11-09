@@ -1,15 +1,14 @@
 ---
-title: Askowl Decoupler for Unity3D
-description: Decoupling software components and systems
+title: Askowl Fibers for Unity3D
+description: Like Coroutines but with less overhead
 ---
 * Table of Contents
 {:toc}
 # [Executive Summary](http://www.askowl.net/unity-coroutines)
-Coroutines are the core mechanism in Unity3d MonoBehaviour classes to provide independent parallel processing. Activities that must occur in order use `yield return myCoroutine();` to wait on completion before continuing.
 
-A problem occurs when we want functions to occur in a specific order but from different parts of the code. A player logs in to a remote system. They then go on to something that requires authorisation. That code does not know whether the authorisation has completed. With Askowl Coroutines a queue is created and tasks placed on it when needed. This way any coroutine with dependencies won't run until said dependencies have done their thing.
+Coroutines are the core mechanism in Unity3d MonoBehaviour classes to provide independent processing as a form of co-opoerative multi-tasking. Activities that must occur in order use `yield return myCoroutine();` to wait on completion before continuing. Yield instructions must reside in methods that have an IEnumerator return type. C# turns them into a state machine. These state machines cannot be reset, so they must be discarded once complete. Since every call generates a new state machine this puts a heavy load on the garbage collector. Using coroutines in abundance can cause glitches in the running of VR and mobile applications.
 
-Some unity packages, specifically FireBase, use C# 4+ Tasks, a preemptive multitasking interface. Anything using Task callbacks must be treated as independent threads with semaphores and the like to protect against data corruption. The Askowl Tasks class converts Task responses into Coroutines so that they fit better and more safely into the Unity system.
+Some unity packages, specifically FireBase, use C# 4+ Tasks, a preemptive multitasking interface. Anything using Task callbacks must be treated as independent threads with semaphores and the like to protect against data corruption. The Askowl Tasks class mergest tasks into Fibers so that they fit better and more safely into the Unity system.
 
 > Read the code in the Examples Folder.
 

@@ -53,21 +53,8 @@ namespace Askowl.Examples {
       }
     }
 
-    /// <a href=""></a>
-    [UnityTest] public IEnumerator EmitterT() {
-      using (emitterInt = Emitter<int>.Instance) {
-        emitterFiredValue = 0;
-        Fiber.Start.Emitter(emitterInt, SetEmitterInt);
-        yield return Fiber.Start.WaitForSecondsRealtime(0.2f).Do(FireInt).AsCoroutine();
-
-        Assert.AreEqual(22, emitterFiredValue);
-      }
-    }
-
-    private void SetEmitterInt(int         value) => emitterFiredValue = value;
     private void SetEmitterFiredFlag(Fiber fiber) => emitterFired = true;
     private void Fire(Fiber                fiber) => emitter.Fire();
-    private void FireInt(Fiber             fiber) => emitterInt.Fire(22);
     private void RestartIdle(Fiber         fiber) => idlingFiber.Restart.Do(Nothing);
     private void Nothing(Fiber             fiber) { }
   }

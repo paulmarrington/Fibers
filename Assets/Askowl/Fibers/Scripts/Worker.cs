@@ -84,18 +84,17 @@ namespace Askowl {
       /// <a href=""></a>
       protected static bool NeedsUpdates = true;
 
-      static Worker() {
-        if (!NeedsUpdates) return;
+      private static void OnUpdate(Fiber fiber) {
+        var node = Queue.First;
+        while (node?.Item.Workers.Top?.NoMore == false) {
+          var next = node.Next; // save in case Step() calls dispose
+          node.Item.Workers.Top.Step();
+          node = next;
+        }
+      }
 
-        StartWithAction(
-          fiber => {
-            var node = Queue.First;
-            while (node?.Item.Workers.Top?.NoMore == false) {
-              var next = node.Next; // save in case Step() calls dispose
-              node.Item.Workers.Top.Step();
-              node = next;
-            }
-          });
+      static Worker() {
+        if (NeedsUpdates) StartWithAction(OnUpdate);
       }
     }
   }
