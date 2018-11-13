@@ -7,7 +7,7 @@ namespace Askowl {
 
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber Emitter(Emitter emitter) => EmitterWorker.Instance.Load(this, emitter);
+    public Fiber WaitFor(Emitter emitter) => EmitterWorker.Instance.Load(this, emitter);
 
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;

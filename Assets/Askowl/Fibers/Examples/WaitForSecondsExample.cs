@@ -22,7 +22,7 @@ namespace Askowl.Examples {
       void setStartTime(Fiber fiber) => start = Time.timeSinceLevelLoad;
       void check300ms(Fiber   fiber) => checkElapsed(0.3f);
 
-      yield return Fiber.Start.Begin.Do(setStartTime).WaitForSeconds(0.3f).Do(check300ms).Repeat(5).AsCoroutine();
+      yield return Fiber.Start.Begin.Do(setStartTime).WaitFor(seconds: 0.3f).Do(check300ms).Repeat(5).AsCoroutine();
     }
 
     /// <a href="">Using <see cref="Fiber.WaitForSecondsRealtime"/></a>
@@ -36,7 +36,7 @@ namespace Askowl.Examples {
       void check300ms(Fiber   fiber) => checkElapsed(0.3f);
 
       yield return Fiber.Start.Begin
-                        .Do(setStartTime).WaitForSecondsRealtime(0.3f).Do(check300ms)
+                        .Do(setStartTime).WaitRealtime(seconds: 0.3f).Do(check300ms)
                         .Repeat(5).AsCoroutine();
 
       checkElapsed(0);

@@ -4,8 +4,10 @@ namespace Askowl {
   using System.Threading.Tasks;
 
   /// <a href="">Convert Task activities to Coroutines to behave well with the rest of Unity</a> //#TBD#//
-  public static class Tasks {
-    public static Emitter EmitOnComplete(Task task) {
+  // ReSharper disable once ClassNeverInstantiated.Global
+  public partial class Fiber {
+    /// <a href=""></a> //#TBD#//
+    public Fiber WaitFor(Task task) {
       var emitter = Emitter.Instance;
 
       void action(Task _) {
@@ -14,7 +16,7 @@ namespace Askowl {
       }
 
       task.ContinueWith(action);
-      return emitter;
+      return WaitFor(emitter);
     }
   }
 }

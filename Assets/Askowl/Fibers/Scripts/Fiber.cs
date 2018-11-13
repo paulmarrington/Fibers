@@ -35,6 +35,7 @@ namespace Askowl {
         newFiber.actions = Cache<ActionList>.Instance;
         newFiber.SetAction("Start", null);
         newFiber.running = false;
+        newFiber.exiting = false;
         return newFiber;
       }
     }
@@ -128,15 +129,27 @@ namespace Askowl {
     public Fiber Idle => PrepareFiberToRun().StartCall;
 
     /// <a href=""></a>
-    public Fiber Restart {
-      get {
-        waitingOnCallee.Fire();
-        return this;
-      }
+    public Fiber Restart() {
+      waitingOnCallee?.Fire();
+      return this;
+    }
+
+    /// <a href=""></a>
+    public Fiber Restart(Fiber fiber) {
+      fiber.waitingOnCallee?.Fire();
+      return this;
     }
 
     /// <a href=""></a>
     public void Break() => SetAction("Break", actions.First);
+
+    /// <a href=""></a>
+    public void Exit() {
+      exiting = yielding = true;
+      SetAction("Exit", actions.First);
+    }
+
+    private bool exiting;
 
     /// <a href=""></a>
     public Fiber End => EndCallee(ReturnFromCallee);
@@ -153,6 +166,7 @@ namespace Askowl {
     private Fiber EndCallee(Action endCalleeAction) {
       void endCalleeFiller(Fiber _) { }
       if (actions.Count <= 2) Do(endCalleeFiller); // otherwise termination gets in before activation
+
       Do(endCalleeAction);
       return caller ?? this;
     }
@@ -163,7 +177,7 @@ namespace Askowl {
       else { ReturnFromCallee(fiber); }                  // all done
     }
 
-    private static void ToBegin(Fiber fiber) => fiber.SetAction("To-Being", fiber.actions.Last);
+    private static void ToBegin(Fiber fiber) => fiber.SetAction("To-Begin", fiber.actions.Last);
 
     private Fiber       caller, idler;
     private CounterFifo repeats = CounterFifo.Instance;
@@ -171,7 +185,7 @@ namespace Askowl {
     private Fiber StartCall {
       get {
         running = false;
-        return Emitter(waitingOnCallee ?? (waitingOnCallee = Askowl.Emitter.Instance));
+        return WaitFor(waitingOnCallee ?? (waitingOnCallee = Emitter.Instance));
       }
     }
 
@@ -181,18 +195,22 @@ namespace Askowl {
       var caller = callee.caller;
       if (caller != null) {
         callee.caller = null;
+        if (callee.exiting) caller.Exit();
         caller.waitingOnCallee.Fire();
       }
+
       callee.node.Recycle();
     }
 
     /// <a href=""></a>
     public IEnumerator AsCoroutine() {
-      bool done;
-      void yield(Fiber fiber) => done = true;
+      void yield(Fiber fiber) => yielding = true;
+
       Do(yield);
-      for (done = false; done != true;) yield return null;
+      for (yielding = false; yielding != true;) yield return null;
     }
+
+    private bool yielding;
     #endregion
 
     #region Debugging
@@ -210,7 +228,7 @@ namespace Askowl {
 
         for (var idx = 0; idx < array.Length; node = node.Previous, idx++) {
           string name = node.Item.Method.Name;
-          array[idx] = (node == action) ? $"[{name}]" : name;
+          array[idx] = node == action ? $"[{name}]" : name;
         }
         return Csv.ToString(array);
       }

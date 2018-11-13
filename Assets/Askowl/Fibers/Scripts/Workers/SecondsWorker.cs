@@ -7,10 +7,10 @@ namespace Askowl {
 
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber WaitForSeconds(float seconds) => SecondsWorker.Instance.Load(fiber: this, data: seconds);
+    public Fiber WaitFor(float seconds) => SecondsWorker.Instance.Load(fiber: this, data: seconds);
 
     /// <a href=""></a>
-    public Fiber WaitForSecondsRealtime(float seconds) => RealtimeWorker.Instance.Load(fiber: this, seconds);
+    public Fiber WaitRealtime(float seconds) => RealtimeWorker.Instance.Load(fiber: this, seconds);
 
     private class SecondsWorker : BaseTimeWorker {
       protected override void Prepare() { EndTime = Seed + Time.time - 2 * Time.deltaTime; }

@@ -14,7 +14,7 @@ namespace Askowl.Examples {
     [UnityTest] public IEnumerator Enumerator() {
       counter = 0;
       float start = Time.realtimeSinceStartup;
-      yield return Fiber.Start.Coroutine(SampleEnumeratorCoroutine()).AsCoroutine();
+      yield return Fiber.Start.WaitFor(SampleEnumeratorCoroutine()).AsCoroutine();
 
       float elapsed = Time.realtimeSinceStartup - start;
       Assert.AreEqual(10 / 60f, elapsed, 0.05f);
@@ -25,7 +25,7 @@ namespace Askowl.Examples {
     [UnityTest] public IEnumerator EnumeratorSpaced() {
       counter = 0;
       float start = Time.realtimeSinceStartup;
-      yield return Fiber.Start.Coroutine(framesBetweenChecks: 5, enumerator: SampleEnumeratorCoroutine()).AsCoroutine();
+      yield return Fiber.Start.WaitFor(framesBetweenChecks: 5, enumerator: SampleEnumeratorCoroutine()).AsCoroutine();
 
       float elapsed = Time.realtimeSinceStartup - start;
       // 5 frames - 1 for each count plus 25 frames, 5 for each frames between checks
@@ -42,7 +42,7 @@ namespace Askowl.Examples {
       }
 
       float start = Time.realtimeSinceStartup;
-      yield return Fiber.Start.Coroutine(sampleFrameEnumeratorCoroutine()).AsCoroutine();
+      yield return Fiber.Start.WaitFor(sampleFrameEnumeratorCoroutine()).AsCoroutine();
 
       float elapsed = Time.realtimeSinceStartup - start;
       // 5 frames - 1 for each count plus 25 frames, 5 for enumerator integer response
@@ -59,7 +59,7 @@ namespace Askowl.Examples {
       }
 
       float start = Time.realtimeSinceStartup;
-      yield return Fiber.Start.Coroutine(sampleSecondsEnumeratorCoroutine()).AsCoroutine();
+      yield return Fiber.Start.WaitFor(sampleSecondsEnumeratorCoroutine()).AsCoroutine();
 
       float elapsed = Time.realtimeSinceStartup - start;
       Assert.AreEqual(0.3f * 5, elapsed, 0.05f);

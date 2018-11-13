@@ -8,10 +8,10 @@ namespace Askowl {
 
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber Coroutine(IEnumerator enumerator) => LoadWithPayload(enumerator, 0);
+    public Fiber WaitFor(IEnumerator enumerator) => LoadWithPayload(enumerator, 0);
 
     /// <a href=""></a>
-    public Fiber Coroutine(int framesBetweenChecks, IEnumerator enumerator) =>
+    public Fiber WaitFor(int framesBetweenChecks, IEnumerator enumerator) =>
       LoadWithPayload(enumerator, framesBetweenChecks);
 
     private Fiber LoadWithPayload(IEnumerator enumerator, int skipFrames) {
@@ -46,10 +46,10 @@ namespace Askowl {
         if (Seed.Enumerator.MoveNext()) {
           switch (Seed.Enumerator.Current) {
             case IEnumerator coroutine:
-              Fiber.Coroutine(coroutine);
+              Fiber.WaitFor(coroutine);
               break;
             case float seconds:
-              Fiber.WaitForSeconds(seconds);
+              Fiber.WaitFor(seconds);
               break;
             case int frames:
               nextStepFrame = Time.frameCount + frames;

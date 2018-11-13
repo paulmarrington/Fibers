@@ -26,6 +26,16 @@ namespace Askowl.Examples {
     }
 
     /// <a href=""></a>
+    [UnityTest] public IEnumerator BeginAgainExit() {
+      counter = 0;
+      yield return Fiber.Start
+                        .Begin.Do(IncrementCounter).Do(Exit).Again
+                        .Do(IncrementCounter).AsCoroutine();
+
+      Assert.AreEqual(1, counter);
+    }
+
+    /// <a href=""></a>
     [UnityTest] public IEnumerator BeginRepeat() {
       counter = 0;
       yield return Fiber.Start.Begin.Do(IncrementCounter).Repeat(5).Do(IncrementCounter).AsCoroutine();
@@ -36,6 +46,8 @@ namespace Askowl.Examples {
     private void Escape(Fiber fiber) {
       if (counter > 5) fiber.Break();
     }
+
+    private void Exit(Fiber fiber) { fiber.Exit(); }
 
     private void IncrementCounter(Fiber fiber) => counter++;
   }
