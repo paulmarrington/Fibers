@@ -2,17 +2,17 @@
 
 // ReSharper disable InconsistentNaming
 
+// ReSharper disable MissingXmlDoc
+
 namespace Askowl.Examples {
   using System.Collections;
   using NUnit.Framework;
   using UnityEngine;
   using UnityEngine.TestTools;
 
-  /// Using <see cref="Askowl.Fibers" /><inheritdoc />
   public class WaitForSecondsExample : PlayModeTests {
     private float start;
 
-    /// <a href="">Using <see cref="Fiber.WaitForSeconds"/></a>
     [UnityTest] public IEnumerator WaitForSeconds() {
       void checkElapsed(float seconds) {
         Assert.AreEqual(seconds + Time.deltaTime, Time.timeSinceLevelLoad - start, 0.05f);
@@ -25,7 +25,6 @@ namespace Askowl.Examples {
       yield return Fiber.Start.Begin.Do(setStartTime).WaitFor(seconds: 0.3f).Do(check300ms).Repeat(5).AsCoroutine();
     }
 
-    /// <a href="">Using <see cref="Fiber.WaitForSecondsRealtime"/></a>
     [UnityTest] public IEnumerator WaitForSecondsRealtime() {
       void checkElapsed(float seconds) {
         Assert.AreEqual(seconds + Time.unscaledDeltaTime, Time.realtimeSinceStartup - start, 0.05f);

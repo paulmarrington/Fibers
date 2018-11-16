@@ -1,16 +1,16 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+// ReSharper disable MissingXmlDoc
+
 namespace Askowl.Examples {
   using System.Collections;
   using NUnit.Framework;
   using UnityEngine;
   using UnityEngine.TestTools;
 
-  /// <a href=""></a>
   public class IEnumeratorExample {
     private int counter;
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator Enumerator() {
       counter = 0;
       float start = Time.realtimeSinceStartup;
@@ -21,7 +21,6 @@ namespace Askowl.Examples {
       Assert.AreEqual(6,        counter);
     }
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator EnumeratorSpaced() {
       counter = 0;
       float start = Time.realtimeSinceStartup;
@@ -33,7 +32,6 @@ namespace Askowl.Examples {
       Assert.AreEqual(6,                  counter);
     }
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator EnumeratorFrames() {
       counter = 0;
 
@@ -50,7 +48,6 @@ namespace Askowl.Examples {
       Assert.AreEqual(6,                  counter);
     }
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator EnumeratorSeconds() {
       counter = 0;
 

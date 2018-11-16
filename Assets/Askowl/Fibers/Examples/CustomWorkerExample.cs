@@ -1,6 +1,6 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-// ReSharper disable ClassNeverInstantiated.Local ClassNeverInstantiated.Global
+// ReSharper disable ClassNeverInstantiated.Local ClassNeverInstantiated.Global MissingXmlDoc
 
 namespace Askowl.Examples {
   using System.Collections;
@@ -8,19 +8,16 @@ namespace Askowl.Examples {
   using UnityEngine;
   using UnityEngine.TestTools;
 
-  /// <a href=""></a>
   public class CustomWorkerExample {
-    /// <a href=""></a>
     [UnityTest] public IEnumerator CustomTypeWorkerExample() {
       CustomTypeWorkerClass.Disposed = false;
-        var start = Time.frameCount;
-        yield return Fiber.Start.CustomTypeWorker(3).AsCoroutine();
+      var start = Time.frameCount;
+      yield return Fiber.Start.CustomTypeWorker(3).AsCoroutine();
 
-        Assert.AreEqual(4, Time.frameCount - start);
+      Assert.AreEqual(4, Time.frameCount - start);
       Assert.IsTrue(CustomTypeWorkerClass.Disposed);
     }
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator CustomObjectWorkerExample() {
       CustomObjectWorkerClass.Payload payload = new CustomObjectWorkerClass.Payload { A = 5, B = 6 };
       yield return Fiber.Start.CustomObjectWorker(payload).AsCoroutine();
@@ -54,17 +51,13 @@ namespace Askowl.Examples {
     }
   }
 
-  /// <a href=""></a> <inheritdoc />
   public class CustomObjectWorkerClass : Fiber.Worker<CustomObjectWorkerClass.Payload> {
     public static      CustomObjectWorkerClass Instance  => Cache<CustomObjectWorkerClass>.Instance;
     protected override void                    Recycle() { Cache<CustomObjectWorkerClass>.Dispose(this); }
 
-    /// <a href=""></a> <inheritdoc />
     protected override void Prepare() { }
 
-    /// <a href=""></a>
     public class Payload {
-      /// <a href=""></a>
       public int A, B;
     }
 
@@ -73,13 +66,10 @@ namespace Askowl.Examples {
     }
   }
 
-  /// <a href=""></a>
   public static class MyCustomFiberExtensions {
-    /// <a href=""></a>
     public static Fiber CustomTypeWorker(this Fiber fiber, int seed) =>
       CustomTypeWorkerClass.Instance.Load(fiber, seed);
 
-    /// <a href=""></a>
     public static Fiber CustomObjectWorker(this Fiber fiber, CustomObjectWorkerClass.Payload payload) =>
       CustomObjectWorkerClass.Instance.Load(fiber, payload);
   }

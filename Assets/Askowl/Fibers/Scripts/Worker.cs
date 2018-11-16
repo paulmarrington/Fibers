@@ -7,44 +7,43 @@ namespace Askowl {
 
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2Ptbf6V">List of workers associated with Fiber actions</a>
     public readonly Fifo<Worker> Workers = Fifo<Worker>.Instance;
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2Ptbf6V">Abstract code to implement a worker</a>
     public abstract class Worker : IDisposable {
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Fiber that owns this worker instance</a>
       protected Fiber Fiber;
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Queue that Fiber came from and will return to after worker is done</a>
       internal Queue From;
 
-//      private protected static void Deactivate(LinkedList<Fiber>.Node node) => node.MoveTo(node.Item.Workers.Top.From);
       private protected static void Deactivate(LinkedList<Fiber>.Node node) => node.MoveTo(node.Item.Workers.Top.From);
 
       private protected static int Compare(LinkedList<Fiber>.Node left, LinkedList<Fiber>.Node right) =>
         left.Item.Workers.Top.CompareTo(right.Item.Workers.Top);
 
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Implement for worker queue order</a>
       protected virtual int CompareTo(Worker other) => 0;
 
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Implement to stop scanning based on sort order</a>
       public virtual bool NoMore => false;
 
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Implement on processing worker (usually calls dispose)</a>
       public virtual void Step() { }
 
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2Ptbf6V">Name from worker class name</a>
       public string Name;
 
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2Ptbf6V">Return worker name</a>
       public override string ToString() => Name;
 
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Do any preparation to payload here</a>
       protected abstract void Prepare();
 
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Implement anything needed before worker is placed in recycle bin</a>
       protected abstract void Recycle();
 
-      /// <a href="">Deactivate worker</a> <inheritdoc />
+      /// <a href="http://bit.ly/2Ptbf6V">Move Fiber bak to queue it came from</a> <inheritdoc />
       public virtual void Dispose() {
         Fiber.node.MoveTo(From);
         Fiber.Workers.Pop();
@@ -52,12 +51,12 @@ namespace Askowl {
       }
     }
 
-    /// <a href=""></a> <inheritdoc />
+    /// <a href="http://bit.ly/2Ptbf6V">Worker with payload</a> <inheritdoc />
     public abstract class Worker<T> : Worker {
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Payload</a>
       public T Seed;
 
-      /// <a href="">Load happens when we are building up a list of actions</a>
+      /// <a href="http://bit.ly/2Ptbf6V">Load happens when we are building up a list of actions</a>
       public Fiber Load(Fiber fiber, T data) {
         Name  = $"{GetType()}-{Uid += 1}";
         Seed  = data;
@@ -70,7 +69,7 @@ namespace Askowl {
 
       private protected static int Uid;
 
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2Ptbf6V">Move fiber to worker queue and start processing</a>
       protected void ActivateWorker(Fiber fiber) {
         fiber.Workers.Push(this);
         From = (Queue) fiber.node.Owner;
@@ -81,9 +80,10 @@ namespace Askowl {
       // ReSharper disable once StaticMemberInGenericType
       internal static readonly Queue Queue = new Queue { CompareItem = Compare, DeactivateItem = Deactivate };
 
-      /// <a href=""></a>
+      /// <a href="http://bit.ly/2Ptbf6V">Set to false for workers that do not need calls on frame update</a>
       protected static bool NeedsUpdates = true;
 
+      // ReSharper disable once MemberHidesStaticFromOuterClass
       private static void OnUpdate(Fiber fiber) {
         var node = Queue.First;
         while (node?.Item.Workers.Top?.NoMore == false) {

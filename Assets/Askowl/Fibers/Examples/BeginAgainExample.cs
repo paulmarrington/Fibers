@@ -1,15 +1,15 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+// ReSharper disable MissingXmlDoc
+
 namespace Askowl.Examples {
   using System.Collections;
   using NUnit.Framework;
   using UnityEngine.TestTools;
 
-  /// <a href=""></a>
   public class BeginAgainExample {
     private int counter;
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator BeginEnd() {
       counter = 0;
       yield return Fiber.Start.Do(IncrementCounter).Begin.Do(IncrementCounter).End.Do(IncrementCounter).AsCoroutine();
@@ -17,7 +17,6 @@ namespace Askowl.Examples {
       Assert.AreEqual(3, counter);
     }
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator BeginBreakAgain() {
       counter = 0;
       yield return Fiber.Start.Begin.Do(IncrementCounter).Do(Escape).Again.Do(IncrementCounter).AsCoroutine();
@@ -25,7 +24,6 @@ namespace Askowl.Examples {
       Assert.AreEqual(7, counter);
     }
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator BeginAgainExit() {
       counter = 0;
       yield return Fiber.Start
@@ -35,7 +33,6 @@ namespace Askowl.Examples {
       Assert.AreEqual(1, counter);
     }
 
-    /// <a href=""></a>
     [UnityTest] public IEnumerator BeginRepeat() {
       counter = 0;
       yield return Fiber.Start.Begin.Do(IncrementCounter).Repeat(5).Do(IncrementCounter).AsCoroutine();

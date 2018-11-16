@@ -5,17 +5,16 @@ namespace Askowl {
   using System.Collections;
   using UnityEngine;
 
-  /// <a href=""></a>
+  /// <a href="http://bit.ly/2DF6QHw">lightweight cooperative multi-tasking</a>
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber : IDisposable {
-    /// <a href=""></a> <inheritdoc />
+    /// <a href="http://bit.ly/2DF6QHw">Container for different update queues</a> <inheritdoc />
     internal class Queue : LinkedList<Fiber> {
       internal static readonly Queue Update      = new Queue { Name = "Update Fibers" };
       internal static readonly Queue LateUpdate  = new Queue { Name = "Late Update Fibers" };
       internal static readonly Queue FixedUpdate = new Queue { Name = "Fixed Update Fibers" };
     }
 
-//    private static  Log.EventRecorder debug = Log.Events("Debug");
     internal static MonoBehaviour Controller;
     internal        Action        Update;
 
@@ -28,7 +27,7 @@ namespace Askowl {
       else { fiber.SetAction("Call", fiber.action.Previous).Item(fiber); }
     }
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
     public static Fiber Start {
       get {
         var newFiber = StartWithAction(OnUpdate);
@@ -63,7 +62,7 @@ namespace Askowl {
     #endregion
 
     #region Fiber Action Support
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2DDZjbO">Method signature for Do(Action) methods</a>
     public delegate void Action(Fiber fiber);
 
     // ReSharper disable once ClassNeverInstantiated.Local
@@ -72,7 +71,7 @@ namespace Askowl {
     private ActionList              actions;
     private LinkedList<Action>.Node action;
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvnwP">Cleans up Fiber before it goes into the recycling</a>
     public void Dispose() {
       actions.Dispose();
       Cache<ActionList>.Dispose(actions);
@@ -82,11 +81,11 @@ namespace Askowl {
     #endregion
 
     #region Things we can do with Fibers
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2Pqv2Ub">Return Fiber processing to frame Update queue</a>
     public Fiber OnUpdates => MoveTo(Queue.Update);
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2Pqv2Ub">Move Fiber processing to FixedUpdate queue</a>
     public Fiber OnFixedUpdates => MoveTo(Queue.Update);
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2Pqv2Ub">Move Fiber processing to LateUpdate queue</a>
     public Fiber OnLateUpdates => MoveTo(Queue.Update);
 
     private Fiber MoveTo(Queue queue) {
@@ -94,7 +93,7 @@ namespace Askowl {
       return this;
     }
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDZjbO">Business logic activation step</a>
     public Fiber Do(Action nextAction, string actionsText = "Actions") {
       actions.Add(nextAction); // Now there is at least one on the list
       #if UNITY_EDITOR
@@ -103,7 +102,7 @@ namespace Askowl {
       return PrepareFiberToRun(); // sets action and always return this
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2DDvmZN">Displays Do() and action events on Unity console</a>
     public static bool Debugging = false;
 
     private Fiber PrepareFiberToRun() {
@@ -115,35 +114,36 @@ namespace Askowl {
     // ReSharper disable once InconsistentNaming
     private static void start(Fiber fiber) { }
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvnNl">Loops and Blocks - Begin/End, Begin/Again, Begin-Repeat</a>
     public Fiber Begin {
       get {
-        Fiber parent = PrepareFiberToRun().StartCall;
+        Fiber parent = PrepareFiberToRun().StartCall();
         Fiber child  = Start;
         child.caller = parent;
         return child;
       }
     }
 
-    /// <a href=""></a>
-    public Fiber Idle => PrepareFiberToRun().StartCall;
+    /// <a href="http://bit.ly/2DDvmcf">Separate Fiber into more than one statement</a>
+    public Fiber Idle => PrepareFiberToRun().StartCall();
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvmcf">Restart a fiber that includes an Idle command</a>
     public Fiber Restart() {
       waitingOnCallee?.Fire();
       return this;
     }
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvmcf">Restart another fiber that includes an Idle command</a>
     public Fiber Restart(Fiber fiber) {
-      fiber.waitingOnCallee?.Fire();
+      void restart(Fiber _) => fiber.waitingOnCallee?.Fire();
+      Do(restart);
       return this;
     }
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvlFd">Break a Begin/End/Repeat/Again block</a>
     public void Break() => SetAction("Break", actions.First);
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DBVWCe">Abort fiber processing, cleaning up as we go</a>
     public void Exit() {
       exiting = yielding = true;
       SetAction("Exit", actions.First);
@@ -151,13 +151,13 @@ namespace Askowl {
 
     private bool exiting;
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2PtbezT">Begin/End block - use Break() to create an `if`</a>
     public Fiber End => EndCallee(ReturnFromCallee);
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvnNl">Begin/Again repeating operations. Use Break() or Exit() to leave</a>
     public Fiber Again => EndCallee(ToBegin);
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DDvp7V">Begin/Repeat loop for a specific number of times</a>
     public Fiber Repeat(int count) {
       repeats.Start(-(count + 1));
       return EndCallee(Repeat);
@@ -182,11 +182,9 @@ namespace Askowl {
     private Fiber       caller, idler;
     private CounterFifo repeats = CounterFifo.Instance;
 
-    private Fiber StartCall {
-      get {
-        running = false;
-        return WaitFor(waitingOnCallee ?? (waitingOnCallee = Emitter.Instance));
-      }
+    private Fiber StartCall() {
+      running = false;
+      return WaitFor(waitingOnCallee ?? (waitingOnCallee = Emitter.Instance));
     }
 
     private Emitter waitingOnCallee;
@@ -202,7 +200,7 @@ namespace Askowl {
       callee.node.Recycle();
     }
 
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2DB3wgx">Return an IEnumerator to use with a yield in a Coroutine</a>
     public IEnumerator AsCoroutine() {
       void yield(Fiber fiber) => yielding = true;
 
@@ -214,10 +212,10 @@ namespace Askowl {
     #endregion
 
     #region Debugging
-    /// <a href=""></a> //#TBD#// <inheritdoc />
+    /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() {
       string worker = Workers.Empty ? "none" : $"{Workers.Top}";
-      return $"{ActionNames} (Worker: {worker} // Owner: {node.Owner.Name} // Home: {node.Home.Name})";
+      return $"{ActionNames} (Worker: {worker} // Queue: {node.Owner.Name})";
     }
 
     private string ActionNames {

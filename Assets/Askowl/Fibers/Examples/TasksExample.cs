@@ -1,5 +1,7 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+// ReSharper disable MissingXmlDoc
+
 #if UNITY_EDITOR && AskowlFibers
 namespace Askowl.Examples {
   using System.Collections;
@@ -8,7 +10,6 @@ namespace Askowl.Examples {
   using UnityEngine.TestTools;
   using System.Threading.Tasks;
 
-  /// <a href="">Samples for using `Tasks` - also behaving as runtime tests</a> //#TBD#//
   public sealed class TasksExample {
     private int counter;
 
@@ -21,7 +22,6 @@ namespace Askowl.Examples {
         });
     }
 
-    /// <a href="">Check that tasks will cause matching coroutines to wait until they are done</a> //#TBD#//
     [UnityTest, Timeout(10000)] public IEnumerator EmitOnComplete() {
       counter = 0;
       Task task = Delay(500);
