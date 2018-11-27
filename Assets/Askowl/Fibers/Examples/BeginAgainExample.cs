@@ -1,5 +1,7 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+#if UNITY_EDITOR && Fibers
+
 // ReSharper disable MissingXmlDoc
 
 namespace Askowl.Examples {
@@ -49,3 +51,4 @@ namespace Askowl.Examples {
     private void IncrementCounter(Fiber fiber) => counter++;
   }
 }
+#endif

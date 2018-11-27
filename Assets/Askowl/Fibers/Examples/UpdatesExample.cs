@@ -1,5 +1,7 @@
 ﻿// ReSharper disable MissingXmlDoc
 
+#if UNITY_EDITOR && Fibers
+
 namespace Askowl.Examples {
   using System.Collections;
   using NUnit.Framework;
@@ -39,3 +41,4 @@ namespace Askowl.Examples {
     private void Check(Fiber fiber) => counter = 1;
   }
 }
+#endif

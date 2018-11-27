@@ -5,10 +5,9 @@
 #if UNITY_EDITOR && AskowlFibers
 namespace Askowl.Examples {
   using System.Collections;
-  using Askowl;
+  using System.Threading.Tasks;
   using NUnit.Framework;
   using UnityEngine.TestTools;
-  using System.Threading.Tasks;
 
   public sealed class TasksExample {
     private int counter;
