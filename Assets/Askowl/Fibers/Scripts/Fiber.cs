@@ -36,14 +36,17 @@ namespace Askowl {
         newFiber.SetAction("Start", null);
         newFiber.running = false;
         newFiber.exiting = false;
+        newFiber.id      = ++nextId;
         return newFiber;
       }
     }
+    private static int nextId;
+    private        int id;
 
     private LinkedList<Action>.Node SetAction(string reason, LinkedList<Action>.Node nextAction) {
       action = nextAction;
       #if UNITY_EDITOR
-      if (Debugging) Log.Debug($"Fiber: {reason,10} for {this}");
+      if (Debugging) Log.Debug($"Run: {reason,10} for {this}");
       #endif
       return action;
     }
@@ -98,7 +101,7 @@ namespace Askowl {
     public Fiber Do(Action nextAction, string actionsText = "Actions") {
       actions.Add(nextAction); // Now there is at least one on the list
       #if UNITY_EDITOR
-      if (Debugging) Log.Debug($"Fiber: {actionsText,10} for {this}");
+      if (Debugging) Log.Debug($"Add: {actionsText,10} for {this}");
       #endif
       return PrepareFiberToRun(); // sets action and always return this
     }
@@ -219,7 +222,7 @@ namespace Askowl {
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() {
       string worker = Workers.Empty ? "none" : $"{Workers.Top}";
-      return $"{ActionNames} (Worker: {worker} // Queue: {node.Owner.Name})";
+      return $"{ActionNames} // {id} // {node.Owner.Name})";
     }
 
     private string ActionNames {
@@ -229,7 +232,9 @@ namespace Askowl {
         var node = actions.Last;
 
         for (var idx = 0; idx < array.Length; node = node.Previous, idx++) {
-          string name = node.Item.Method.Name;
+          string instance = node.Item.Target?.GetType().Name;
+          string name     = node.Item.Method.Name;
+          name       = (name == "ActivateWorker") ? instance : (instance != null) ? $"{instance}.{name}" : name;
           array[idx] = node == action ? $"[{name}]" : name;
         }
         return Csv.ToString(array);

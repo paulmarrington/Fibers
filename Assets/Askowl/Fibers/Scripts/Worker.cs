@@ -46,7 +46,6 @@ namespace Askowl {
 
       /// <a href="http://bit.ly/2Ptbf6V">Move Fiber back to queue it came from</a> <inheritdoc />
       public virtual void Dispose() {
-        Debug.Log($"**** Dispose {Fiber}"); //#DM#//
         Fiber.node.MoveTo(From);
         Fiber.Workers.Pop();
         Recycle();
@@ -60,11 +59,14 @@ namespace Askowl {
 
       /// <a href="http://bit.ly/2Ptbf6V">Load happens when we are building up a list of actions</a>
       public Fiber Load(Fiber fiber, T data) {
-        Name  = $"{GetType()}-{Uid += 1}";
-        Seed  = data;
-        Fiber = fiber;
+        if (NeedsUpdates) StartWithAction(OnUpdate);
+        NeedsUpdates = false;
+        Name         = $"{GetType()}-{Uid += 1}";
+        Seed         = data;
+        Fiber        = fiber;
         // ActivateWorker happens when we are executing all the actions in sequence
-        if (fiber.running) { ActivateWorker(fiber); } else { fiber.Do(ActivateWorker, Name); }
+        if (fiber.running) { ActivateWorker(fiber); }
+        else { fiber.Do(ActivateWorker, Name); }
         return fiber;
       }
 
@@ -92,10 +94,6 @@ namespace Askowl {
           node.Item.Workers.Top.Step();
           node = next;
         }
-      }
-
-      static Worker() {
-        if (NeedsUpdates) StartWithAction(OnUpdate);
       }
     }
   }

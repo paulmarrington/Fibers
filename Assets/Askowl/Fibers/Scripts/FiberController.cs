@@ -15,7 +15,10 @@ namespace Askowl {
     private void FixedUpdate() { UpdateAllWorkers(Fiber.Queue.FixedUpdate); }
 
     private static void UpdateAllWorkers(Fiber.Queue queue) {
-      for (var node = queue.First; node != null; node = node.Next) node.Item.Update(fiber: node.Item);
+      for (LinkedList<Fiber>.Node node = queue.First, next; node != null; node = next) {
+        next = node.Next; // the devil of side-effects, score one for functional programming
+        node.Item.Update(fiber: node.Item);
+      }
     }
   }
 }
