@@ -4,6 +4,7 @@
 
 namespace Askowl {
   using System;
+  using UnityEngine;
 
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
@@ -43,8 +44,9 @@ namespace Askowl {
       /// <a href="http://bit.ly/2Ptbf6V">Implement anything needed before worker is placed in recycle bin</a>
       protected abstract void Recycle();
 
-      /// <a href="http://bit.ly/2Ptbf6V">Move Fiber bak to queue it came from</a> <inheritdoc />
+      /// <a href="http://bit.ly/2Ptbf6V">Move Fiber back to queue it came from</a> <inheritdoc />
       public virtual void Dispose() {
+        Debug.Log($"**** Dispose {Fiber}"); //#DM#//
         Fiber.node.MoveTo(From);
         Fiber.Workers.Pop();
         Recycle();
@@ -62,8 +64,7 @@ namespace Askowl {
         Seed  = data;
         Fiber = fiber;
         // ActivateWorker happens when we are executing all the actions in sequence
-        if (fiber.running) { ActivateWorker(fiber); }
-        else { fiber.Do(ActivateWorker, Name); }
+        if (fiber.running) { ActivateWorker(fiber); } else { fiber.Do(ActivateWorker, Name); }
         return fiber;
       }
 

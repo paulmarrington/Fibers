@@ -23,8 +23,9 @@ namespace Askowl {
 
     private static void OnUpdate(Fiber fiber) {
       fiber.running = true;
-      if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
-      else { fiber.SetAction("Call", fiber.action.Previous).Item(fiber); }
+      if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); } else {
+        fiber.SetAction("Call", fiber.action.Previous).Item(fiber);
+      }
     }
 
     /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
@@ -156,6 +157,9 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2DDvnNl">Begin/Again repeating operations. Use Break() or Exit() to leave</a>
     public Fiber Again => EndCallee(ToBegin);
+
+    /// <a href=""></a> //#TBD#//
+    public void Finish() { }
 
     /// <a href="http://bit.ly/2DDvp7V">Begin/Repeat loop for a specific number of times</a>
     public Fiber Repeat(int count) {
