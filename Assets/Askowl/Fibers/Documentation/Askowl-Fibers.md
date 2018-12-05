@@ -169,8 +169,9 @@ private class FrameWorker : Worker<int> {
   public override void Step() { Dispose(); }
     
   // more complex instantiation may require more preparation to convert for sorting
-  // See the source SecondsWorker.cs for an example.
-  protected override void Prepare() { }
+  // See the source SecondsWorker.cs for an example. Returning false will abort the
+  // current operation
+  protected override boolean Prepare() { return true; }
 }
 ```
 ## Debugging

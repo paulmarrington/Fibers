@@ -2,9 +2,9 @@
 
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
-namespace Askowl {
-  using UnityEngine;
+using UnityEngine;
 
+namespace Askowl {
   public partial class Fiber {
     /// <a href=""></a>
     public Fiber WaitFor(float seconds) => SecondsWorker.Instance.Load(fiber: this, data: seconds);
@@ -13,29 +13,35 @@ namespace Askowl {
     public Fiber WaitRealtime(float seconds) => RealtimeWorker.Instance.Load(fiber: this, seconds);
 
     private class SecondsWorker : BaseTimeWorker {
-      protected override void Prepare() { EndTime = Seed + Time.time - 2 * Time.deltaTime; }
-
-      public static      BaseTimeWorker Instance  => Cache<SecondsWorker>.Instance;
-      protected override void           Recycle() => Cache<SecondsWorker>.Dispose(this);
-      protected override float          TimeNow   => Time.time;
+      public static      BaseTimeWorker Instance            => Cache<SecondsWorker>.Instance;
+      protected override void           Recycle()           => Cache<SecondsWorker>.Dispose(this);
+      protected override float          TimeNow             => Time.time;
+      protected override float          CalculatedEndTime() => Seed + Time.time - 2 * Time.deltaTime;
     }
 
     private class RealtimeWorker : BaseTimeWorker {
-      protected override void Prepare() => EndTime = Seed + Time.realtimeSinceStartup - 2 * Time.unscaledDeltaTime;
-
       public static      BaseTimeWorker Instance  => Cache<RealtimeWorker>.Instance;
       protected override void           Recycle() => Cache<RealtimeWorker>.Dispose(this);
       protected override float          TimeNow   => Time.realtimeSinceStartup;
+
+      protected override float CalculatedEndTime() => Seed + Time.realtimeSinceStartup - 2 * Time.unscaledDeltaTime;
     }
 
     private abstract class BaseTimeWorker : Worker<float> {
-      protected float EndTime;
+      private float endTime;
+
+      protected abstract float CalculatedEndTime();
+
+      protected override bool Prepare() {
+        endTime = CalculatedEndTime();
+        return true;
+      }
 
       protected abstract float TimeNow { get; }
 
       protected override int CompareTo(Worker other) => Seed.CompareTo((other as BaseTimeWorker)?.Seed);
 
-      public override bool NoMore => EndTime > TimeNow;
+      public override bool NoMore => endTime > TimeNow;
 
       public override void Step() => Dispose();
     }

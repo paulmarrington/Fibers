@@ -1,17 +1,21 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+
 #if UNITY_EDITOR && Fibers
 
 // ReSharper disable ClassNeverInstantiated.Local ClassNeverInstantiated.Global MissingXmlDoc
 
-namespace Askowl.Examples {
-  using System.Collections;
-  using NUnit.Framework;
-  using UnityEngine;
-  using UnityEngine.TestTools;
-
-  public class CustomWorkerExample {
-    [UnityTest] public IEnumerator CustomTypeWorkerExample() {
+namespace Askowl.Examples
+{
+  public class CustomWorkerExample
+  {
+    [UnityTest]
+    public IEnumerator CustomTypeWorkerExample()
+    {
       CustomTypeWorkerClass.Disposed = false;
       var start = Time.frameCount;
       yield return Fiber.Start.CustomTypeWorker(3).AsCoroutine();
@@ -20,22 +24,32 @@ namespace Askowl.Examples {
       Assert.IsTrue(CustomTypeWorkerClass.Disposed);
     }
 
-    [UnityTest] public IEnumerator CustomObjectWorkerExample() {
-      CustomObjectWorkerClass.Payload payload = new CustomObjectWorkerClass.Payload { A = 5, B = 6 };
+    [UnityTest]
+    public IEnumerator CustomObjectWorkerExample()
+    {
+      CustomObjectWorkerClass.Payload payload = new CustomObjectWorkerClass.Payload {A = 5, B = 6};
       yield return Fiber.Start.CustomObjectWorker(payload).AsCoroutine();
 
       Assert.AreEqual(16, payload.A + payload.B);
     }
   }
 
-  internal class CustomTypeWorkerClass : Fiber.Worker<int> {
-    public static      CustomTypeWorkerClass Instance  => Cache<CustomTypeWorkerClass>.Instance;
-    protected override void                  Recycle() { Cache<CustomTypeWorkerClass>.Dispose(this); }
-    public static      bool                  Disposed;
+  internal class CustomTypeWorkerClass : Fiber.Worker<int>
+  {
+    public static CustomTypeWorkerClass Instance => Cache<CustomTypeWorkerClass>.Instance;
 
-    protected override void Prepare() {
+    protected override void Recycle()
+    {
+      Cache<CustomTypeWorkerClass>.Dispose(this);
+    }
+
+    public static bool Disposed;
+
+    protected override bool Prepare()
+    {
       Disposed = false;
-      counter  = Seed;
+      counter = Seed;
+      return true;
     }
 
     private int counter;
@@ -43,32 +57,42 @@ namespace Askowl.Examples {
     protected override int CompareTo(Fiber.Worker other) =>
       counter.CompareTo((other as CustomTypeWorkerClass)?.counter);
 
-    public override void Step() {
+    public override void Step()
+    {
       if (++counter == 5) Dispose();
     }
 
-    public override void Dispose() {
+    public override void Dispose()
+    {
       Disposed = true;
       base.Dispose();
     }
   }
 
-  public class CustomObjectWorkerClass : Fiber.Worker<CustomObjectWorkerClass.Payload> {
-    public static      CustomObjectWorkerClass Instance  => Cache<CustomObjectWorkerClass>.Instance;
-    protected override void                    Recycle() { Cache<CustomObjectWorkerClass>.Dispose(this); }
+  public class CustomObjectWorkerClass : Fiber.Worker<CustomObjectWorkerClass.Payload>
+  {
+    public static CustomObjectWorkerClass Instance => Cache<CustomObjectWorkerClass>.Instance;
 
-    protected override void Prepare() { }
+    protected override void Recycle()
+    {
+      Cache<CustomObjectWorkerClass>.Dispose(this);
+    }
 
-    public class Payload {
+    protected override bool Prepare() => true;
+
+    public class Payload
+    {
       public int A, B;
     }
 
-    public override void Step() {
+    public override void Step()
+    {
       if (++Seed.A == 10) Dispose();
     }
   }
 
-  public static class MyCustomFiberExtensions {
+  public static class MyCustomFiberExtensions
+  {
     public static Fiber CustomTypeWorker(this Fiber fiber, int seed) =>
       CustomTypeWorkerClass.Instance.Load(fiber, seed);
 

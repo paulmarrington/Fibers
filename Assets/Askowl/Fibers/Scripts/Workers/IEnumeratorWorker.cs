@@ -15,15 +15,15 @@ namespace Askowl {
       LoadWithPayload(enumerator, framesBetweenChecks);
 
     private Fiber LoadWithPayload(IEnumerator enumerator, int skipFrames) {
-      var payload = new IEnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = skipFrames };
-      return IEnumeratorWorker.Instance.Load(this, payload);
+      var payload = new EnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = skipFrames };
+      return EnumeratorWorker.Instance.Load(this, payload);
     }
 
     /// <a href=""></a> <inheritdoc />
-    private class IEnumeratorWorker : Worker<IEnumeratorWorker.Payload> {
+    private class EnumeratorWorker : Worker<EnumeratorWorker.Payload> {
 //      static IEnumeratorWorker() => NeedsUpdates = false;
-      public static      IEnumeratorWorker Instance  => Cache<IEnumeratorWorker>.Instance;
-      protected override void              Recycle() { Cache<IEnumeratorWorker>.Dispose(this); }
+      public static      EnumeratorWorker Instance  => Cache<EnumeratorWorker>.Instance;
+      protected override void              Recycle() { Cache<EnumeratorWorker>.Dispose(this); }
 
       /// <a href=""></a>
       public struct Payload {
@@ -33,10 +33,10 @@ namespace Askowl {
 
       private int nextStepFrame;
 
-      protected override void Prepare() { }
+      protected override bool Prepare() => true;
 
       protected override int CompareTo(Worker other) =>
-        Seed.SkipFrames.CompareTo((other as IEnumeratorWorker)?.Seed.SkipFrames);
+        Seed.SkipFrames.CompareTo((other as EnumeratorWorker)?.Seed.SkipFrames);
 
       public override void Step() {
         if (Time.frameCount < nextStepFrame) return;

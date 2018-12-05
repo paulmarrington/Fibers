@@ -23,9 +23,8 @@ namespace Askowl {
 
     private static void OnUpdate(Fiber fiber) {
       fiber.running = true;
-      if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); } else {
-        fiber.SetAction("Call", fiber.action.Previous).Item(fiber);
-      }
+      if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
+      else { fiber.SetAction("Call", fiber.action.Previous).Item(fiber); }
     }
 
     /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
@@ -220,10 +219,7 @@ namespace Askowl {
 
     #region Debugging
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
-    public override string ToString() {
-      string worker = Workers.Empty ? "none" : $"{Workers.Top}";
-      return $"{ActionNames} // {id} // {node.Owner.Name})";
-    }
+    public override string ToString() => $"{ActionNames} // {id} // {node.Owner.Name})";
 
     private string ActionNames {
       get {
@@ -234,7 +230,7 @@ namespace Askowl {
         for (var idx = 0; idx < array.Length; node = node.Previous, idx++) {
           string instance = node.Item.Target?.GetType().Name;
           string name     = node.Item.Method.Name;
-          name       = (name == "ActivateWorker") ? instance : (instance != null) ? $"{instance}.{name}" : name;
+          name       = name == "ActivateWorker" ? instance : instance != null ? $"{instance}.{name}" : name;
           array[idx] = node == action ? $"[{name}]" : name;
         }
         return Csv.ToString(array);

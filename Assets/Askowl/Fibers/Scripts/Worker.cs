@@ -4,7 +4,6 @@
 
 namespace Askowl {
   using System;
-  using UnityEngine;
 
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
@@ -21,7 +20,7 @@ namespace Askowl {
       private protected static void Deactivate(LinkedList<Fiber>.Node node) => node.MoveTo(node.Item.Workers.Top.From);
 
       private protected static int Compare(LinkedList<Fiber>.Node left, LinkedList<Fiber>.Node right) =>
-        left.Item.Workers.Top.CompareTo(right.Item.Workers.Top);
+        left.Item.Workers.Top?.CompareTo(right.Item.Workers.Top) ?? ((right.Item.Workers.Top == null) ? 0 : -1);
 
       /// <a href="http://bit.ly/2Ptbf6V">Implement for worker queue order</a>
       protected virtual int CompareTo(Worker other) => 0;
@@ -39,7 +38,7 @@ namespace Askowl {
       public override string ToString() => Name;
 
       /// <a href="http://bit.ly/2Ptbf6V">Do any preparation to payload here</a>
-      protected abstract void Prepare();
+      protected abstract bool Prepare();
 
       /// <a href="http://bit.ly/2Ptbf6V">Implement anything needed before worker is placed in recycle bin</a>
       protected abstract void Recycle();
@@ -74,9 +73,10 @@ namespace Askowl {
 
       /// <a href="http://bit.ly/2Ptbf6V">Move fiber to worker queue and start processing</a>
       protected void ActivateWorker(Fiber fiber) {
+        if (!Prepare()) return;
+
         fiber.Workers.Push(this);
         From = (Queue) fiber.node.Owner;
-        Prepare();
         fiber.node.MoveTo(Queue);
       }
 

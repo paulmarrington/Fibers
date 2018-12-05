@@ -12,7 +12,17 @@ namespace Askowl {
 
       public static      EmitterWorker Instance  => Cache<EmitterWorker>.Instance;
       protected override void          Recycle() => Cache<EmitterWorker>.Dispose(this);
-      protected override void          Prepare() => Seed.Subscribe(Dispose);
+
+      protected override bool Prepare() {
+        bool nothingWaiting = Seed.Firings == 0;
+        if (nothingWaiting) Seed.Subscribe(OnFire);
+        return nothingWaiting; // drop through if emission already happened
+      }
+
+      private void OnFire() {
+        Seed.RemoveAllListeners();
+        Dispose();
+      }
     }
   }
 }

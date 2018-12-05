@@ -20,7 +20,7 @@ namespace Askowl {
 
       public override void Step() { Dispose(); }
 
-      protected override void Prepare() { }
+      protected override bool Prepare() => true;
     }
   }
 }
