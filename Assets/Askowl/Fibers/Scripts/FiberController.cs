@@ -1,18 +1,18 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-namespace Askowl {
-  using UnityEngine;
+using UnityEngine;
 
+namespace Askowl {
   /// <a href=""></a>
   /// <inheritdoc />
   public class FiberController : MonoBehaviour {
-    private void Start() { DontDestroyOnLoad(gameObject); }
+    private void Start() => DontDestroyOnLoad(gameObject);
 
-    private void Update() { UpdateAllWorkers(Fiber.Queue.Update); }
+    private void Update() => UpdateAllWorkers(Fiber.Queue.Update);
 
-    private void LateUpdate() { UpdateAllWorkers(Fiber.Queue.LateUpdate); }
+    private void LateUpdate() => UpdateAllWorkers(Fiber.Queue.LateUpdate);
 
-    private void FixedUpdate() { UpdateAllWorkers(Fiber.Queue.FixedUpdate); }
+    private void FixedUpdate() => UpdateAllWorkers(Fiber.Queue.FixedUpdate);
 
     private static void UpdateAllWorkers(Fiber.Queue queue) {
       for (LinkedList<Fiber>.Node node = queue.First, next; node != null; node = next) {

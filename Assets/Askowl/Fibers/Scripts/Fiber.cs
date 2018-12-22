@@ -1,30 +1,32 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
-namespace Askowl {
-  using System;
-  using System.Collections;
-  using UnityEngine;
+using System;
+using System.Collections;
+using UnityEngine;
 
+namespace Askowl {
   /// <a href="http://bit.ly/2DF6QHw">lightweight cooperative multi-tasking</a>
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber : IDisposable {
     /// <a href="http://bit.ly/2DF6QHw">Container for different update queues</a> <inheritdoc />
     internal class Queue : LinkedList<Fiber> {
-      internal static readonly Queue Update      = new Queue { Name = "Update Fibers" };
-      internal static readonly Queue LateUpdate  = new Queue { Name = "Late Update Fibers" };
-      internal static readonly Queue FixedUpdate = new Queue { Name = "Fixed Update Fibers" };
+      internal static readonly Queue Update      = new Queue {Name = "Update Fibers"};
+      internal static readonly Queue LateUpdate  = new Queue {Name = "Late Update Fibers"};
+      internal static readonly Queue FixedUpdate = new Queue {Name = "Fixed Update Fibers"};
     }
 
     internal static MonoBehaviour Controller;
     internal        Action        Update;
 
     #region Fiber Instantiation
+
     private LinkedList<Fiber>.Node node;
 
     private static void OnUpdate(Fiber fiber) {
       fiber.running = true;
-      if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); }
-      else { fiber.SetAction("Call", fiber.action.Previous).Item(fiber); }
+      if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); } else {
+        fiber.SetAction("Call", fiber.action.Previous).Item(fiber);
+      }
     }
 
     /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
@@ -54,17 +56,18 @@ namespace Askowl {
 
     private static Fiber StartWithAction(Action onUpdate) {
       if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
-
-      var node  = Queue.Update.GetRecycledOrNew();
-      var fiber = node.Item;
+      var node                           = Queue.Update.GetRecycledOrNew();
+      var fiber                          = node.Item;
       fiber.node   = node;
       fiber.Update = onUpdate;
       fiber.caller = null;
       return fiber;
     }
+
     #endregion
 
     #region Fiber Action Support
+
     /// <a href="http://bit.ly/2DDZjbO">Method signature for Do(Action) methods</a>
     public delegate void Action(Fiber fiber);
 
@@ -81,9 +84,11 @@ namespace Askowl {
       waitingOnCallee?.Dispose();
       repeats.Dispose();
     }
+
     #endregion
 
     #region Things we can do with Fibers
+
     /// <a href="http://bit.ly/2Pqv2Ub">Return Fiber processing to frame Update queue</a>
     public Fiber OnUpdates => MoveTo(Queue.Update);
     /// <a href="http://bit.ly/2Pqv2Ub">Move Fiber processing to FixedUpdate queue</a>
@@ -215,9 +220,11 @@ namespace Askowl {
     }
 
     private bool yielding;
+
     #endregion
 
     #region Debugging
+
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() => $"{ActionNames} // {id} // {node.Owner.Name})";
 
@@ -236,6 +243,7 @@ namespace Askowl {
         return Csv.ToString(array);
       }
     }
+
     #endregion
   }
 }

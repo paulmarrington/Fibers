@@ -16,6 +16,7 @@ namespace Askowl {
       protected override bool Prepare() {
         bool nothingWaiting = Seed.Firings == 0;
         if (nothingWaiting) Seed.Subscribe(OnFire);
+        Seed.Firings = 0;
         return nothingWaiting; // drop through if emission already happened
       }
 
