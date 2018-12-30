@@ -13,6 +13,7 @@ namespace Askowl {
       internal static readonly Queue Update      = new Queue {Name = "Update Fibers"};
       internal static readonly Queue LateUpdate  = new Queue {Name = "Late Update Fibers"};
       internal static readonly Queue FixedUpdate = new Queue {Name = "Fixed Update Fibers"};
+      internal static readonly Queue Waiting     = new Queue {Name = "Fiber Waiting Queue"};
     }
 
     internal static MonoBehaviour Controller;
@@ -23,6 +24,7 @@ namespace Askowl {
     private LinkedList<Fiber>.Node node;
 
     private static void OnUpdate(Fiber fiber) {
+      if (!fiber.running) Debug.Log($"OnUpdate {fiber}");
       fiber.running = true;
       if (fiber.action?.Previous == null) { ReturnFromCallee(fiber); } else {
         fiber.SetAction("Call", fiber.action.Previous).Item(fiber);
@@ -30,17 +32,41 @@ namespace Askowl {
     }
 
     /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
-    public static Fiber Start {
+    public static Fiber Instance {
       get {
-        var newFiber = StartWithAction(OnUpdate);
-        newFiber.actions = Cache<ActionList>.Instance;
-        newFiber.SetAction("Start", null);
-        newFiber.running = false;
-        newFiber.exiting = false;
-        newFiber.id      = ++nextId;
-        return newFiber;
+        var node  = Queue.Waiting.GetRecycledOrNew();
+        var fiber = node.Item;
+        fiber.node    = node;
+        fiber.caller  = null;
+        fiber.actions = Cache<ActionList>.Instance;
+        fiber.SetAction("Instance", null);
+        fiber.running = false;
+        fiber.exiting = false;
+        fiber.id      = nextId++;
+        return fiber;
       }
     }
+
+    /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
+    public static Fiber Start => Instance.Go();
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber Go() {
+      if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
+      Update = OnUpdate;
+      node.MoveTo(Queue.Update);
+      return this;
+    }
+//
+//    private static Fiber StartWithAction(Action onUpdate) {
+//      if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
+//      var node                           = Queue.Update.GetRecycledOrNew();
+//      var fiber                          = node.Item;
+//      fiber.node   = node;
+//      fiber.Update = onUpdate;
+//      fiber.caller = null;
+//      return fiber;
+//    }
     private static int nextId;
     private        int id;
 
@@ -53,16 +79,6 @@ namespace Askowl {
     }
 
     private bool running;
-
-    private static Fiber StartWithAction(Action onUpdate) {
-      if (Controller == null) Controller = Components.Create<FiberController>("FiberController");
-      var node                           = Queue.Update.GetRecycledOrNew();
-      var fiber                          = node.Item;
-      fiber.node   = node;
-      fiber.Update = onUpdate;
-      fiber.caller = null;
-      return fiber;
-    }
 
     #endregion
 
@@ -120,7 +136,7 @@ namespace Askowl {
     }
 
     // ReSharper disable once InconsistentNaming
-    private static void start(Fiber fiber) { }
+    private static readonly Action start = (fiber) => { };
 
     /// <a href="http://bit.ly/2DDvnNl">Loops and Blocks - Begin/End, Begin/Again, Begin-Repeat</a>
     public Fiber Begin {
@@ -150,6 +166,12 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2DDvlFd">Break a Begin/End/Repeat/Again block</a>
     public void Break() => SetAction("Break", actions.First);
+
+    /// <a href="http://bit.ly/2DDvlFd">Break a Begin/End/Repeat/Again block</a>
+    public Fiber BreakIf(System.Func<bool> isBreak) {
+      if (isBreak()) SetAction("Break", actions.First);
+      return this;
+    }
 
     /// <a href="http://bit.ly/2DBVWCe">Abort fiber processing, cleaning up as we go</a>
     public void Exit() {
@@ -190,8 +212,8 @@ namespace Askowl {
 
     private static void ToBegin(Fiber fiber) => fiber.SetAction("To-Begin", fiber.actions.Last);
 
-    private Fiber       caller, idler;
-    private CounterFifo repeats = CounterFifo.Instance;
+    private          Fiber       caller, idler;
+    private readonly CounterFifo repeats = CounterFifo.Instance;
 
     private Fiber StartCall() {
       running = false;
@@ -226,7 +248,7 @@ namespace Askowl {
     #region Debugging
 
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
-    public override string ToString() => $"{ActionNames} // {id} // {node.Owner.Name})";
+    public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Owner: {node.Owner.Name})";
 
     private string ActionNames {
       get {

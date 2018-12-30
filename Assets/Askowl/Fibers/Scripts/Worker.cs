@@ -58,14 +58,13 @@ namespace Askowl {
 
       /// <a href="http://bit.ly/2Ptbf6V">Load happens when we are building up a list of actions</a>
       public Fiber Load(Fiber fiber, T data) {
-        if (NeedsUpdates) StartWithAction(OnUpdate);
+//        if (NeedsUpdates) StartWithAction(OnUpdate);
         NeedsUpdates = false;
         Name         = $"{GetType()}-{Uid += 1}";
         Seed         = data;
         Fiber        = fiber;
         // ActivateWorker happens when we are executing all the actions in sequence
-        if (fiber.running) { ActivateWorker(fiber); }
-        else { fiber.Do(ActivateWorker, Name); }
+        if (fiber.running) { ActivateWorker(fiber); } else { fiber.Do(ActivateWorker, Name); }
         return fiber;
       }
 
@@ -81,7 +80,7 @@ namespace Askowl {
       }
 
       // ReSharper disable once StaticMemberInGenericType
-      internal static readonly Queue Queue = new Queue { CompareItem = Compare, DeactivateItem = Deactivate };
+      internal static readonly Queue Queue = new Queue {CompareItem = Compare, DeactivateItem = Deactivate};
 
       /// <a href="http://bit.ly/2Ptbf6V">Set to false for workers that do not need calls on frame update</a>
       protected static bool NeedsUpdates = true;
