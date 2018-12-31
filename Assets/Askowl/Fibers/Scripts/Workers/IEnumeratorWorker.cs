@@ -2,20 +2,21 @@
 
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
-namespace Askowl {
-  using System.Collections;
-  using UnityEngine;
+using System.Collections;
+using UnityEngine;
 
+namespace Askowl {
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber WaitFor(IEnumerator enumerator) => LoadWithPayload(enumerator, 0);
+    public Fiber WaitFor(IEnumerator enumerator) =>
+      AddAction(_ => LoadWithPayload(enumerator, 0), "WaitFor(IEnumerator)");
 
     /// <a href=""></a>
     public Fiber WaitFor(int framesBetweenChecks, IEnumerator enumerator) =>
-      LoadWithPayload(enumerator, framesBetweenChecks);
+      AddAction(_ => LoadWithPayload(enumerator, framesBetweenChecks));
 
     private Fiber LoadWithPayload(IEnumerator enumerator, int skipFrames) {
-      var payload = new EnumeratorWorker.Payload { Enumerator = enumerator, SkipFrames = skipFrames };
+      var payload = new EnumeratorWorker.Payload {Enumerator = enumerator, SkipFrames = skipFrames};
       return EnumeratorWorker.Instance.Load(this, payload);
     }
 
@@ -23,7 +24,7 @@ namespace Askowl {
     private class EnumeratorWorker : Worker<EnumeratorWorker.Payload> {
 //      static IEnumeratorWorker() => NeedsUpdates = false;
       public static      EnumeratorWorker Instance  => Cache<EnumeratorWorker>.Instance;
-      protected override void              Recycle() { Cache<EnumeratorWorker>.Dispose(this); }
+      protected override void             Recycle() { Cache<EnumeratorWorker>.Dispose(this); }
 
       /// <a href=""></a>
       public struct Payload {
@@ -59,8 +60,7 @@ namespace Askowl {
               break;
             case null: break; // step again on next frame
           }
-        }
-        else { Dispose(); }
+        } else { Dispose(); }
       }
     }
   }

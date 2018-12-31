@@ -1,14 +1,14 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine.TestTools;
+
 #if UNITY_EDITOR && Fibers
 
 // ReSharper disable MissingXmlDoc
 
 namespace Askowl.Examples {
-  using System.Collections;
-  using NUnit.Framework;
-  using UnityEngine.TestTools;
-
   public class EmitterExample {
     private bool         emitterFired;
     private Emitter      emitter;
@@ -30,7 +30,7 @@ namespace Askowl.Examples {
     }
 
     [UnityTest] public IEnumerator IdleDo() {
-      Fiber.Debugging = false;
+      Fiber.Debugging = true;
       emitterFired    = false;
       var idlingFiber = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
       Assert.IsFalse(emitterFired);

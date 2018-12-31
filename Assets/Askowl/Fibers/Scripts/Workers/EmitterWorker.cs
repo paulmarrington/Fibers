@@ -5,11 +5,13 @@
 namespace Askowl {
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber WaitFor(Emitter emitter) => EmitterWorker.Instance.Load(this, emitter);
+    public Fiber WaitFor(Emitter emitter, string name = null) =>
+      AddAction(_ => EmitterWorker.Instance.Load(this, emitter), name ?? "WaitFor(Emitter)");
 
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;
 
+      // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      EmitterWorker Instance  => Cache<EmitterWorker>.Instance;
       protected override void          Recycle() => Cache<EmitterWorker>.Dispose(this);
 

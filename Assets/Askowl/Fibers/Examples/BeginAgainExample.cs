@@ -16,15 +16,15 @@ namespace Askowl.Examples {
     private readonly Fiber beginEndGo, beginBreakAgainGo;
 
     public BeginAgainExample() {
-      beginEndGo        = Fiber.Instance.Do(IncrementCounter).Begin.Do(IncrementCounter).End.Do(IncrementCounter);
-      beginBreakAgainGo = Fiber.Instance.Begin.Do(_ => counter++).Do(Escape).Again.Do(_ => counter++);
-      Debug.Log($"BeginAgainExample {beginEndGo}\n{beginBreakAgainGo}"); //#TBD#//
+      beginEndGo = Fiber.Instance.Do(IncrementCounter).Begin.Do(IncrementCounter).End.Do(IncrementCounter);
+
+      Fiber.Action incrementCounter = _ => counter++;
+      beginBreakAgainGo = Fiber.Instance.Begin.Do(incrementCounter).Do(Escape).Again.Do(incrementCounter);
     }
 
     [UnityTest] public IEnumerator BeginEnd() {
       counter = 0;
       var fiber = Fiber.Start.Do(IncrementCounter).Begin.Do(IncrementCounter).End.Do(IncrementCounter);
-      Debug.Log($"BeginEnd {fiber}");
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
       Assert.AreEqual(3, counter);
@@ -32,16 +32,15 @@ namespace Askowl.Examples {
 
     [UnityTest] public IEnumerator BeginEndGo() {
       counter = 0;
-      Debug.Log($"BeginEndGo {beginEndGo}");
       yield return beginEndGo.Go().AsCoroutine();
       yield return new WaitForSeconds(0.3f);
       Assert.AreEqual(3, counter);
     }
 
     [UnityTest] public IEnumerator BeginBreakAgain() {
-      counter = 0;
+      Fiber.Debugging = false;
+      counter         = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Do(Escape).Again.Do(IncrementCounter);
-      Debug.Log($"BeginBreakAgain {fiber}");
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
       Assert.AreEqual(7, counter);
@@ -56,9 +55,9 @@ namespace Askowl.Examples {
     }
 
     [UnityTest] public IEnumerator BeginAgainExit() {
-      counter = 0;
+      Fiber.Debugging = false;
+      counter         = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Do(Exit).Again.Do(IncrementCounter);
-      Debug.Log($"BeginAgainExit {fiber}");
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
 
@@ -66,7 +65,8 @@ namespace Askowl.Examples {
     }
 
     [UnityTest] public IEnumerator BeginRepeat() {
-      counter = 0;
+      Fiber.Debugging = false;
+      counter         = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Repeat(5).Do(IncrementCounter);
       Debug.Log($"BeginRepeat {fiber}");
       yield return fiber.AsCoroutine();
@@ -87,10 +87,7 @@ namespace Askowl.Examples {
       fiber.Exit();
     }
 
-    private void IncrementCounter(Fiber fiber) {
-      counter++;
-      Debug.Log($"{counter} IncrementCounter {fiber}");
-    }
+    private void IncrementCounter(Fiber fiber) => counter++;
   }
 }
 #endif

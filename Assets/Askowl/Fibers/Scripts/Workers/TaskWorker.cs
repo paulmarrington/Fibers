@@ -7,16 +7,18 @@ namespace Askowl {
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
     /// <a href=""></a> //#TBD#//
-    public Fiber WaitFor(Task task) {
-      var emitter = Emitter.Instance;
+    public Fiber WaitFor(Task task) =>
+      AddAction(
+        _ => {
+          var emitter = Emitter.Instance;
 
-      void action(Task _) {
-        emitter.Fire();
-        emitter.Dispose();
-      }
+          void action(Task __) {
+            emitter.Fire();
+            emitter.Dispose();
+          }
 
-      task.ContinueWith(action);
-      return WaitFor(emitter);
-    }
+          task.ContinueWith(action);
+          WaitFor(emitter);
+        }, "WaitFor(Task)");
   }
 }

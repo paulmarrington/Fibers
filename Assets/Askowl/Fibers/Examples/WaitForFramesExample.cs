@@ -1,17 +1,18 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+
 #if UNITY_EDITOR && Fibers
 
 // ReSharper disable MissingXmlDoc
 
 namespace Askowl.Examples {
-  using System.Collections;
-  using NUnit.Framework;
-  using UnityEngine;
-  using UnityEngine.TestTools;
-
   public class WaitForFramesExample {
     [UnityTest] public IEnumerator WaitForFrames() {
+      Fiber.Debugging = false;
       var frame = 0;
       void reset(Fiber _) => frame = Time.frameCount + 1;
 

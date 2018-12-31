@@ -7,10 +7,12 @@ using UnityEngine;
 namespace Askowl {
   public partial class Fiber {
     /// <a href=""></a>
-    public Fiber WaitFor(float seconds) => SecondsWorker.Instance.Load(fiber: this, data: seconds);
+    public Fiber WaitFor(float seconds) =>
+      AddAction(_ => SecondsWorker.Instance.Load(fiber: this, data: seconds), "WaitFor(Seconds)");
 
     /// <a href=""></a>
-    public Fiber WaitRealtime(float seconds) => RealtimeWorker.Instance.Load(fiber: this, seconds);
+    public Fiber WaitRealtime(float seconds) =>
+      AddAction(_ => RealtimeWorker.Instance.Load(fiber: this, seconds), "WaitFor(Realtime Seconds)");
 
     private class SecondsWorker : BaseTimeWorker {
       public static      BaseTimeWorker Instance            => Cache<SecondsWorker>.Instance;

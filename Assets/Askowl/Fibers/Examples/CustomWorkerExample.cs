@@ -9,13 +9,9 @@ using UnityEngine.TestTools;
 
 // ReSharper disable ClassNeverInstantiated.Local ClassNeverInstantiated.Global MissingXmlDoc
 
-namespace Askowl.Examples
-{
-  public class CustomWorkerExample
-  {
-    [UnityTest]
-    public IEnumerator CustomTypeWorkerExample()
-    {
+namespace Askowl.Examples {
+  public class CustomWorkerExample {
+    [UnityTest] public IEnumerator CustomTypeWorkerExample() {
       CustomTypeWorkerClass.Disposed = false;
       var start = Time.frameCount;
       yield return Fiber.Start.CustomTypeWorker(3).AsCoroutine();
@@ -24,9 +20,7 @@ namespace Askowl.Examples
       Assert.IsTrue(CustomTypeWorkerClass.Disposed);
     }
 
-    [UnityTest]
-    public IEnumerator CustomObjectWorkerExample()
-    {
+    [UnityTest] public IEnumerator CustomObjectWorkerExample() {
       CustomObjectWorkerClass.Payload payload = new CustomObjectWorkerClass.Payload {A = 5, B = 6};
       yield return Fiber.Start.CustomObjectWorker(payload).AsCoroutine();
 
@@ -34,21 +28,16 @@ namespace Askowl.Examples
     }
   }
 
-  internal class CustomTypeWorkerClass : Fiber.Worker<int>
-  {
+  internal class CustomTypeWorkerClass : Fiber.Worker<int> {
     public static CustomTypeWorkerClass Instance => Cache<CustomTypeWorkerClass>.Instance;
 
-    protected override void Recycle()
-    {
-      Cache<CustomTypeWorkerClass>.Dispose(this);
-    }
+    protected override void Recycle() => Cache<CustomTypeWorkerClass>.Dispose(this);
 
     public static bool Disposed;
 
-    protected override bool Prepare()
-    {
+    protected override bool Prepare() {
       Disposed = false;
-      counter = Seed;
+      counter  = Seed;
       return true;
     }
 
@@ -57,42 +46,33 @@ namespace Askowl.Examples
     protected override int CompareTo(Fiber.Worker other) =>
       counter.CompareTo((other as CustomTypeWorkerClass)?.counter);
 
-    public override void Step()
-    {
+    public override void Step() {
       if (++counter == 5) Dispose();
     }
 
-    public override void Dispose()
-    {
+    public override void Dispose() {
       Disposed = true;
       base.Dispose();
     }
   }
 
-  public class CustomObjectWorkerClass : Fiber.Worker<CustomObjectWorkerClass.Payload>
-  {
+  public class CustomObjectWorkerClass : Fiber.Worker<CustomObjectWorkerClass.Payload> {
     public static CustomObjectWorkerClass Instance => Cache<CustomObjectWorkerClass>.Instance;
 
-    protected override void Recycle()
-    {
-      Cache<CustomObjectWorkerClass>.Dispose(this);
-    }
+    protected override void Recycle() => Cache<CustomObjectWorkerClass>.Dispose(this);
 
     protected override bool Prepare() => true;
 
-    public class Payload
-    {
+    public class Payload {
       public int A, B;
     }
 
-    public override void Step()
-    {
+    public override void Step() {
       if (++Seed.A == 10) Dispose();
     }
   }
 
-  public static class MyCustomFiberExtensions
-  {
+  public static class MyCustomFiberExtensions {
     public static Fiber CustomTypeWorker(this Fiber fiber, int seed) =>
       CustomTypeWorkerClass.Instance.Load(fiber, seed);
 

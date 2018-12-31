@@ -2,9 +2,9 @@
 
 // ReSharper disable StaticMemberInGenericType
 
-namespace Askowl {
-  using System;
+using System;
 
+namespace Askowl {
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
     /// <a href="http://bit.ly/2Ptbf6V">List of workers associated with Fiber actions</a>
@@ -58,13 +58,14 @@ namespace Askowl {
 
       /// <a href="http://bit.ly/2Ptbf6V">Load happens when we are building up a list of actions</a>
       public Fiber Load(Fiber fiber, T data) {
-//        if (NeedsUpdates) StartWithAction(OnUpdate);
+        if (NeedsUpdates) Instance.Go(onUpdate); // hook into update if this worker needs it
         NeedsUpdates = false;
-        Name         = $"{GetType()}-{Uid += 1}";
-        Seed         = data;
-        Fiber        = fiber;
+
+        Name  = $"{GetType()}-{Uid += 1}";
+        Seed  = data;
+        Fiber = fiber;
         // ActivateWorker happens when we are executing all the actions in sequence
-        if (fiber.running) { ActivateWorker(fiber); } else { fiber.Do(ActivateWorker, Name); }
+        if (fiber.running) { ActivateWorker(fiber); } else { fiber.AddAction(ActivateWorker); }
         return fiber;
       }
 
@@ -79,21 +80,20 @@ namespace Askowl {
         fiber.node.MoveTo(Queue);
       }
 
-      // ReSharper disable once StaticMemberInGenericType
       internal static readonly Queue Queue = new Queue {CompareItem = Compare, DeactivateItem = Deactivate};
 
       /// <a href="http://bit.ly/2Ptbf6V">Set to false for workers that do not need calls on frame update</a>
       protected static bool NeedsUpdates = true;
 
       // ReSharper disable once MemberHidesStaticFromOuterClass
-      private static void OnUpdate(Fiber fiber) {
+      private static readonly Action onUpdate = (fiber) => {
         var node = Queue.First;
         while (node?.Item.Workers.Top?.NoMore == false) {
           var next = node.Next; // save in case Step() calls dispose
           node.Item.Workers.Top.Step();
           node = next;
         }
-      }
+      };
     }
   }
 }
