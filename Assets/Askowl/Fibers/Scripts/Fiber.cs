@@ -190,7 +190,6 @@ namespace Askowl {
         _ => {
           if (anotherFiber == null) return;
           WaitFor(anotherFiber.OnComplete);
-          Debug.Log($"WaitFor running='{anotherFiber.Running}', {anotherFiber}"); //#DM#// 
           if (!anotherFiber.Running) anotherFiber.Go();
         });
 
