@@ -2,6 +2,7 @@
 
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -10,6 +11,10 @@ namespace Askowl {
     /// <a href=""></a>
     public Fiber WaitFor(IEnumerator enumerator) =>
       AddAction(_ => LoadWithPayload(enumerator, 0), "WaitFor(IEnumerator)");
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber WaitFor(Func<Fiber, IEnumerator> getter) =>
+      AddAction(_ => WaitFor(getter(this)), "WaitFor(IEnumerator)");
 
     /// <a href=""></a>
     public Fiber WaitFor(int framesBetweenChecks, IEnumerator enumerator) =>
@@ -22,9 +27,10 @@ namespace Askowl {
 
     /// <a href=""></a> <inheritdoc />
     private class EnumeratorWorker : Worker<EnumeratorWorker.Payload> {
-//      static IEnumeratorWorker() => NeedsUpdates = false;
+      static EnumeratorWorker() => NeedsUpdates = false;
+      // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      EnumeratorWorker Instance  => Cache<EnumeratorWorker>.Instance;
-      protected override void             Recycle() { Cache<EnumeratorWorker>.Dispose(this); }
+      protected override void             Recycle() => Cache<EnumeratorWorker>.Dispose(this);
 
       /// <a href=""></a>
       public struct Payload {
@@ -55,7 +61,7 @@ namespace Askowl {
             case int frames:
               nextStepFrame = Time.frameCount + frames;
               break;
-            case YieldInstruction yieldInstruction:
+            case YieldInstruction _:
               Log.Error($"YieldInstruction {Seed.Enumerator.Current.GetType()} only works with Unity coroutines");
               break;
             case null: break; // step again on next frame

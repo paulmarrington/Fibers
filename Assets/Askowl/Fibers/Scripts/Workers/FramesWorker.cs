@@ -2,13 +2,17 @@
 
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
-namespace Askowl {
-  using UnityEngine;
+using System;
+using UnityEngine;
 
+namespace Askowl {
   public partial class Fiber {
-    /// <a href=""></a>
+    /// <a href=""></a> //#TBD#// 
     public Fiber SkipFrames(int framesToSkip) =>
       AddAction(_ => FrameWorker.Instance.Load(fiber: this, data: Time.frameCount + framesToSkip));
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber SkipFrames(Func<Fiber, int> getter) => AddAction(_ => SkipFrames(getter(this)));
 
     private class FrameWorker : Worker<int> {
       // ReSharper disable once MemberHidesStaticFromOuterClass

@@ -46,6 +46,24 @@ namespace Askowl.Examples {
       Assert.AreEqual(7, counter);
     }
 
+    [UnityTest] public IEnumerator BreakIf() {
+      Fiber.Debugging = false;
+      counter         = 0;
+      var fiber = Fiber.Start.Begin.Do(IncrementCounter).BreakIf(_ => counter > 5).Again.Do(IncrementCounter);
+      yield return fiber.AsCoroutine();
+      yield return new WaitForSeconds(0.3f);
+      Assert.AreEqual(7, counter);
+    }
+
+    [UnityTest] public IEnumerator BeginUntil() {
+      Fiber.Debugging = false;
+      counter         = 0;
+      var fiber = Fiber.Start.Begin.Do(IncrementCounter).Until(_ => counter > 5).Do(IncrementCounter);
+      yield return fiber.AsCoroutine();
+      yield return new WaitForSeconds(0.3f);
+      Assert.AreEqual(7, counter);
+    }
+
     [UnityTest] public IEnumerator BeginBreakAgainGo() {
       counter = 0;
       Debug.Log($"BeginBreakAgainGo {beginBreakAgainGo}");

@@ -65,7 +65,7 @@ namespace Askowl {
         Seed  = data;
         Fiber = fiber;
         // ActivateWorker happens when we are executing all the actions in sequence
-        if (fiber.running) { ActivateWorker(fiber); } else { fiber.AddAction(ActivateWorker); }
+        if (fiber.Running) { ActivateWorker(fiber); } else { fiber.AddAction(ActivateWorker); }
         return fiber;
       }
 

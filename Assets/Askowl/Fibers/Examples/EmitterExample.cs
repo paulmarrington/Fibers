@@ -2,6 +2,7 @@
 
 using System.Collections;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.TestTools;
 
 #if UNITY_EDITOR && Fibers
@@ -55,6 +56,17 @@ namespace Askowl.Examples {
 
     private void SetEmitterFiredFlag(Fiber fiber) => emitterFired = true;
     private void Fire(Fiber                fiber) => emitter.Fire();
+
+    [UnityTest] public IEnumerator WaitForFiber() {
+      var sleeper = Fiber.Instance.WaitFor(seconds: 0.1f).Do(_ => sleeperDone = true);
+      Fiber.Start.Do(_ => sleeperDone = false).WaitFor(sleeper.OnComplete);
+      yield return new WaitForSeconds(0.2f);
+      Assert.IsFalse(sleeperDone);
+      sleeper.Go();
+      yield return new WaitForSeconds(0.2f);
+      Assert.IsTrue(sleeperDone);
+    }
+    private bool sleeperDone;
   }
 }
 #endif

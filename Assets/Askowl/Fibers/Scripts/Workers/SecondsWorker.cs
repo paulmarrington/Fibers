@@ -2,31 +2,41 @@
 
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
+using System;
 using UnityEngine;
 
 namespace Askowl {
   public partial class Fiber {
-    /// <a href=""></a>
+    /// <a href=""></a> //#TBD#// 
     public Fiber WaitFor(float seconds) =>
       AddAction(_ => SecondsWorker.Instance.Load(fiber: this, data: seconds), "WaitFor(Seconds)");
 
-    /// <a href=""></a>
+    /// <a href=""></a> //#TBD#//
+    public Fiber WaitFor(Func<Fiber, float> getter) => AddAction(_ => WaitFor(getter(this)), "WaitFor(Seconds)");
+
+    /// <a href=""></a> //#TBD#// 
     public Fiber WaitRealtime(float seconds) =>
       AddAction(_ => RealtimeWorker.Instance.Load(fiber: this, seconds), "WaitFor(Realtime Seconds)");
 
+    /// <a href=""></a> //#TBD#//
+    public Fiber WaitRealtime(Func<Fiber, float> getter) =>
+      AddAction(_ => WaitRealtime(getter(this)), "WaitFor(Realtime Seconds)");
+
     private class SecondsWorker : BaseTimeWorker {
+      // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      BaseTimeWorker Instance            => Cache<SecondsWorker>.Instance;
       protected override void           Recycle()           => Cache<SecondsWorker>.Dispose(this);
       protected override float          TimeNow             => Time.time;
-      protected override float          CalculatedEndTime() => Seed + Time.time - 2 * Time.deltaTime;
+      protected override float          CalculatedEndTime() => (Seed + Time.time) - (2 * Time.deltaTime);
     }
 
     private class RealtimeWorker : BaseTimeWorker {
+      // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      BaseTimeWorker Instance  => Cache<RealtimeWorker>.Instance;
       protected override void           Recycle() => Cache<RealtimeWorker>.Dispose(this);
       protected override float          TimeNow   => Time.realtimeSinceStartup;
 
-      protected override float CalculatedEndTime() => Seed + Time.realtimeSinceStartup - 2 * Time.unscaledDeltaTime;
+      protected override float CalculatedEndTime() => (Seed + Time.realtimeSinceStartup) - (2 * Time.unscaledDeltaTime);
     }
 
     private abstract class BaseTimeWorker : Worker<float> {

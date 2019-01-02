@@ -1,5 +1,7 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+using System;
+
 namespace Askowl {
   using System.Threading.Tasks;
 
@@ -20,5 +22,8 @@ namespace Askowl {
           task.ContinueWith(action);
           WaitFor(emitter);
         }, "WaitFor(Task)");
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber WaitFor(Func<Fiber, Task> getter) => AddAction(_ => WaitFor(getter(this)), "WaitFor(Task)");
   }
 }

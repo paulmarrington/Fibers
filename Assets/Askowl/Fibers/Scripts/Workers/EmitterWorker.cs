@@ -2,11 +2,17 @@
 
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
+using System;
+
 namespace Askowl {
   public partial class Fiber {
-    /// <a href=""></a>
+    /// <a href=""></a> //#TBD#//
     public Fiber WaitFor(Emitter emitter, string name = null) =>
       AddAction(_ => EmitterWorker.Instance.Load(this, emitter), name ?? "WaitFor(Emitter)");
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber WaitFor(Func<Fiber, Emitter> getEmitter, string name = null) =>
+      AddAction(_ => WaitFor(getEmitter(this)), name ?? "WaitFor(Emitter)");
 
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;
