@@ -38,10 +38,19 @@ namespace Askowl {
     /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
     public static Fiber Start {
       get {
-        var fiber = Instance.Go();
+        if (controller == null) {
+          controller = Components.Create<FiberController>("FiberController");
+        }
+        var fiber = Instance;
+        fiber.Update = FirstUpdate;
+        fiber.node.MoveTo(Queue.Update);
         fiber.disposeOnComplete = true;
         return fiber;
       }
+    }
+    private static void FirstUpdate(Fiber fiber) { // called on first Update
+      fiber.Go(NextAction);
+      NextAction(fiber);
     }
 
     /// <a href=""></a> //#TBD#//
