@@ -70,17 +70,34 @@ A Fiber can have a repeat count. It could be the number of sparkler flashes or t
 Fiber.Start.Begin.Do(ShowLightBulb).WaitForSeconds(3).Repeat(5);
 ```
 ### Begin End
-A Fiber command does not have an `if` statement, but the same result can be gained with Begin, Break and End.
+Use `Break()` from inside any Do-code to go to the next command after `End`*[]:
+
 ``` c#
 private void Step1(Fiber fiber) {
   if (noMore) fiber.Break();
 }
 Fiber.Start.Begin.Do(Step1).WaitFor(seconds: 1f).Do(Step2).End.Do(Step3);
 ```
+
+### Begin Until
+Another looping function that can be terminated with a boolean test at the end of each cycle.
+``` c#
+Fiber mineAlert = Fiber.Instance.Begin.WaitFor(flashAlarmLight)
+                       .Until(_ => MineDistance() > 1.0f);
+```
+
 ### Break
 Break when called within a Fiber function exits the inner block.
+
 ### Exit
 When `Exit()` is called from within a Fiber function, the Fiber stack terminates after cleaning up. Mostly used for unexpected conditions or in response to an error.
+
+### Do
+Do functions contain project specific logic. Since each `Do` function runs in a single frame, make them short and sweat.
+``` c#
+Fiber.Start.Do(Breaking).Do(Up).Do(Large).Do(Calculations)
+```
+
 ### Idle and Restart
 `Idle` is a built-in emitter listener where `Restart` is the trigger. Restart can be given a reference to the fiber to kick.
 ``` c#
@@ -119,6 +136,25 @@ An `Emitter` is an Able class that implements the observer pattern. When used Fi
 #### WaitFor(Fiber) or WaitFor((fiber) => anotherFiber)
 Waiting for another Fiber is a way of factoring out common sequences. The driving fiber continues once the fiber being waited on completes. If the inner fiber is not running, `Go` is called.
 
+```c#
+// Create and display a thingamebob
+Fiber display = Fiber.Instance.Do(_ => whatever);
+// Wait for the thingamebob to finish doing it's thing
+Fiber completion = Fiber.Instance.If(display.Running)
+                        .WaitFor(display.OnComplete).Then;
+// Allow current thingamebob to complete before starting another
+Fiber nextDisplay = Fiber.Instance.WaitFor(completion)
+                         .Do(_ => SetNextDisplay).WaitFor(display);
+// Let thingamebob to complete before falling over
+Fiber fallOver = Fiber.Instance.WaitFor(Completion).Do(_ => FallOver();
+// ...
+display.Go();
+// ...
+if (fellOver) fallOver.Go() else nextDisplay.Go();
+```
+
+This, admittedly theoretical example follows the dance of four fibers. Note that we don't need to start the completion fiber.
+
 #### WaitFor(IEnumerator) or WaitFor((fiber) => iEnumerator)
 A C# method with an IEnumerator return value is a state machine with each state transferal happening each update. Use for existing coroutines you would like to integrate. Use sparingly because coroutine state machines use the heap and increase garbage collection.
 
@@ -127,12 +163,6 @@ Delay the Fiber for the specified time. `WaitForSeconds` is scaled by `Time.time
 
 #### Waitfor(Task)
 C# and .NET Core provide support for Tasks - a preemptive thread-based multi-tasking approach. Task works fine with Unity except that a response can be sent at any time, not just in one of the update cycles. Attempting to do any Unity work at these times will be disastrous. Using this action within a Fiber will synchronise to Update, LateUpdate or FixedUpdate as you require.
-
-### Do
-Do functions contain project specific logic. Since each `Do` function runs in a single frame, make them short and sweat.
-``` c#
-Fiber.Start.Do(Breaking).Do(Up).Do(Large).Do(Calculations)
-```
 ## Creating New Fiber Commands
 You should only need to create new Fiber commands when dealing with external asynchronous events.
 ### Using an Emitter
