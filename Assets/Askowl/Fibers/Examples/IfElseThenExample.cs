@@ -24,7 +24,7 @@ namespace Askowl.Examples {
     }
 
     [UnityTest, Timeout(10000)] public IEnumerator IfElseThen() {
-      Fiber.Debugging = true;
+      Fiber.Debugging = false;
       int mark  = 0;
       var fiber = Fiber.Instance.If(_ => mark == 1).Do(_ => mark = 2).Else.Do(_ => mark = 3).Then;
 

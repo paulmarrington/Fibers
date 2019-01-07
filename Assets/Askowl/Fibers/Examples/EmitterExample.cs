@@ -31,7 +31,7 @@ namespace Askowl.Examples {
     }
 
     [UnityTest] public IEnumerator IdleDo() {
-      Fiber.Debugging = true;
+      Fiber.Debugging = false;
       emitterFired    = false;
       var idlingFiber = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
       Assert.IsFalse(emitterFired);

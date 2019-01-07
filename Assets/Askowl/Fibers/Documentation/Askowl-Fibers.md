@@ -38,6 +38,8 @@ Fiber.Start
   .Do(Stagger).WaitFor(seconds: 0.2f)
   .Begin.Do(Stars).WaitFor(seconds: 0.2f).Do(CheckForDeath).Repeat(5);
 ```
+Note that each step in a fiber is passed a reference. This is mostly so that you can call `fiber.Break()` if needed.
+
 Once a Fiber terminates it is placed in a recycle bin for later reuse. The section below includes functions that allow loops, repeats and conditional exits.
 
 ## Built-in Fiber Commands
@@ -100,7 +102,12 @@ Fiber.Start.OnLateUpdate.Begin.Do(FollowingCamera). Again;
 Fiber.Start.OnFixedUpdate.Begin.Do(BlinkMessage).Repeat(10);
 Fiber.Start.OnFixedUpdate.OnUpdate.Do(WhyDidIDoThat);
 ```
-### WaitFor(Emitter)
+### WaitFor
+The main reason for Fibers, Coroutines and Threads is that most tasks spend much more time waiting for something than actually doing anything. Enter `WaitFor` to the rescue. Most `WaitFor` commands come in two flavours - to provide the source directly or by calling a function. There is method to this madness. If the resource is unavailable or likely to change in the Fiber compile phase, then the function approach must be used. Examples would include an emitter that may not yet have been created or a number of seconds that could change between fiber runs.
+
+The `WaitFor` commands here provide all basic usage. `WaitFor(Emitter)` can be used for almost any other case you will require.
+
+#### WaitFor(Emitter) and WaitFor((fiber) => emitter)
 An `Emitter` is an Able class that implements the observer pattern. When used Fibers, they are the key to inter-Fiber synchronisation. By giving external processes emitters, they allow Fibers to wait on asynchronous results.
 ``` c#
       using (emitter = Askowl.Emitter.Instance) {
@@ -109,16 +116,23 @@ An `Emitter` is an Able class that implements the observer pattern. When used Fi
         Fiber.Start.WaitRealtime(0.2f).Do(Fire);
       }
 ```
-### WaitFor(IEnumerator)
+#### WaitFor(Fiber) or WaitFor((fiber) => anotherFiber)
+Waiting for another Fiber is a way of factoring out common sequences. The driving fiber continues once the fiber being waited on completes. If the inner fiber is not running, `Go` is called.
+
+#### WaitFor(IEnumerator) or WaitFor((fiber) => iEnumerator)
 A C# method with an IEnumerator return value is a state machine with each state transferal happening each update. Use for existing coroutines you would like to integrate. Use sparingly because coroutine state machines use the heap and increase garbage collection.
+
+#### WaitFor(seconds), WaitFor((fiber) => seconds), WaitRealtime(seconds) and WaitRealtime((fiber) => seconds)
+Delay the Fiber for the specified time. `WaitForSeconds` is scaled by `Time.timeScale`, while `WaitForSecondsRealtime` isn't. The Fiber worker is moved to a special queue that is only processed when the shortest waiting frame count expires. This further minimises the processing load during updates.
+
+#### Waitfor(Task)
+C# and .NET Core provide support for Tasks - a preemptive thread-based multi-tasking approach. Task works fine with Unity except that a response can be sent at any time, not just in one of the update cycles. Attempting to do any Unity work at these times will be disastrous. Using this action within a Fiber will synchronise to Update, LateUpdate or FixedUpdate as you require.
+
 ### Do
 Do functions contain project specific logic. Since each `Do` function runs in a single frame, make them short and sweat.
 ``` c#
 Fiber.Start.Do(Breaking).Do(Up).Do(Large).Do(Calculations)
 ```
-### WaitFor(seconds) and WaitRealtime(seconds)
-
-Delay the Fiber for the specified time. `WaitForSeconds` is scaled by `Time.timeScale`, while `WaitForSecondsRealtime` isn't. The Fiber worker is moved to a special queue that is only processed when the shortest waiting frame count expires. This further minimises the processing load during updates. 
 ## Creating New Fiber Commands
 You should only need to create new Fiber commands when dealing with external asynchronous events.
 ### Using an Emitter

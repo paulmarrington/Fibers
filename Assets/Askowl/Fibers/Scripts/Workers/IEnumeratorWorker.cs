@@ -27,7 +27,7 @@ namespace Askowl {
 
     /// <a href=""></a> <inheritdoc />
     private class EnumeratorWorker : Worker<EnumeratorWorker.Payload> {
-      static EnumeratorWorker() => NeedsUpdates = false;
+//      static EnumeratorWorker() => NeedsUpdates = false;
       // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      EnumeratorWorker Instance  => Cache<EnumeratorWorker>.Instance;
       protected override void             Recycle() => Cache<EnumeratorWorker>.Dispose(this);

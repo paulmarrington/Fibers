@@ -16,7 +16,7 @@ namespace Askowl.Examples {
       var start = Time.frameCount;
       yield return Fiber.Start.CustomTypeWorker(3).AsCoroutine();
 
-      Assert.AreEqual(4, Time.frameCount - start);
+      Assert.AreEqual(3, Time.frameCount - start);
       Assert.IsTrue(CustomTypeWorkerClass.Disposed);
     }
 

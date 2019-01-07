@@ -1,12 +1,12 @@
 ﻿// ReSharper disable MissingXmlDoc
 
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine.TestTools;
+
 #if UNITY_EDITOR && Fibers
 
 namespace Askowl.Examples {
-  using System.Collections;
-  using NUnit.Framework;
-  using UnityEngine.TestTools;
-
   public class UpdatesExample {
     private int counter;
 
@@ -34,7 +34,6 @@ namespace Askowl.Examples {
     [UnityTest] public IEnumerator OnFixedUpdatesExample() {
       counter = 0;
       yield return Fiber.Start.OnFixedUpdates.Do(Check).AsCoroutine();
-
       Assert.AreEqual(1, counter);
     }
 

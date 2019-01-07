@@ -58,11 +58,12 @@ namespace Askowl {
 
     /// <a href=""></a> //#TBD#//
     public Fiber Go(Action updater) {
+      if (Running) return this;
       if (controller == null) {
         controller = Components.Create<FiberController>("FiberController");
       }
-      Running = true;
       Update  = updater;
+      Running = true;
       SetAction(actions.Last);
       node.MoveTo(Queue.Update);
       return this;
@@ -81,7 +82,7 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2DBVWCe">Abort fiber processing, cleaning up as we go</a>
     public Fiber Exit() {
-      while ((action?.Previous != null) && (action.Previous.Item.Actor != Yielding)) action = action.Previous;
+      action = actions.First;
       return this;
     }
 
@@ -187,11 +188,9 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2DB3wgx">Return an IEnumerator to use with a yield in a Coroutine</a>
     public IEnumerator AsCoroutine() {
-      Do(Yielding);
-      for (yielding = false; yielding != true;) yield return null;
+      if (!Running) Go();
+      while (Running) yield return null;
     }
-    private bool yielding;
-    private void Yielding(Fiber fiber) => yielding = true;
 
     /// <a href=""></a> //#TBD#//
     public Fiber WaitFor(Fiber anotherFiber) =>
