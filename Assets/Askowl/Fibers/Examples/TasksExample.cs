@@ -13,13 +13,12 @@ namespace Askowl.Examples {
     private int counter;
 
     // Start an asynchronous task that completes after a time in milliseconds
-    private Task Delay(int ms) {
-      return Task.Run(
+    private Task Delay(int ms) =>
+      Task.Run(
         async () => {
           await Task.Delay(ms);
           counter++;
         });
-    }
 
     [UnityTest, Timeout(10000)] public IEnumerator EmitOnComplete() {
       counter = 0;

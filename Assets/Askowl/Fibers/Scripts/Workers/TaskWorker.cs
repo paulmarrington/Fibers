@@ -5,10 +5,9 @@ using System;
 namespace Askowl {
   using System.Threading.Tasks;
 
-  /// <a href="">Convert Task activities to Coroutines to behave well with the rest of Unity</a> //#TBD#//
   // ReSharper disable once ClassNeverInstantiated.Global
   public partial class Fiber {
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RcQM7a">Convert Task activities to Coroutines to behave well with the rest of Unity</a>
     public Fiber WaitFor(Task task) =>
       AddAction(
         _ => {
@@ -23,7 +22,7 @@ namespace Askowl {
           WaitFor(emitter);
         }, "WaitFor(Task)");
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RcQM7a">Convert Task activities to Coroutines to behave well with the rest of Unity - value passed by function return</a>
     public Fiber WaitFor(Func<Fiber, Task> getter) => AddAction(_ => WaitFor(getter(this)), "WaitFor(Task)");
   }
 }

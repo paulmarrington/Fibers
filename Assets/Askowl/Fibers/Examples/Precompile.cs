@@ -13,15 +13,26 @@ namespace Askowl.Examples {
     private float start, end;
     private float secondsToDelay;
 
-    private void checkElapsed(float seconds) {
+    private void CheckElapsed(float seconds) {
       Assert.AreEqual(seconds + Time.deltaTime, Time.timeSinceLevelLoad - start, 0.05f);
       start = Time.timeSinceLevelLoad + Time.deltaTime;
+    }
+
+    [UnityTest] public IEnumerator InstanceGo() {
+      start = Time.realtimeSinceStartup;
+
+      var fiber = Fiber.Instance.WaitFor(seconds: 0.3f);
+      fiber.Go(); // in this case superfluous since AsCoroutine() calls it implicitly (as does WaitFor(Fiber))
+
+      yield return fiber.AsCoroutine();
+      end = Time.realtimeSinceStartup;
+      Assert.AreEqual(0.3f, end - start, 0.05f);
     }
 
     [UnityTest] public IEnumerator WaitForFunc() {
       var compiledFiber = Fiber.Instance.Begin.Do(_ => start = Time.timeSinceLevelLoad)
                                .WaitFor(_ => secondsToDelay)
-                               .Do(_ => checkElapsed(secondsToDelay)).Repeat(5);
+                               .Do(_ => CheckElapsed(secondsToDelay)).Repeat(5);
 
       secondsToDelay = 0.3f;
       yield return compiledFiber.Go().AsCoroutine();

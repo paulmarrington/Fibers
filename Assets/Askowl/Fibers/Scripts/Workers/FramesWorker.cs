@@ -7,11 +7,11 @@ using UnityEngine;
 
 namespace Askowl {
   public partial class Fiber {
-    /// <a href=""></a> //#TBD#// 
+    /// <a href="http://bit.ly/2DDvloH">Wait a specific count of Update, FixedUpdate or LateUpdate frames</a>
     public Fiber SkipFrames(int framesToSkip) =>
       AddAction(_ => FrameWorker.Instance.Load(fiber: this, data: Time.frameCount + framesToSkip));
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2DDvloH">Wait a specific count of Update, FixedUpdate or LateUpdate frames - value passed by function return to</a>
     public Fiber SkipFrames(Func<Fiber, int> getter) => AddAction(_ => SkipFrames(getter(this)));
 
     private class FrameWorker : Worker<int> {

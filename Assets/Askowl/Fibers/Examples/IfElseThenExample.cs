@@ -11,7 +11,8 @@ using UnityEngine.TestTools;
 namespace Askowl.Examples {
   public sealed class IfElseThenExample {
     [UnityTest, Timeout(10000)] public IEnumerator IfThen() {
-      int mark  = 0;
+      int mark = 0;
+      // ReSharper disable once AccessToModifiedClosure
       var fiber = Fiber.Instance.If(_ => mark == 1).Do(_ => mark = 2).Then;
       fiber.Go();
       yield return new WaitForSeconds(0.2f);
@@ -25,7 +26,8 @@ namespace Askowl.Examples {
 
     [UnityTest, Timeout(10000)] public IEnumerator IfElseThen() {
       Fiber.Debugging = false;
-      int mark  = 0;
+      int mark = 0;
+      // ReSharper disable once AccessToModifiedClosure
       var fiber = Fiber.Instance.If(_ => mark == 1).Do(_ => mark = 2).Else.Do(_ => mark = 3).Then;
 
       mark = 0;

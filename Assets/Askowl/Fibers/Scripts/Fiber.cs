@@ -10,16 +10,16 @@ namespace Askowl {
   public partial class Fiber : IDisposable {
     #region Instantiate
 
-    /// <a href=""></a> //#TBD#//
+    ///
     public Emitter OnComplete;
 
-    /// <a href=""></a> //#TBD#//
+    ///
     public bool Running;
 
     /// <a href="http://bit.ly/2DDZjbO">Method signature for Do(Action) methods</a>
     public delegate void Action(Fiber fiber);
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RAsNy3">Precompile an instance of a fiber command</a>
     public static Fiber Instance {
       get {
         var node = Queue.Waiting.GetRecycledOrNew();
@@ -53,10 +53,10 @@ namespace Askowl {
       NextAction(fiber);
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2Rb9oEq">Start a fiber if it is not already running</a>
     public Fiber Go() => Go(NextAction);
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2Rb9oEq">Start a fiber if it is not already running</a>
     public Fiber Go(Action updater) {
       if (Running) return this;
       if (controller == null) {
@@ -86,7 +86,7 @@ namespace Askowl {
       return this;
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2Rf0dD4">Complete a Fiber.Start statement where needed (no action)</a>
     public void Finish() { }
 
     #endregion
@@ -119,7 +119,7 @@ namespace Askowl {
         }, "Repeat").End;
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2CT634f">Loop until a value function returns true</a>
     public Fiber Until(Func<Fiber, bool> isTrue) =>
       AddAction(
         _ => {
@@ -127,7 +127,7 @@ namespace Askowl {
           if (!isTrue(this)) action = begin;
         }, "Until").End;
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RDN05W">Break out of any block if a value function returns true</a>
     public Fiber BreakIf(Func<Fiber, bool> isBreak) =>
       AddAction(
         _ => {
@@ -139,13 +139,13 @@ namespace Askowl {
       while ((action?.Previous != null) && (action.Previous.Item.Actor != NextAction)) action = action.Previous;
     }
 
-    /// <a href=""></a> //#TBD#//
+    ///
     public void Break(int after) {
       Skip(after);
       Break();
     }
 
-    /// <a href=""></a> //#TBD#//
+    ///
     public void Skip(int after) {
       for (int i = 0; (i < after) && (action != null); i++) action = action.Previous;
     }
@@ -154,17 +154,17 @@ namespace Askowl {
 
     #region If Else Then
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2CU6Vp6">Standard If // Else // Then branch</a>
     public Fiber If(Func<Fiber, bool> isTrue) =>
       AddAction(
         _ => {
           if (!isTrue(this)) Break();
         }, "If");
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2CU6Vp6">Standard If // Else // Then branch</a>
     public Fiber Else => AddAction(_ => Break(2), "Else").AddAction(NextAction);
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2CU6Vp6">Standard If // Else // Then branch</a>
     public Fiber Then => AddAction(NextAction, "Then");
 
     #endregion
@@ -192,7 +192,7 @@ namespace Askowl {
       while (Running) yield return null;
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed</a>
     public Fiber WaitFor(Fiber anotherFiber) =>
       AddAction(
         _ => {
@@ -201,7 +201,7 @@ namespace Askowl {
           if (!anotherFiber.Running) anotherFiber.Go();
         });
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed - value set by return value of a function</a>
     public Fiber WaitFor(Func<Fiber, Fiber> getFiber) => AddAction(_ => WaitFor(getFiber(this)));
 
     #endregion

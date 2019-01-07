@@ -89,13 +89,37 @@ Fiber mineAlert = Fiber.Instance.Begin.WaitFor(flashAlarmLight)
 ### Break
 Break when called within a Fiber function exits the inner block.
 
-### Exit
-When `Exit()` is called from within a Fiber function, the Fiber stack terminates after cleaning up. Mostly used for unexpected conditions or in response to an error.
+### BreakIf
+`BreakIf` does what it says. Break out of the inner block if a function with a boolean return returns true.
+
+```c#
+counter         = 0;
+var fiber = Fiber.Start.Begin.Do(_ => counter++).BreakIf(_ => counter > 5).Again;
+```
 
 ### Do
 Do functions contain project specific logic. Since each `Do` function runs in a single frame, make them short and sweat.
 ``` c#
 Fiber.Start.Do(Breaking).Do(Up).Do(Large).Do(Calculations)
+```
+
+### Exit
+When `Exit()` is called from within a Fiber function, the Fiber stack terminates after cleaning up. Mostly used for unexpected conditions or in response to an error.
+
+### Go
+Unless you dispose of a fiber, it will live on for as long as you keep at least one reference. `Go` will restart a fiber from the first action even if it is not running. Use `Exit` if you want to terminate an earlier run first.
+
+``` c#
+var ping = Fiber.Start.Do(_ => Ping()).WaitFor(seconds: 1.0f);
+// ...
+if (sonar) ping.Go();
+```
+
+### Finish
+`Finish` is the quintessential do-nothing function. Using `Start` turns creating a Fiber into a statement. If you don't need a reference, the statement is not an assignment. Such a statement must end in a function call to pass the C# compiler.
+
+``` c#
+Fiber.Start.Begin.Do(_ => Something()).Again.Finish();
 ```
 
 ### Idle and Restart
@@ -107,6 +131,52 @@ if (moreToDo)  idlingFiber.Restart().Do(SomeMore).Idle;
 if (oneMoreThing)  idlingFiber.Restart().Do(LastAction);
 idlingFiber.Restart(); // otherwise fiber will never be released.
 ```
+### If // Else // Then
+This most common example of program logic needs little explanation.
+
+```c#
+var fiber1 = Fiber.Instance
+                 .If(_ => mark == 1).Do(_ => mark = 2).Then;
+// or...
+var fiber2 = Fiber.Instance
+                 .If(_ => mark == 1).Do(_ => mark = 2)
+                 .Else.Do(_ => mark = 3).Then;
+```
+
+### Instance
+`Instance` allows a fiber to be compiled to be run later with `Go()`, `WaitFor(Fiber)` or `AsCoroutine()`. Precompilation is good since all functions provided as parameters to `Do()`, `WaitFor()` and others compile to an anonymous class which is instantiated when it is created. By function I mean lambdas, inner functions or references to members of an existing class. There is always state to be kept around the function.
+
+So, the **Only** way to take the load from the garbage collector is to precompile fibers and reuse then. This does not apply to infinite loops since they only ever have one instance.
+
+```c#
+Fiber change;
+float changeAmount, changeInterval;
+int changeSteps;
+
+void Awake {
+  // No Need to precompile since the loop is infinite
+  void trickleCharge(Fiber fiber) => health.Value += trickleChargePerSecond;
+  Fiber.Start.Begin.WaitFor(seconds: 1.0f).Do(trickleCharge).Again.Finish();
+  change = Fiber.Instance.Begin
+                .Do(_ => health.Value += changeAmount)
+                .WaitFor(_ => changeInterval)
+                .Repeat(_ => changeSteps);
+}
+
+void ChangeHealth(float amount, float every, int over) {
+  changeAmount = amount;
+  changeInterval = every;
+  changeSteps = over;
+  change.Go();
+}
+```
+
+For a more complete implementation, look at the source to `ChangeOverTime` in this package.
+
+There is one trip-up for new players that I want to point out. Note `WaitFor(_ => changeInterval)` is a function rather than just a float reference. If we had said `WaitFor(changeInterval)` instead, the waiting time would have been zero since `ChangeInterval` was zero at the time of compile.
+
+Since all functions are generated at the time of compile, the steps are quite efficient when run.
+
 ### SkipFrames
 Each command in a Fiber list executes in a separate frame. If you want a short delay, it is efficient to call SkipFrames. The Fiber worker moves to a special queue and only processed when the shortest waiting frame count expires, reducing update ovrhead. The frame rate is usually 30 fps or 60 fps for Unity games.
 ``` c#

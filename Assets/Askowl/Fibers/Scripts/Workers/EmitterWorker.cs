@@ -6,11 +6,11 @@ using System;
 
 namespace Askowl {
   public partial class Fiber {
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2Rb9pbs">Wait for an emitter to fire</a>
     public Fiber WaitFor(Emitter emitter, string name = null) =>
       AddAction(_ => EmitterWorker.Instance.Load(this, emitter), name ?? "WaitFor(Emitter)");
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2Rb9pbs">Wait for an emitter passed by function return to fire</a>
     public Fiber WaitFor(Func<Fiber, Emitter> getEmitter, string name = null) =>
       AddAction(_ => WaitFor(getEmitter(this)), name ?? "WaitFor(Emitter)");
 

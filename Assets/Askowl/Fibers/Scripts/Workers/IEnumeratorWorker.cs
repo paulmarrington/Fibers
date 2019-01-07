@@ -8,11 +8,11 @@ using UnityEngine;
 
 namespace Askowl {
   public partial class Fiber {
-    /// <a href=""></a>
+    /// <a href="http://bit.ly/2CSVnCt">Wait for a C# IEnumerator/Unity Coroutine to take a step</a>
     public Fiber WaitFor(IEnumerator enumerator) =>
       AddAction(_ => LoadWithPayload(enumerator, 0), "WaitFor(IEnumerator)");
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2CSVnCt">Wait for a C# IEnumerator/Unity Coroutine to take a step - value passed by function return</a>
     public Fiber WaitFor(Func<Fiber, IEnumerator> getter) =>
       AddAction(_ => WaitFor(getter(this)), "WaitFor(IEnumerator)");
 
