@@ -11,12 +11,9 @@ namespace Askowl {
     public Fiber WaitFor(Task task) =>
       AddAction(
         _ => {
-          var emitter = Emitter.Instance;
+          var emitter = Emitter.SingleFireInstance;
 
-          void action(Task __) {
-            emitter.Fire();
-            emitter.Dispose();
-          }
+          void action(Task __) => emitter.Fire();
 
           task.ContinueWith(action);
           WaitFor(emitter);

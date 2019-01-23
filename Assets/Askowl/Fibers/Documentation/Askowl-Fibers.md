@@ -292,3 +292,56 @@ private class FrameWorker : Worker<int> {
 Set that static boolean `Fiber.Debugging` to get console output whenever a `Do()` action is called and whenever a new action is set. The output displays while running in the Unity Editor
 
 Asynchronous programming is always harder to follow. If you keep a handle to a Fiber, you can use `ToString()`. It lists out all the actions in the Fiber with square brackets around the one currently being processed. It appends you the current worker and queue.
+
+## Emitter.cs - the observer pattern
+
+A consumer creates an ***Emitter***. Many producers can register and send events. Observers get told when anyone who has access to the emitter instance pulls the trigger. The generic version can pass an object between the emitter and the observers.
+
+```c#
+var emitter = new Emitter();
+
+using (var subscription = emitter.Subscribe(new Observer1())) {
+  // we now have one subscription
+  Assert.AreEqual(expected: 0, actual: counter);
+  // Tell observers we have something for them
+  emitter.Fire();
+  // The observer changes the value
+  Assert.AreEqual(expected: 1, actual: counter);
+  // A manual call to Dispose will stop the observer listening ...
+  subscription.Dispose();
+  // ... and calls OnComplete that in this case sets count to zero
+  Assert.AreEqual(expected: 0, actual: counter);
+  // Now if we fire...
+  emitter.Fire(); // not listening any more
+  // ... the counter doesn't change because we have no observers
+  Assert.AreEqual(expected: 0, actual: counter);
+}
+// Outside the using - an implicit Dispose but no call to OnComplete again
+Assert.AreEqual(expected: 0, actual: counter);
+```
+
+```c#
+private struct Observer1 : IObserver {
+  public void OnNext()      { ++counter; }
+  public void OnCompleted() { counter--; }
+}
+```
+
+The generic version can pass information.
+
+```c#
+var emitter = Emitter<int>.Instance;
+using (emitter.Subscribe(new Observer3())) {
+  emitter.Fire(10);
+}
+// ...
+emitter.Dispose(); // drops it back on the recycling
+```
+
+```c#
+private struct Observer3 : IObserver<int> {
+  public void OnCompleted()            { counter--; }
+  public void OnError(Exception error) { throw new Exception(); }
+  public void OnNext(int        value) { counter = value; }
+}
+```

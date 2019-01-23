@@ -9,7 +9,6 @@ namespace Askowl {
   /// <a href="http://bit.ly/2DF6QHw">lightweight cooperative multi-tasking</a>
   public partial class Fiber : IDisposable {
     #region Instantiate
-
     ///
     public Emitter OnComplete;
 
@@ -33,7 +32,11 @@ namespace Askowl {
     }
 
     /// <a href="http://bit.ly/2DDvnwP">Cleans up Fiber before it goes into the recycling</a>
-    public void Dispose() => node.Recycle();
+    public void Dispose() {
+      (context as IDisposable)?.Dispose();
+      context = default;
+      node.Recycle();
+    }
 
     /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
     public static Fiber Start {
@@ -68,11 +71,21 @@ namespace Askowl {
       node.MoveTo(Queue.Update);
       return this;
     }
+    #endregion
 
+    #region Context
+    /// <a href=""></a> //#TBD#//
+    public T Context<T>() where T : class => context as T;
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber Context<T>(T value) where T : class {
+      context = value;
+      return this;
+    }
+    private object context;
     #endregion
 
     #region Queues
-
     /// <a href="http://bit.ly/2Pqv2Ub">Return Fiber processing to frame Update queue</a>
     public Fiber OnUpdates => AddAction(_ => node.MoveTo(Queue.Update), "OnUpdates");
     /// <a href="http://bit.ly/2Pqv2Ub">Move Fiber processing to FixedUpdate queue</a>
@@ -88,11 +101,9 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2Rf0dD4">Complete a Fiber.Start statement where needed (no action)</a>
     public void Finish() { }
-
     #endregion
 
     #region Blocks and Loops
-
     /// <a href="http://bit.ly/2DDvnNl">Loops and Blocks - Begin/End, Begin/Again, Begin-Repeat</a>
     public Fiber Begin {
       get {
@@ -149,11 +160,9 @@ namespace Askowl {
     public void Skip(int after) {
       for (int i = 0; (i < after) && (action != null); i++) action = action.Previous;
     }
-
     #endregion
 
     #region If Else Then
-
     /// <a href="http://bit.ly/2CU6Vp6">Standard If // Else // Then branch</a>
     public Fiber If(Func<Fiber, bool> isTrue) =>
       AddAction(
@@ -166,14 +175,12 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2CU6Vp6">Standard If // Else // Then branch</a>
     public Fiber Then => AddAction(NextAction, "Then");
-
     #endregion
 
     /// <a href="http://bit.ly/2DDZjbO">Business logic activation step</a>
     public Fiber Do(Action nextAction, string name = null) => AddAction(nextAction, name);
 
     #region Leave a Fiber Idling
-
     /// <a href="http://bit.ly/2DDvmcf">Separate Fiber into more than one statement</a>
     public Fiber Idle => WaitFor(idleEmitter, "Idle");
 
@@ -203,14 +210,12 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed - value set by return value of a function</a>
     public Fiber WaitFor(Func<Fiber, Fiber> getFiber) => AddAction(_ => WaitFor(getFiber(this)));
-
     #endregion
 
     /// <a href="http://bit.ly/2DDvmZN">Displays Do() and action events on Unity console</a>
     public static bool Debugging = false;
 
     #region Support
-
     /// <a href="http://bit.ly/2DF6QHw">Container for different update queues</a> <inheritdoc />
     internal class Queue : LinkedList<Fiber> {
       internal static Action<Node> Deactivation = (node) => {
@@ -300,11 +305,9 @@ namespace Askowl {
       #endif
       return action;
     }
-
     #endregion
 
     #region Debugging
-
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Queue: {node.Owner}";
 
@@ -322,7 +325,6 @@ namespace Askowl {
         return Csv.ToString(array);
       }
     }
-
     #endregion
   }
 }
