@@ -13,17 +13,16 @@ namespace Askowl {
     public static Emitter SingleFireInstance {
       get {
         var emitter = Instance;
+        if (emitter.releaseEmitterAction == default) { // fiber.dispose calls context/emitter.dispose
+          // can't put it in constructor 'cause fiber calls emitter...
+          Fiber releaseEmitterFiber = Fiber.Instance.SkipFrames(2).Do(fiber => fiber.Dispose());
+          emitter.releaseEmitterAction = () => releaseEmitterFiber.Go();
+        }
         emitter.Context(emitter).Subscribe(emitter.releaseEmitterAction);
         return emitter;
       }
     }
-
-    private Emitter() {
-      // fiber.dispose calls context/emitter.dispose 
-      Fiber releaseEmitterFiber = Fiber.Instance.SkipFrames(2).Do(fiber => fiber.Dispose());
-      releaseEmitterAction = () => releaseEmitterFiber.Go();
-    }
-    private readonly Action releaseEmitterAction;
+    private Action releaseEmitterAction;
     #endregion
 
     #region Context
@@ -51,10 +50,7 @@ namespace Askowl {
     public int Firings;
 
     /// <a href="http://bit.ly/2OzDM9D">Ask an emitter to tell me too</a>
-    public Emitter Subscribe(IObserver observer) {
-      listeners.Push(observer.OnNext);
-      return this;
-    }
+    public Emitter Subscribe(IObserver observer) => Subscribe(observer.OnNext);
 
     /// <a href="http://bit.ly/2OzDM9D">Ask an emitter to tell me too</a>
     public Emitter Subscribe(Action action) {
