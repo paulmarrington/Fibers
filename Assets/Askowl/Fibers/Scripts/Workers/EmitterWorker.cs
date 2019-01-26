@@ -14,6 +14,18 @@ namespace Askowl {
     public Fiber WaitFor(Func<Fiber, Emitter> getEmitter, string name = null) =>
       AddAction(_ => WaitFor(getEmitter(this)), name ?? "WaitFor(Emitter)");
 
+    /// <a href=""></a> //#TBD#//
+    public Fiber Fire(Emitter emitter) {
+      emitter.Fire();
+      return this;
+    }
+//
+//    public Fiber CancelOn(Emitter emitter) {
+//      emitter.ListenOnce(exit);
+//      Exit();
+//      return this;
+//    }
+
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;
 
