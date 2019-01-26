@@ -28,7 +28,7 @@ namespace Askowl {
         return nothingWaiting; // drop through if emission already happened
       }
 
-      private void OnFire() {
+      private void OnFire(Emitter emitter) {
         Seed.RemoveAllListeners();
         Dispose();
       }

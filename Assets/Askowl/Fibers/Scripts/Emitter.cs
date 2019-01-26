@@ -10,15 +10,21 @@ namespace Askowl {
     public static Emitter Instance => Cache<Emitter>.Instance;
 
     /// <a href=""></a> //#TBD#//
+    public delegate void Action(Emitter emitter);
+
+    /// <a href=""></a> //#TBD#//
     public static Emitter SingleFireInstance {
       get {
         var emitter = Instance;
         if (emitter.releaseEmitterAction == default) { // fiber.dispose calls context/emitter.dispose
           // can't put it in constructor 'cause fiber calls emitter...
-          Fiber releaseEmitterFiber = Fiber.Instance.SkipFrames(2).Do(fiber => fiber.Dispose());
-          emitter.releaseEmitterAction = () => releaseEmitterFiber.Go();
+          Fiber releaseEmitterFiber = Fiber.Instance.Context(emitter).SkipFrames(2).Do(fiber => fiber.Dispose());
+          emitter.releaseEmitterAction = _ => {
+            (emitter.context as IDisposable)?.Dispose();
+            releaseEmitterFiber.Go();
+          };
         }
-        emitter.Context(emitter).Subscribe(emitter.releaseEmitterAction);
+        emitter.Subscribe(emitter.releaseEmitterAction);
         return emitter;
       }
     }
@@ -26,6 +32,9 @@ namespace Askowl {
     #endregion
 
     #region Context
+    /// <a href=""></a> //#TBD#//
+    public object Context() => context;
+
     /// <a href=""></a> //#TBD#//
     public T Context<T>() where T : class => context as T;
 
@@ -43,14 +52,14 @@ namespace Askowl {
     /// <a href="http://bit.ly/2OzDM9D">The owner shoots and all the listeners hear</a>
     public void Fire() {
       Firings++;
-      for (var idx = 0; idx < listeners.Count; idx++) listeners[idx]();
+      for (var idx = 0; idx < listeners.Count; idx++) listeners[idx](this);
     }
 
     /// <a href=""></a> //#TBD#//
     public int Firings;
 
     /// <a href="http://bit.ly/2OzDM9D">Ask an emitter to tell me too</a>
-    public Emitter Subscribe(IObserver observer) => Subscribe(observer.OnNext);
+    public Emitter Subscribe(IObserver observer) => Subscribe(_ => observer.OnNext());
 
     /// <a href="http://bit.ly/2OzDM9D">Ask an emitter to tell me too</a>
     public Emitter Subscribe(Action action) {
