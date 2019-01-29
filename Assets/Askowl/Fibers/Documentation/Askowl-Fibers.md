@@ -254,6 +254,15 @@ The simplest and most common extension methods use an emitter to synchronise wit
 // ...
  Fiber.Start.WaitFor(task).Do(Whatever);
 ```
+### Context
+
+If we run a fiber in a class scope, we can keep context in the class. When it runs longer than the calling scope we need to have the fiber know some more about the context.
+
+``` c#
+
+```
+
+
 ### Creating a Worker
 The only situation I can think of that you may need to resort to writing a new low-level Worker instance would be if you wanted to implement efficient polling, The example below is for `SkipFrames`, but `WaitFor(seconds)` uses a similar approach. The requesting fiber is in a new queue unique to this worker type, inserted in sorted order. Each update needs only to check and process items that are ready to run again.
 ``` c#
@@ -327,21 +336,34 @@ private struct Observer1 : IObserver {
 }
 ```
 
-The generic version can pass information.
+I am lazy. I most often use a callback rather than an observer. `Subscribe` returns the containing emitter instance for chaining.
 
-```c#
-var emitter = Emitter<int>.Instance;
-using (emitter.Subscribe(new Observer3())) {
-  emitter.Fire(10);
-}
-// ...
-emitter.Dispose(); // drops it back on the recycling
+``` c#
+Emitter emitter = Emitter.Instance.Subscribe(() => ++counter);
 ```
 
-```c#
-private struct Observer3 : IObserver<int> {
-  public void OnCompleted()            { counter--; }
-  public void OnError(Exception error) { throw new Exception(); }
-  public void OnNext(int        value) { counter = value; }
-}
+### Emitter.Context
+If we respond to an emitter from a class scope, we can keep context in the class. When it is at the function scope we need to have the emitter know some more about the context.
+
+``` c#
+    private class EmitterContext : IDisposable {
+      public int  Number;
+      public void Dispose() => Number = 0;
+    }
+
+    [Test] public void Context() {
+      var emitterContext = new EmitterContext {Number = 12};
+      using (emitter = new Emitter().Context(emitterContext)) {
+        emitter.Subscribe(em => Assert.AreEqual(12, em.Context<EmitterContext>().Number));
+        emitter.Fire();
+        Assert.AreEqual(12, emitter.Context<EmitterContext>().Number);
+      }
+      // proving that the context is also disposed
+      Assert.AreEqual(0, emitter.Context<EmitterContext>().Number);
+    }
 ```
+
+When an emitter is disposed, it calls dispose on the context if and only if the context is `IDisposable`.
+
+### SingleFireInstance
+I find that in most cases I get an emitter from the cache, wait for one firing then dispose of it. Because this is an asynchronous process, it is messy. It is better for the emitter to dispose of itself. When you use `Emitter.SingleFireInstance` instead of `Emitter.Instance`, the Emitter (and any context) are disposed of two frames after an `emitter.Fire()`.

@@ -267,6 +267,7 @@ namespace Askowl {
         fiber.OnComplete.Fire();
         fiber.Running = false;
         fiber.node.MoveTo(Queue.Waiting);
+        Debug.Log($"*** NextAction '{fiber.disposeOnComplete}'"); //#DM#//
         if (fiber.disposeOnComplete) fiber.node.Dispose();
       }
     }
