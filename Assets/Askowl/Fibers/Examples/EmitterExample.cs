@@ -15,46 +15,14 @@ namespace Askowl.Examples {
     private Emitter emitter;
     private int     emitterFiredValue;
 
-    private void Wait300ms(Fiber fiber) => fiber.WaitRealtime(seconds: 0.3f);
-
-    [UnityTest] public IEnumerator IdleRestart() {
-      Fiber.Debugging = false;
-      using (var idleFiber = Fiber.Start.Idle) {
-        emitterFired = false;
-        idleFiber.Do(SetEmitterFiredFlag);
-        Assert.IsFalse(emitterFired);
-        yield return Fiber.Start.Restart().Do(Wait300ms).Restart(idleFiber).Do(Wait300ms).AsCoroutine();
-
-        Assert.IsTrue(emitterFired);
-      }
-    }
-
-    [UnityTest] public IEnumerator IdleDo() {
-      Fiber.Debugging = false;
-      emitterFired    = false;
-      var idlingFiber = Fiber.Start.Idle.Do(SetEmitterFiredFlag);
-      Assert.IsFalse(emitterFired);
-      yield return Fiber.Start.Do(Wait300ms).AsCoroutine();
-
-      Assert.IsFalse(emitterFired); // telling another Fiber to do something leaves others idling
-      idlingFiber.Restart();        // telling it to do something kicks it out of idling
-      yield return null;
-
-      Assert.IsTrue(emitterFired);
-    }
-
     [UnityTest] public IEnumerator EmitterFire() {
       using (emitter = Emitter.Instance) {
         emitterFired = false;
-        Fiber.Start.WaitFor(emitter).Do(SetEmitterFiredFlag);
-        yield return Fiber.Start.WaitRealtime(0.2f).Do(Fire).AsCoroutine();
-
+        Fiber.Start.WaitFor(emitter).Do(fiber => emitterFired = true);
+        yield return Fiber.Start.WaitRealtime(0.2f).Fire(emitter).AsCoroutine();
         Assert.IsTrue(emitterFired);
       }
     }
-
-    private void SetEmitterFiredFlag(Fiber fiber) => emitterFired = true;
-    private void Fire(Fiber                fiber) => emitter.Fire();
 
     [UnityTest] public IEnumerator WaitForFiber() {
       var sleeper = Fiber.Instance.WaitFor(seconds: 0.1f).Do(_ => sleeperDone = true);

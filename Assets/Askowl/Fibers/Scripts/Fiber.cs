@@ -93,9 +93,20 @@ namespace Askowl {
     /// <a href="http://bit.ly/2Pqv2Ub">Move Fiber processing to LateUpdate queue</a>
     public Fiber OnLateUpdates => AddAction(_ => node.MoveTo(Queue.LateUpdate), "OnLateUpdates");
 
-    /// <a href="http://bit.ly/2DBVWCe">Abort fiber processing, cleaning up as we go</a>
+    /// <a href="http://bit.ly/2DBVWCe">Abort fiber processing immediately, cleaning up as we go</a>
     public Fiber Exit() {
       action = actions.First;
+      return this;
+    }
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber Exit(Fiber fiber) {
+      AddAction(
+        _ => {
+          fiber.action = fiber.actions.First;
+          node.MoveTo(Queue.Update);
+          Update(fiber);
+        });
       return this;
     }
 
@@ -147,7 +158,7 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2DDvlFd">Break a Begin/End/Repeat/Again block</a>
     public void Break() {
-      while ((action?.Previous != null) && (action.Previous.Item.Actor != NextAction)) action = action.Previous;
+      while ((action?.Previous != null) && (action.Previous.Item.Actor1 != NextAction)) action = action.Previous;
     }
 
     ///
@@ -180,19 +191,7 @@ namespace Askowl {
     /// <a href="http://bit.ly/2DDZjbO">Business logic activation step</a>
     public Fiber Do(Action nextAction, string name = null) => AddAction(nextAction, name);
 
-    #region Leave a Fiber Idling
-    /// <a href="http://bit.ly/2DDvmcf">Separate Fiber into more than one statement</a>
-    public Fiber Idle => WaitFor(idleEmitter, "Idle");
-
-    /// <a href="http://bit.ly/2DDvmcf">Restart a fiber that includes an Idle command</a>
-    public Fiber Restart() {
-      idleEmitter.Fire();
-      return this;
-    }
-
-    /// <a href="http://bit.ly/2DDvmcf">Restart another fiber that includes an Idle command</a>
-    public Fiber Restart(Fiber fiber) => AddAction(_ => fiber.idleEmitter.Fire(), "Restart");
-
+    #region Fiber Control and Monitoring
     /// <a href="http://bit.ly/2DB3wgx">Return an IEnumerator to use with a yield in a Coroutine</a>
     public IEnumerator AsCoroutine() {
       if (!Running) Go();
@@ -208,6 +207,16 @@ namespace Askowl {
           if (!anotherFiber.Running) anotherFiber.Go();
         });
 
+    /// <a href=""></a> //#TBD#//
+    public Fiber Timeout(float seconds) {
+      secondsTimeout = seconds;
+      if (timeoutFiber == null) timeoutFiber = Instance.WaitFor(_ => secondsTimeout).Exit(this);
+      timeoutFiber.Go();
+      return this;
+    }
+    private float secondsTimeout;
+    private Fiber timeoutFiber;
+
     /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed - value set by return value of a function</a>
     public Fiber WaitFor(Func<Fiber, Fiber> getFiber) => AddAction(_ => WaitFor(getFiber(this)));
     #endregion
@@ -218,11 +227,11 @@ namespace Askowl {
     #region Support
     /// <a href="http://bit.ly/2DF6QHw">Container for different update queues</a> <inheritdoc />
     internal class Queue : LinkedList<Fiber> {
+      // Deactivate only used for Start when it is not an infinite loop - in other words hardly ever
       internal static Action<Node> Deactivation = (node) => {
         var fiber = node.Item;
         fiber.actions.Dispose();
         fiber.blockStack.Dispose();
-        fiber.idleEmitter.Dispose();
         fiber.OnComplete.Dispose();
       };
 
@@ -231,9 +240,8 @@ namespace Askowl {
         fiber.OnComplete = Emitter.Instance;
         fiber.actions    = Cache<ActionList>.Instance;
         fiber.AddAction(_ => { }, "Start");
-        fiber.blockStack  = Fifo<LinkedList<ActionItem>.Node>.Instance;
-        fiber.Running     = false;
-        fiber.idleEmitter = Emitter.Instance;
+        fiber.blockStack = Fifo<LinkedList<ActionItem>.Node>.Instance;
+        fiber.Running    = false;
       }
 
       internal static readonly Queue Update = new Queue
@@ -247,7 +255,7 @@ namespace Askowl {
     }
 
     private static string ActionName(ActionItem actionItem) {
-      var   name  = actionItem.Name ?? actionItem.Actor.Method.Name;
+      var   name  = actionItem.Name ?? actionItem.Actor1.Method.Name;
       Match match = getRe.Match(name);
       for (int i = 0; i < match.Groups.Count; i++) {
         if (match.Groups[i].Success) name = match.Groups[i].Value;
@@ -259,7 +267,7 @@ namespace Askowl {
 
     private static void NextAction(Fiber fiber) {
       if (fiber.action?.Previous != null) {
-        fiber.SetAction(fiber.action.Previous).Item.Actor(fiber);
+        fiber.SetAction(fiber.action.Previous).Item.Actor1(fiber);
       } else {
         #if UNITY_EDITOR
         if (Debugging) Log.Debug($"OnComplete: for {fiber.node}");
@@ -267,14 +275,22 @@ namespace Askowl {
         fiber.OnComplete.Fire();
         fiber.Running = false;
         fiber.node.MoveTo(Queue.Waiting);
-        Debug.Log($"*** NextAction '{fiber.disposeOnComplete}'"); //#DM#//
-        if (fiber.disposeOnComplete) fiber.node.Dispose();
+        if (fiber.disposeOnComplete) fiber.Dispose();
       }
     }
 
     private struct ActionItem {
       public string Name;
-      public Action Actor;
+      public Action Actor1;
+    }
+
+    private interface IActor { }
+
+    private struct Actor<T> : IActor {
+      public string    Name;
+      public Action<T> Action;
+//      public T         data;
+//      public void      Invoke() => Action(data);
     }
 
     private class ActionList : LinkedList<ActionItem> { }
@@ -285,7 +301,6 @@ namespace Askowl {
     private static MonoBehaviour                     controller;
     private        bool                              disposeOnComplete;
     private        int                               id;
-    private        Emitter                           idleEmitter;
     private static int                               nextId;
     private        LinkedList<Fiber>.Node            node;
     internal       Action                            Update;
@@ -294,7 +309,7 @@ namespace Askowl {
       if (Running) {
         newAction(this);
       } else {
-        actions.Add(new ActionItem {Name = name, Actor = newAction});
+        actions.Add(new ActionItem {Name = name, Actor1 = newAction});
       }
       return this;
     }

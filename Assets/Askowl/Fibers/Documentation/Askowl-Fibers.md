@@ -106,6 +106,13 @@ Fiber.Start.Do(Breaking).Do(Up).Do(Large).Do(Calculations)
 ### Exit
 When `Exit()` is called from within a Fiber function, the Fiber stack terminates after cleaning up. Mostly used for unexpected conditions or in response to an error.
 
+Alternative, exit another Fiber by providing it as a parameter.
+
+``` c#
+Fiber.Start.WaitFor(seconds: 2).Exit(otherFiber)
+```
+
+
 ### Go
 Unless you dispose of a fiber, it will live on for as long as you keep at least one reference. `Go` will restart a fiber from the first action even if it is not running. Use `Exit` if you want to terminate an earlier run first.
 
@@ -120,16 +127,6 @@ if (sonar) ping.Go();
 
 ``` c#
 Fiber.Start.Begin.Do(_ => Something()).Again.Finish();
-```
-
-### Idle and Restart
-`Idle` is a built-in emitter listener where `Restart` is the trigger. Restart can be given a reference to the fiber to kick.
-``` c#
-var idlingFiber = Fiber.Start.Idle.Do(SomethingAfterRestart);
-if (moreToDo)  idlingFiber.Restart().Do(SomeMore).Idle;
-// ...
-if (oneMoreThing)  idlingFiber.Restart().Do(LastAction);
-idlingFiber.Restart(); // otherwise fiber will never be released.
 ```
 ### If // Else // Then
 This most common example of program logic needs little explanation.
@@ -182,6 +179,9 @@ Each command in a Fiber list executes in a separate frame. If you want a short d
 ``` c#
 Fiber.Start.Do(Event1).SkipFrames(10).Do(Event2);
 ```
+### Timeout
+Asynchronous processes suffer from services that never take the next step. External interfaces that don't return, buttons that aren't pressed, you get the idea. By adding `Timeout(seconds: 1.5f)` or the like and a fiber will at least exit reasonable gracefully.
+
 ### Update, LateUpdate and FixedUpdate
 By default, Fibers run on `Update()` which occurs once per frame. If `Time.timeScale` is changed then the time between updates changes accordingly. `OnFixedUpdate()` is on a reliable timer so that it is called regularly - more than once per frame if the frame rate is low. `OnLateUpdate()` is called once per frame after `OnUpdate()`. Use it to control a third-person camera so that any character movements are complete.
 ``` c#
@@ -256,10 +256,27 @@ The simplest and most common extension methods use an emitter to synchronise wit
 ```
 ### Context
 
-If we run a fiber in a class scope, we can keep context in the class. When it runs longer than the calling scope we need to have the fiber know some more about the context.
+If we run a fiber in a class scope, we can keep context in the class. When it runs longer than the calling scope we need to have the fiber know some more about the context. To this end we can set it during the fiber execution and access it whenever we have a reference to the fiber.
 
 ``` c#
+    private class FiberContext : IDisposable {
+      public int  Number;
+      public void Dispose() => Number = 0;
+    }
 
+    [UnityTest] public IEnumerator Context() {
+      var fiberContext = new FiberContext {Number = 12};
+      Fiber.Start.Context(fiberContext).WaitFor(seconds: 0.1f).Do(
+        fiber => {
+          var context = fiber.Context<FiberContext>();
+          Assert.AreEqual(12, context.Number);
+        });
+      // `Start` disposes of fiber after running it
+      yield return new WaitForSeconds(0.2f);
+      // proving that the context is also disposed
+      Assert.AreEqual(0, fiberContext.Number);
+    }
+  }
 ```
 
 

@@ -4,7 +4,6 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-
 #if UNITY_EDITOR && Fibers
 
 // ReSharper disable MissingXmlDoc
@@ -78,7 +77,14 @@ namespace Askowl.Examples {
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Do(Exit).Again.Do(IncrementCounter);
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
+      Assert.AreEqual(1, counter);
+    }
 
+    [UnityTest] public IEnumerator ExitAnotherFiber() {
+      counter = 0;
+      var mainFiber = Fiber.Instance;
+      mainFiber.Begin.Do(_ => counter++).WaitFor(seconds: 0.2f).Do(_ => counter++).Go();
+      yield return Fiber.Start.WaitFor(seconds: 0.1f).Exit(mainFiber).WaitFor(0.2f).AsCoroutine();
       Assert.AreEqual(1, counter);
     }
 

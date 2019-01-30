@@ -19,7 +19,7 @@ namespace Askowl {
       emitter.Fire();
       return this;
     }
-//
+
 //    public Fiber CancelOn(Emitter emitter) {
 //      emitter.ListenOnce(exit);
 //      Exit();

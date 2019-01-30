@@ -23,7 +23,6 @@ namespace Askowl.Examples {
           Assert.AreEqual(12, context.Number);
         });
       yield return new WaitForSeconds(0.2f);
-      Debug.Log($"*** Context ''"); //#DM#// 
       // proving that the context is also disposed
       Assert.AreEqual(0, fiberContext.Number);
     }
