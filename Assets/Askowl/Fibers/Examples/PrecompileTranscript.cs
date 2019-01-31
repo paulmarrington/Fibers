@@ -3,7 +3,6 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-
 #if UNITY_EDITOR && Fibers
 // ReSharper disable MissingXmlDoc
 
@@ -31,7 +30,7 @@ namespace Askowl.Transcripts {
       Assert.AreEqual(0.3f, Time.realtimeSinceStartup - start, delta: 0.05f);
     }
 
-    //- This next example should two advantages of precompiled
+    //- This next example shows two advantages of precompiled fibers
     [UnityTest] public IEnumerator WaitForFunc() {
       start = Time.realtimeSinceStartup;
       //- One that we can set variables that will be used in the next fiber run
@@ -43,7 +42,7 @@ namespace Askowl.Transcripts {
       secondsToDelay = 0.5f;
       //- And two that we can reuse fibers without involving the garbage collector - assuming that we do not need AsCoroutine in production code
       yield return fiberVarMs.Go().AsCoroutine();
-      Assert.AreEqual(0.3f, Time.realtimeSinceStartup - start, delta: 0.05f);
+      Assert.AreEqual(0.5f, Time.realtimeSinceStartup - start, delta: 0.05f);
     }
 
     //- One more important use for precompiled fibers is reusable code similar to functions in sequential programming

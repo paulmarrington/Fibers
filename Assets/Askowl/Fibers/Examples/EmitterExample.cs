@@ -1,4 +1,4 @@
-﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages //#TBD#//
 
 using System;
 using System.Collections;
@@ -11,9 +11,9 @@ using UnityEngine.TestTools;
 
 namespace Askowl.Examples {
   public class EmitterExample {
-    private bool    emitterFired;
-    private Emitter emitter;
-    private int     emitterFiredValue;
+    private        bool    emitterFired;
+    private static Emitter emitter;
+    private        int     emitterFiredValue;
 
     [UnityTest] public IEnumerator EmitterFire() {
       using (emitter = Emitter.Instance) {
@@ -36,33 +36,65 @@ namespace Askowl.Examples {
     private bool sleeperDone;
 
     [UnityTest] public IEnumerator SingleFireInstance() {
-      emitter = Emitter.SingleFireInstance;
-      emitter.Fire();
-      yield return new WaitForSeconds(0.1f);
-      Assert.AreSame(Cache<Emitter>.Entries.RecycleBin, Cache<Emitter>.Entries.ReverseLookup(emitter).Owner);
+      using (emitter = Emitter.SingleFireInstance) {
+        emitter.Fire();
+        yield return new WaitForSeconds(0.1f);
+        Assert.AreSame(Cache<Emitter>.Entries.RecycleBin, Cache<Emitter>.Entries.ReverseLookup(emitter).Owner);
+      }
     }
 
-    [Test] public void ObserverEmitter() {
-      counter = 0;
-
-      emitter = Emitter.Instance;
-
-      emitter.Subscribe(new Observer1()).Subscribe(new Observer2());
-      Assert.AreEqual(expected: 0, actual: counter);
-      emitter.Fire();
-      Assert.AreEqual(expected: 3, actual: counter);
-      emitter.Fire();
-      Assert.AreEqual(expected: 6, actual: counter);
+    [UnityTest] public IEnumerator CancelOn() {
+      using (emitter = Emitter.Instance) {
+        counter = 0;
+        Fiber.Start.CancelOn(emitter).Begin.Do(_ => counter++).WaitFor(seconds: 0.05f).Again.Finish();
+        yield return new WaitForSeconds(0.5f);
+        Assert.AreNotEqual(0, counter);
+        var mark = counter;
+        emitter.Fire();
+        yield return new WaitForSeconds(0.3f);
+        Assert.AreEqual(mark, counter);
+      }
     }
 
     [Test] public void ActionEmitter() {
-      emitter = Emitter.Instance.Subscribe(_ => counter++).Subscribe(_ => Assert.AreSame(emitter, _));
-      using (emitter) {
+      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(checkIsSame)) {
         Assert.AreEqual(expected: 0, actual: counter);
         emitter.Fire();
         Assert.AreEqual(expected: 1, actual: counter);
       }
     }
+
+    [Test] public void ListenOnce() {
+      counter = 0;
+      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(incrementCounter)) {
+        Assert.AreEqual(expected: 0, actual: counter);
+        emitter.Fire();
+        emitter.Fire();
+        Assert.AreEqual(expected: 4, actual: counter);
+      }
+      counter = 0;
+      using (emitter = Emitter.Instance.Listen(incrementCounterOnce).Listen(incrementCounterOnce)) {
+        Assert.AreEqual(expected: 0, actual: counter);
+        emitter.Fire();
+        emitter.Fire();
+        Assert.AreEqual(expected: 2, actual: counter);
+      }
+    }
+
+    private static readonly Emitter.Action incrementCounter = _ => {
+      counter++;
+      return true;
+    };
+
+    private static readonly Emitter.Action incrementCounterOnce = _ => {
+      counter++;
+      return false;
+    };
+    private static bool Same(Emitter _) {
+      Assert.AreSame(emitter, _);
+      return true;
+    }
+    private static readonly Emitter.Action checkIsSame = Same;
 
     private class EmitterContext : IDisposable {
       public int  Number;
@@ -72,22 +104,16 @@ namespace Askowl.Examples {
     [Test] public void Context() {
       var emitterContext = new EmitterContext {Number = 12};
       using (emitter = Emitter.Instance.Context(emitterContext)) {
-        emitter.Subscribe(em => Assert.AreEqual(12, em.Context<EmitterContext>().Number));
+        emitter.Listen(
+          em => {
+            Assert.AreEqual(12, em.Context<EmitterContext>().Number);
+            return false;
+          });
         emitter.Fire();
         Assert.AreEqual(12, emitter.Context<EmitterContext>().Number);
       }
       // proving that the context is also disposed
       Assert.AreEqual(0, emitter.Context<EmitterContext>().Number);
-    }
-
-    private struct Observer1 : IObserver {
-      public void OnNext()      => ++counter;
-      public void OnCompleted() => counter--;
-    }
-
-    private struct Observer2 : IObserver {
-      public void OnNext()      => counter += 2;
-      public void OnCompleted() => counter--;
     }
 
     private static int counter;

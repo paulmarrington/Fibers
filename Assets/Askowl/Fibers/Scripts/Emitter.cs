@@ -3,42 +3,34 @@
 using System;
 
 namespace Askowl {
-  /// <a href="http://bit.ly/2OzDM9D">Cached C# Action instances using the observer pattern</a>
+  /// <a href="http://bit.ly/2B6jpZl">Cached C# Action instances using the observer pattern</a>
   public class Emitter : IDisposable {
     #region Instantiate
-    /// <a href="http://bit.ly/2OzDM9D">Retrieve an emitter from recycling or new</a>
+    /// <a href="http://bit.ly/2B6jpZl">Retrieve an emitter from recycling or new</a>
     public static Emitter Instance => Cache<Emitter>.Instance;
 
-    /// <a href=""></a> //#TBD#//
-    public delegate void Action(Emitter emitter);
+    /// <a href="http://bit.ly/2B6jpZl">Returns false to remove listener from future firings</a> 
+    public delegate bool Action(Emitter emitter);
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2B8WXPC">Fire once then dispose of the emitter</a> 
     public static Emitter SingleFireInstance {
       get {
         var emitter = Instance;
-        if (emitter.releaseEmitterAction == default) { // fiber.dispose calls context/emitter.dispose
-          // can't put it in constructor 'cause fiber calls emitter...
-          Fiber releaseEmitterFiber = Fiber.Instance.Context(emitter).SkipFrames(2).Do(fiber => fiber.Dispose());
-          emitter.releaseEmitterAction = _ => {
-            (emitter.context as IDisposable)?.Dispose();
-            releaseEmitterFiber.Go();
-          };
-        }
-        emitter.Subscribe(emitter.releaseEmitterAction);
+        emitter.isSingleFire = true;
         return emitter;
       }
     }
-    private Action releaseEmitterAction;
+    private bool isSingleFire;
     #endregion
 
     #region Context
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RUcL2S">The base context retriever returns the context as an object</a> 
     public object Context() => context;
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RUcL2S">Retrieve the context as a class type - null for none or wrong type</a> 
     public T Context<T>() where T : class => context as T;
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RUcL2S">Set the context to an instance of a type</a> 
     public Emitter Context<T>(T value) where T : class {
       context = value;
       return this;
@@ -46,50 +38,41 @@ namespace Askowl {
     private object context;
     #endregion
 
-    /// <a href=""></a> //#TBD#//
-    private readonly Fifo<Action> listeners = new Fifo<Action>();
+    private readonly LinkedList<Action> listeners = new LinkedList<Action>();
 
-    /// <a href="http://bit.ly/2OzDM9D">The owner shoots and all the listeners hear</a>
+    /// <a href="http://bit.ly/2B6jpZl">The owner shoots and all the listeners hear</a>
     public void Fire() {
       Firings++;
-      for (var idx = 0; idx < listeners.Count; idx++) listeners[idx](this);
+      for (var node = listeners.First; node != null; node = node.Next) {
+        if (!node.Item(this)) node = node.Recycle();
+      }
+      if (isSingleFire) Dispose();
+      isSingleFire = false;
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2B6jpZl">Count of the number of times an emitter has fired</a> 
     public int Firings;
 
-    /// <a href="http://bit.ly/2OzDM9D">Ask an emitter to tell me too</a>
-    public Emitter Subscribe(IObserver observer) => Subscribe(_ => observer.OnNext());
-
-    /// <a href="http://bit.ly/2OzDM9D">Ask an emitter to tell me too</a>
-    public Emitter Subscribe(Action action) {
-      listeners.Push(action);
+    /// <a href="http://bit.ly/2B6jpZl">Ask an emitter to tell me too</a>
+    public Emitter Listen(Action action) {
+      listeners.Add(action);
       return this;
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2B6jpZl">Removes all listeners</a> 
     public void RemoveAllListeners() {
-      listeners.Count = 0;
-      Firings         = 0;
+      listeners.Dispose();
+      Firings = 0;
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2B6jpZl">Return true if we have one or more listeners registered</a> 
     public bool Waiting => listeners.Count > 0;
 
-    /// <a href="http://bit.ly/2OzDM9D">Call when we are done with this emitter.</a> <inheritdoc />
+    /// <a href="http://bit.ly/2B6jpZl">Call when we are done with this emitter.</a> <inheritdoc />
     public void Dispose() {
       listeners.Dispose();
       (context as IDisposable)?.Dispose();
       Cache<Emitter>.Dispose(this);
     }
-  }
-
-  /// <a href="http://bit.ly/2OzDM9D">Observer pattern without a payload</a>
-  public interface IObserver {
-    /// <a href="http://bit.ly/2OzDM9D">Get the next listener</a>
-    void OnNext();
-
-    /// <a href="http://bit.ly/2OzDM9D">Called when the emitter is discarded</a>
-    void OnCompleted();
   }
 }

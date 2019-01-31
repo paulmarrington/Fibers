@@ -14,17 +14,23 @@ namespace Askowl {
     public Fiber WaitFor(Func<Fiber, Emitter> getEmitter, string name = null) =>
       AddAction(_ => WaitFor(getEmitter(this)), name ?? "WaitFor(Emitter)");
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2BeoK0X">Fire an emitter at this point in the Fiber sequence</a>
     public Fiber Fire(Emitter emitter) {
       emitter.Fire();
       return this;
     }
 
-//    public Fiber CancelOn(Emitter emitter) {
-//      emitter.ListenOnce(exit);
-//      Exit();
-//      return this;
-//    }
+    /// <a href="http://bit.ly/2B9DZrU">Cancel/Abort/Exit current fiber if an emitter fires</a>
+    public Fiber CancelOn(Emitter emitter) {
+      if (exit == default) exit = ExitOnFire;
+      emitter.Listen(exit);
+      return this;
+    }
+    private Emitter.Action exit;
+    private bool ExitOnFire(Emitter emitter) {
+      Exit();
+      return false;
+    }
 
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;
@@ -34,15 +40,17 @@ namespace Askowl {
       protected override void          Recycle() => Cache<EmitterWorker>.Dispose(this);
 
       protected override bool Prepare() {
-        bool nothingWaiting = Seed.Firings == 0;
-        if (nothingWaiting) Seed.Subscribe(OnFire);
+        bool nothingWaiting           = Seed.Firings == 0;
+        if (onNext == default) onNext = OnNext;
+        if (nothingWaiting) Seed.Listen(onNext);
         Seed.Firings = 0;
         return nothingWaiting; // drop through if emission already happened
       }
 
-      private void OnFire(Emitter emitter) {
-        Seed.RemoveAllListeners();
+      private Emitter.Action onNext;
+      private bool OnNext(Emitter emitter) {
         Dispose();
+        return false;
       }
     }
   }

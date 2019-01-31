@@ -74,10 +74,10 @@ namespace Askowl {
     #endregion
 
     #region Context
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2B9M1kO">Retrieve context object or null for none or wrong type</a>
     public T Context<T>() where T : class => context as T;
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2B9M1kO">Set context object</a>
     public Fiber Context<T>(T value) where T : class {
       context = value;
       return this;
@@ -99,7 +99,7 @@ namespace Askowl {
       return this;
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2DBVWCe">Force another fiber to exit immediately</a>
     public Fiber Exit(Fiber fiber) {
       AddAction(
         _ => {
@@ -207,7 +207,7 @@ namespace Askowl {
           if (!anotherFiber.Running) anotherFiber.Go();
         });
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2RWQrpp">Exit later fiber operations if the time supplied is exceeded</a>
     public Fiber Timeout(float seconds) {
       secondsTimeout = seconds;
       if (timeoutFiber == null) timeoutFiber = Instance.WaitFor(_ => secondsTimeout).Exit(this);
@@ -282,15 +282,6 @@ namespace Askowl {
     private struct ActionItem {
       public string Name;
       public Action Actor1;
-    }
-
-    private interface IActor { }
-
-    private struct Actor<T> : IActor {
-      public string    Name;
-      public Action<T> Action;
-//      public T         data;
-//      public void      Invoke() => Action(data);
     }
 
     private class ActionList : LinkedList<ActionItem> { }
