@@ -77,8 +77,9 @@ namespace Askowl {
     /// <a href="http://bit.ly/2B9M1kO">Retrieve context object or null for none or wrong type</a>
     public T Context<T>() where T : class => context as T;
 
-    /// <a href="http://bit.ly/2B9M1kO">Set context object</a>
+    /// <a href="http://bit.ly/2B9M1kO">Set context object (disposing of old if necessary/possible)</a>
     public Fiber Context<T>(T value) where T : class {
+      (context as IDisposable)?.Dispose();
       context = value;
       return this;
     }

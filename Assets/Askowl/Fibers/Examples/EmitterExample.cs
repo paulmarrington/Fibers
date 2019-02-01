@@ -1,4 +1,4 @@
-﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages //#TBD#//
+﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 using System;
 using System.Collections;
@@ -36,11 +36,10 @@ namespace Askowl.Examples {
     private bool sleeperDone;
 
     [UnityTest] public IEnumerator SingleFireInstance() {
-      using (emitter = Emitter.SingleFireInstance) {
-        emitter.Fire();
-        yield return new WaitForSeconds(0.1f);
-        Assert.AreSame(Cache<Emitter>.Entries.RecycleBin, Cache<Emitter>.Entries.ReverseLookup(emitter).Owner);
-      }
+      emitter = Emitter.SingleFireInstance;
+      emitter.Fire();
+      yield return new WaitForSeconds(0.1f);
+      Assert.AreSame(Cache<Emitter>.Entries.RecycleBin, Cache<Emitter>.Entries.ReverseLookup(emitter).Owner);
     }
 
     [UnityTest] public IEnumerator CancelOn() {
@@ -57,10 +56,22 @@ namespace Askowl.Examples {
     }
 
     [Test] public void ActionEmitter() {
-      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(checkIsSame)) {
+      counter = 0;
+      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(isSame)) {
         Assert.AreEqual(expected: 0, actual: counter);
         emitter.Fire();
         Assert.AreEqual(expected: 1, actual: counter);
+      }
+    }
+
+    [Test] public void Remove() {
+      counter = 0;
+      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(removeMyself)) {
+        emitter.Fire();
+        Assert.AreEqual(expected: 2, actual: counter);
+        emitter.Remove(incrementCounter);
+        emitter.Fire();
+        Assert.AreEqual(expected: 2, actual: counter);
       }
     }
 
@@ -81,20 +92,16 @@ namespace Askowl.Examples {
       }
     }
 
-    private static readonly Emitter.Action incrementCounter = _ => {
+    private static readonly Emitter.Action incrementCounter = _ => counter++;
+
+    private static readonly Emitter.Action removeMyself = emitter => {
       counter++;
-      return true;
+      emitter.StopListening();
     };
 
-    private static readonly Emitter.Action incrementCounterOnce = _ => {
-      counter++;
-      return false;
-    };
-    private static bool Same(Emitter _) {
-      Assert.AreSame(emitter, _);
-      return true;
-    }
-    private static readonly Emitter.Action checkIsSame = Same;
+    private static readonly Emitter.Action incrementCounterOnce = _ => counter++;
+    private static          void           Same(Emitter _) => Assert.AreSame(emitter, _);
+    private static readonly Emitter.Action isSame = Same;
 
     private class EmitterContext : IDisposable {
       public int  Number;
@@ -104,11 +111,7 @@ namespace Askowl.Examples {
     [Test] public void Context() {
       var emitterContext = new EmitterContext {Number = 12};
       using (emitter = Emitter.Instance.Context(emitterContext)) {
-        emitter.Listen(
-          em => {
-            Assert.AreEqual(12, em.Context<EmitterContext>().Number);
-            return false;
-          });
+        emitter.Listen(em => Assert.AreEqual(12, em.Context<EmitterContext>().Number));
         emitter.Fire();
         Assert.AreEqual(12, emitter.Context<EmitterContext>().Number);
       }

@@ -1,7 +1,6 @@
 ﻿//- Copyright 2019 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 //- The Emitter class has been moved from Able to Fibers and given a bit of an overhaul. As the primary inter-fiber communications method it holds more prominence in release 2.0 of fibers.
-using System;
 using NUnit.Framework;
 #if UNITY_EDITOR && Fibers
 // ReSharper disable MissingXmlDoc
@@ -12,9 +11,9 @@ namespace Askowl.Transcripts {
     [Test] public void Basic() {
       bool emitterFired = false;
       //- A listener function is called when the emitter is fired. It is given a reference to the emitter in case it is called out of context. If it returns false it is removed from the list and never called again.
-      bool emitterAction(Emitter _) {
+      void emitterAction(Emitter emitter) {
         emitterFired = true;
-        return false;
+        emitter.StopListening();
       }
       //- An emitter is cached and disposable. In practice a `using` statement is unlikely in an asynchronous world.
       using (var emitter = Emitter.Instance.Listen(emitterAction)) {
@@ -29,7 +28,7 @@ namespace Askowl.Transcripts {
     //- The anonymous class is only instantiated once when the class is first loaded, then reused as needed.
     private static readonly Emitter.Action emitterActionStatic = emitter => {
       emitterFiredStatic = true;
-      return false;
+      emitter.StopListening();
     };
 
     [Test] public void StaticListener() {
@@ -39,7 +38,7 @@ namespace Askowl.Transcripts {
       }
     }
 
-    //- `emitterFiredInstance` is static because otherwise we would have to create the listener in the constructor. I often do it that way.
+    //- A static listener can't access instance data. An instance listener needs to be created in the class constructor or with a lazy load.
     private bool emitterFiredInstance;
     //- The anonymous class is only instantiated once when the class is first loaded, then reused as needed.
     private Emitter.Action emitterActionInstance;
@@ -48,9 +47,10 @@ namespace Askowl.Transcripts {
       if (emitterActionInstance == default) {
         emitterActionInstance = emitter => {
           emitterFiredInstance = true;
-          return false;
+          emitter.StopListening();
         };
       }
+      emitterFiredInstance = false;
       using (var emitter = Emitter.Instance.Listen(emitterActionInstance)) {
         emitter.Fire();
         Assert.IsTrue(emitterFiredInstance);
@@ -63,7 +63,7 @@ namespace Askowl.Transcripts {
     }
     private static readonly Emitter.Action emitterActionWithContext = emitter => {
       emitter.Context<TransferData>().EmitterFired = true;
-      return false;
+      emitter.StopListening();
     };
     [Test] public void ContextListener() {
       var data = Cache<TransferData>.Instance;
@@ -73,6 +73,16 @@ namespace Askowl.Transcripts {
         emitter.Fire();
         Assert.IsTrue(data.EmitterFired);
       }
+    }
+
+    //- There are many situations where an emitter is going to be used once and then discarded. The only catch is that data has been returned to the recycle bin. This is not a problem if you use the context data in the listener.
+    [Test] public void SingleFireInstance() {
+      var data = Cache<TransferData>.Instance;
+      data.EmitterFired = false;
+      var emitter = Emitter.SingleFireInstance.Listen(emitterActionWithContext);
+      emitter.Context(data);
+      emitter.Fire();
+      Assert.IsTrue(data.EmitterFired);
     }
   }
 }

@@ -27,9 +27,9 @@ namespace Askowl {
       return this;
     }
     private Emitter.Action exit;
-    private bool ExitOnFire(Emitter emitter) {
+    private void ExitOnFire(Emitter emitter) {
       Exit();
-      return false;
+      emitter.StopListening();
     }
 
     private class EmitterWorker : Worker<Emitter> {
@@ -48,9 +48,9 @@ namespace Askowl {
       }
 
       private Emitter.Action onNext;
-      private bool OnNext(Emitter emitter) {
+      private void OnNext(Emitter emitter) {
         Dispose();
-        return false;
+        emitter.StopListening();
       }
     }
   }
