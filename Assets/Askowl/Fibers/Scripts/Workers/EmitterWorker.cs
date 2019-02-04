@@ -12,7 +12,7 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2Rb9pbs">Wait for an emitter passed by function return to fire</a>
     public Fiber WaitFor(Func<Fiber, Emitter> getEmitter, string name = null) =>
-      AddAction(_ => WaitFor(getEmitter(this)), name ?? "WaitFor(Emitter)");
+      AddAction(_ => EmitterWorker.Instance.Load(this, getEmitter(this)), name ?? "WaitFor(Emitter)");
 
     /// <a href="http://bit.ly/2BeoK0X">Fire an emitter at this point in the Fiber sequence</a>
     public Fiber Fire(Emitter emitter) {
@@ -35,19 +35,22 @@ namespace Askowl {
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;
 
+      public EmitterWorker() => onNext = OnNext;
+
       // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      EmitterWorker Instance  => Cache<EmitterWorker>.Instance;
       protected override void          Recycle() => Cache<EmitterWorker>.Dispose(this);
 
       protected override bool Prepare() {
-        bool nothingWaiting           = Seed.Firings == 0;
-        if (onNext == default) onNext = OnNext;
-        if (nothingWaiting) Seed.Listen(onNext);
-        Seed.Firings = 0;
-        return nothingWaiting; // drop through if emission already happened
+        if ((Seed != null) && (Seed.Firings == 0)) {
+          Seed.Listen(onNext);
+          return true;
+        }
+        Recycle();
+        return false;
       }
 
-      private Emitter.Action onNext;
+      private readonly Emitter.Action onNext;
       private void OnNext(Emitter emitter) {
         Dispose();
         emitter.StopListening();

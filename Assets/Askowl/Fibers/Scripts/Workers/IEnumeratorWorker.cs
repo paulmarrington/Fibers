@@ -14,11 +14,11 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2CSVnCt">Wait for a C# IEnumerator/Unity Coroutine to take a step - value passed by function return</a>
     public Fiber WaitFor(Func<Fiber, IEnumerator> getter) =>
-      AddAction(_ => WaitFor(getter(this)), "WaitFor(IEnumerator)");
+      AddAction(_ => LoadWithPayload(getter(this), 0), "WaitFor(IEnumerator)");
 
     /// <a href=""></a>
     public Fiber WaitFor(int framesBetweenChecks, IEnumerator enumerator) =>
-      AddAction(_ => LoadWithPayload(enumerator, framesBetweenChecks));
+      AddAction(_ => LoadWithPayload(enumerator, framesBetweenChecks), "WaitFor(framesBetweenChecks, IEnumerator)");
 
     private Fiber LoadWithPayload(IEnumerator enumerator, int skipFrames) {
       var payload = new EnumeratorWorker.Payload {Enumerator = enumerator, SkipFrames = skipFrames};

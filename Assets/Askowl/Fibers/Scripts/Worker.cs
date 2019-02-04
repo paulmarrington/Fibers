@@ -3,6 +3,7 @@
 // ReSharper disable StaticMemberInGenericType
 
 using System;
+using UnityEngine;
 
 namespace Askowl {
   // ReSharper disable once ClassNeverInstantiated.Global
@@ -74,7 +75,6 @@ namespace Askowl {
       /// <a href="http://bit.ly/2Ptbf6V">Move fiber to worker queue and start processing</a>
       protected void ActivateWorker(Fiber fiber) {
         if (!Prepare()) return;
-
         fiber.Workers.Push(this);
         From = (Queue) fiber.node.Owner;
         fiber.node.MoveTo(Queue);

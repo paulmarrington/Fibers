@@ -159,7 +159,7 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2DDvlFd">Break a Begin/End/Repeat/Again block</a>
     public void Break() {
-      while ((action?.Previous != null) && (action.Previous.Item.Actor1 != NextAction)) action = action.Previous;
+      while ((action?.Previous != null) && (action.Previous.Item.Actor != NextAction)) action = action.Previous;
     }
 
     ///
@@ -256,7 +256,7 @@ namespace Askowl {
     }
 
     private static string ActionName(ActionItem actionItem) {
-      var   name  = actionItem.Name ?? actionItem.Actor1.Method.Name;
+      var   name  = actionItem.Name ?? actionItem.Actor.Method.Name;
       Match match = getRe.Match(name);
       for (int i = 0; i < match.Groups.Count; i++) {
         if (match.Groups[i].Success) name = match.Groups[i].Value;
@@ -268,7 +268,7 @@ namespace Askowl {
 
     private static void NextAction(Fiber fiber) {
       if (fiber.action?.Previous != null) {
-        fiber.SetAction(fiber.action.Previous).Item.Actor1(fiber);
+        fiber.SetAction(fiber.action.Previous).Item.Actor(fiber);
       } else {
         #if UNITY_EDITOR
         if (Debugging) Log.Debug($"OnComplete: for {fiber.node}");
@@ -282,7 +282,7 @@ namespace Askowl {
 
     private struct ActionItem {
       public string Name;
-      public Action Actor1;
+      public Action Actor;
     }
 
     private class ActionList : LinkedList<ActionItem> { }
@@ -301,7 +301,7 @@ namespace Askowl {
       if (Running) {
         newAction(this);
       } else {
-        actions.Add(new ActionItem {Name = name, Actor1 = newAction});
+        actions.Add(new ActionItem {Name = name, Actor = newAction});
       }
       return this;
     }

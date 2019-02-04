@@ -12,7 +12,8 @@ namespace Askowl {
       AddAction(_ => FrameWorker.Instance.Load(fiber: this, data: Time.frameCount + framesToSkip));
 
     /// <a href="http://bit.ly/2DDvloH">Wait a specific count of Update, FixedUpdate or LateUpdate frames - value passed by function return to</a>
-    public Fiber SkipFrames(Func<Fiber, int> getter) => AddAction(_ => SkipFrames(getter(this)));
+    public Fiber SkipFrames(Func<Fiber, int> getter) =>
+      AddAction(_ => FrameWorker.Instance.Load(fiber: this, data: Time.frameCount + getter(this)));
 
     private class FrameWorker : Worker<int> {
       // ReSharper disable once MemberHidesStaticFromOuterClass

@@ -12,14 +12,19 @@ namespace Askowl {
       AddAction(
         _ => {
           var emitter = Emitter.SingleFireInstance;
-
           void action(Task __) => emitter.Fire();
-
           task.ContinueWith(action);
-          WaitFor(emitter);
+          EmitterWorker.Instance.Load(this, emitter);
         }, "WaitFor(Task)");
 
     /// <a href="http://bit.ly/2RcQM7a">Convert Task activities to Coroutines to behave well with the rest of Unity - value passed by function return</a>
-    public Fiber WaitFor(Func<Fiber, Task> getter) => AddAction(_ => WaitFor(getter(this)), "WaitFor(Task)");
+    public Fiber WaitFor(Func<Fiber, Task> getter) =>
+      AddAction(
+        _ => {
+          var emitter = Emitter.SingleFireInstance;
+          void action(Task __) => emitter.Fire();
+          getter(this).ContinueWith(action);
+          EmitterWorker.Instance.Load(this, emitter);
+        }, "WaitFor(Task)");
   }
 }
