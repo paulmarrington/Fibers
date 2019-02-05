@@ -99,7 +99,10 @@ namespace Askowl.Examples {
       emitter.StopListening();
     };
 
-    private static readonly Emitter.Action incrementCounterOnce = _ => counter++;
+    private static readonly Emitter.Action incrementCounterOnce = emitter => {
+      counter++;
+      emitter.StopListening();
+    };
     private static          void           Same(Emitter _) => Assert.AreSame(emitter, _);
     private static readonly Emitter.Action isSame = Same;
 
