@@ -48,8 +48,11 @@ namespace Askowl {
         next = node.Next;
         node.Item(this);
       }
-      if (isSingleFire) Dispose();
-      isSingleFire = false;
+      if (isSingleFire) {
+        Firings = 0;
+        Dispose();
+        isSingleFire = false;
+      }
     }
 
     /// <a href="http://bit.ly/2B6jpZl">Count of the number of times an emitter has fired</a>
@@ -61,7 +64,7 @@ namespace Askowl {
       return this;
     }
 
-    /// <a href="http://bit.ly/2TpBXuR">Remove a listener if it is in the list</a> 
+    /// <a href="http://bit.ly/2TpBXuR">Remove a listener if it is in the list</a>
     public Emitter Remove(Action action) {
       for (node = listeners.First; node != null; node = node.Next) {
         if (node.Item != action) continue;
@@ -93,5 +96,7 @@ namespace Askowl {
       (context as IDisposable)?.Dispose();
       Cache<Emitter>.Dispose(this);
     }
+
+    public override string ToString() => $"Firings: {Firings}, Listeners: {listeners.Count}, Context: {context}";
   }
 }
