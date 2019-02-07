@@ -35,6 +35,7 @@ namespace Askowl {
     public void Dispose() {
       (context as IDisposable)?.Dispose();
       context = default;
+      actions.Dispose();
       node.Recycle();
     }
 
@@ -298,11 +299,11 @@ namespace Askowl {
     internal       Action                            Update;
 
     private Fiber AddAction(Action newAction, string name = null) {
-      if (Running) {
-        newAction(this);
-      } else {
-        actions.Add(new ActionItem {Name = name, Actor = newAction});
-      }
+//      if (Running) {
+//        newAction(this);
+//      } else {
+      actions.Add(new ActionItem {Name = name, Actor = newAction});
+//      }
       return this;
     }
 
@@ -317,7 +318,7 @@ namespace Askowl {
 
     #region Debugging
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
-    public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Queue: {node.Owner}";
+    public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Queue: {node?.Owner}";
 
     //BeginAgainExample.IncrementCounter,BeginAgainExample.IncrementCounter,Fiber.<get_End>b__18_0,<>c.<.ctor>b__75_0,BeginAgainExample.IncrementCounter
     private string ActionNames {

@@ -3,7 +3,6 @@
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
 using System;
-using UnityEngine;
 
 namespace Askowl {
   public partial class Fiber {
@@ -17,7 +16,7 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2BeoK0X">Fire an emitter at this point in the Fiber sequence</a>
     public Fiber Fire(Emitter emitter) {
-      emitter.Fire();
+      AddAction(_ => emitter.Fire());
       return this;
     }
 
@@ -45,7 +44,6 @@ namespace Askowl {
       protected override bool Prepare() {
         if ((Seed != null) && (Seed.Firings == 0)) {
           Seed.Listen(onNext);
-          Debug.Log($"*** Prepare '{Seed}'"); //#DM#// 
           return true;
         }
         Recycle();
@@ -54,7 +52,6 @@ namespace Askowl {
 
       private readonly Emitter.Action onNext;
       private void OnNext(Emitter emitter) {
-        Debug.Log($"*** OnNext '{Seed}'"); //#DM#// 
         emitter.StopListening();
         Dispose();
       }

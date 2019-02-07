@@ -1,6 +1,7 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 using System;
+using UnityEngine;
 
 namespace Askowl {
   /// <a href="http://bit.ly/2B6jpZl">Cached C# Action instances using the observer pattern</a>
@@ -49,9 +50,9 @@ namespace Askowl {
         node.Item(this);
       }
       if (isSingleFire) {
-        Firings = 0;
-        Dispose();
+        Firings      = 0;
         isSingleFire = false;
+        Dispose();
       }
     }
 
