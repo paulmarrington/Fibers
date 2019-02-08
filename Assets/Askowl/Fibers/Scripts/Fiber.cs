@@ -201,13 +201,12 @@ namespace Askowl {
     }
 
     /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed</a>
-    public Fiber WaitFor(Fiber anotherFiber) =>
-      AddAction(
-        _ => {
-          if (anotherFiber == null) return;
-          WaitFor(anotherFiber.OnComplete);
-          if (!anotherFiber.Running) anotherFiber.Go();
-        });
+    public Fiber WaitFor(Fiber anotherFiber) {
+      if (anotherFiber == null) return this;
+      Do(_ => anotherFiber.Go());
+      WaitFor(anotherFiber.OnComplete, "WaitFor(Fiber)");
+      return this;
+    }
 
     /// <a href="http://bit.ly/2RWQrpp">Exit later fiber operations if the time supplied is exceeded</a>
     public Fiber Timeout(float seconds) {

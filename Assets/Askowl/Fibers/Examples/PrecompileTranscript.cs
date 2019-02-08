@@ -52,7 +52,7 @@ namespace Askowl.Transcripts {
       var fiber2 = Fiber.Instance.Do(_ => start = Time.realtimeSinceStartup)
                         .WaitFor(fiber1).Do(_ => end = Time.realtimeSinceStartup);
       yield return fiber2.AsCoroutine();
-      Assert.AreEqual(0.3f, end - start, 0.05f);
+      Assert.AreEqual(0.3f, end - start, 0.09f);
     }
   }
 }

@@ -43,8 +43,8 @@ namespace Askowl.Examples {
 
     [UnityTest] public IEnumerator WaitForFiber() {
       var fiber1 = Fiber.Instance.WaitFor(0.3f);
-      var fiber2 = Fiber.Instance.Do(_ => start = Time.realtimeSinceStartup)
-                        .WaitFor(fiber1).Do(_ => end = Time.realtimeSinceStartup);
+      var fiber2 = Fiber.Instance.Do(_ => start = Time.realtimeSinceStartup, "Start time")
+                        .WaitFor(fiber1).Do(_ => end = Time.realtimeSinceStartup, "End time");
       yield return fiber2.AsCoroutine();
       Assert.AreEqual(expected: 0.3f, actual: end - start, delta: 0.05f);
     }

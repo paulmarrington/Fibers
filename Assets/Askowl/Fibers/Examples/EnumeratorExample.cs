@@ -4,7 +4,6 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-
 #if UNITY_EDITOR && Fibers
 
 // ReSharper disable MissingXmlDoc
@@ -62,7 +61,7 @@ namespace Askowl.Examples {
       yield return Fiber.Start.WaitFor(sampleSecondsEnumeratorCoroutine()).AsCoroutine();
 
       float elapsed = Time.realtimeSinceStartup - start;
-      Assert.AreEqual(0.3f * 5, elapsed, 0.1f);
+      Assert.AreEqual(0.3f * 5, elapsed, 0.2f);
       Assert.AreEqual(6,        counter);
     }
 
