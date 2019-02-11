@@ -25,18 +25,25 @@ namespace Askowl {
     #endregion
 
     #region Context
-    /// <a href="http://bit.ly/2RUcL2S">The base context retriever returns the context as an object</a>
-    public object Context() => context;
-
     /// <a href="http://bit.ly/2RUcL2S">Retrieve the context as a class type - null for none or wrong type</a>
-    public T Context<T>() where T : class => context as T;
+    public T Context<T>() where T : class => context[typeof(T)].Value as T;
 
     /// <a href="http://bit.ly/2RUcL2S">Set the context to an instance of a type</a>
     public Emitter Context<T>(T value) where T : class {
-      context = value;
+      (context[typeof(T)].Value as IDisposable)?.Dispose();
+      context.Add(typeof(T), value);
       return this;
     }
-    private object context;
+    /// <a href="http://bit.ly/2RUcL2S">Retrieve the context as a class type - null for none or wrong type</a>
+    public T Context<T>(string name) where T : class => context[name].Value as T;
+
+    /// <a href="http://bit.ly/2RUcL2S">Set the context to an instance of a type</a>
+    public Emitter Context<T>(string name, T value) where T : class {
+      (context[name].Value as IDisposable)?.Dispose();
+      context.Add(name, value);
+      return this;
+    }
+    private readonly Map context = Map.Instance;
     #endregion
 
     private readonly LinkedList<Action> listeners = new LinkedList<Action>();

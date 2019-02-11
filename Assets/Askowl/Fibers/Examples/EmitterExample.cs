@@ -113,13 +113,15 @@ namespace Askowl.Examples {
 
     [Test] public void Context() {
       var emitterContext = new EmitterContext {Number = 12};
-      using (emitter = Emitter.Instance.Context(emitterContext)) {
+      var namedContext   = "named context string reference";
+      using (emitter = Emitter.Instance.Context(emitterContext).Context("name here", namedContext)) {
         emitter.Listen(em => Assert.AreEqual(12, em.Context<EmitterContext>().Number));
         emitter.Fire();
-        Assert.AreEqual(12, emitter.Context<EmitterContext>().Number);
+        Assert.AreEqual(12,                               emitter.Context<EmitterContext>().Number);
+        Assert.AreEqual("named context string reference", emitter.Context<string>("name here"));
       }
       // proving that the context is also disposed
-      Assert.AreEqual(0, emitter.Context<EmitterContext>().Number);
+      Assert.IsNull(emitter.Context<EmitterContext>());
     }
 
     private static int counter;

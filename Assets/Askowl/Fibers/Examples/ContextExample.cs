@@ -17,14 +17,15 @@ namespace Askowl.Examples {
 
     [UnityTest] public IEnumerator Context() {
       var fiberContext = new FiberContext {Number = 12};
-      Fiber.Start.Context(fiberContext).WaitFor(seconds: 0.1f).Do(
+      var fibre = Fiber.Start.Context(fiberContext).Context("name here", "a string").WaitFor(seconds: 0.1f).Do(
         fiber => {
           var context = fiber.Context<FiberContext>();
-          Assert.AreEqual(12, context.Number);
+          Assert.AreEqual(12,         context.Number);
+          Assert.AreEqual("a string", fiber.Context<string>("name here"));
         });
       yield return new WaitForSeconds(0.2f);
       // proving that the context is also disposed
-      Assert.AreEqual(0, fiberContext.Number);
+      Assert.IsNull(fibre.Context<FiberContext>());
     }
   }
 }

@@ -13,7 +13,7 @@ namespace Askowl {
     public Emitter OnComplete;
 
     ///
-    public bool Running;
+    public bool Running, Aborted;
 
     /// <a href="http://bit.ly/2DDZjbO">Method signature for Do(Action) methods</a>
     public delegate void Action(Fiber fiber);
@@ -34,7 +34,6 @@ namespace Askowl {
     /// <a href="http://bit.ly/2DDvnwP">Cleans up Fiber before it goes into the recycling</a>
     public void Dispose() {
       (context as IDisposable)?.Dispose();
-      context = default;
       actions.Dispose();
       node.Recycle();
     }
@@ -75,16 +74,25 @@ namespace Askowl {
     #endregion
 
     #region Context
-    /// <a href="http://bit.ly/2B9M1kO">Retrieve context object or null for none or wrong type</a>
-    public T Context<T>() where T : class => context as T;
+    /// <a href="http://bit.ly/2RUcL2S">Retrieve the context as a class type - null for none or wrong type</a>
+    public T Context<T>() where T : class => context[typeof(T)].Value as T;
 
-    /// <a href="http://bit.ly/2B9M1kO">Set context object (disposing of old if necessary/possible)</a>
+    /// <a href="http://bit.ly/2RUcL2S">Set the context to an instance of a type</a>
     public Fiber Context<T>(T value) where T : class {
-      (context as IDisposable)?.Dispose();
-      context = value;
+      (context[typeof(T)].Value as IDisposable)?.Dispose();
+      context.Add(typeof(T), value);
       return this;
     }
-    private object context;
+    /// <a href="http://bit.ly/2RUcL2S">Retrieve the context as a class type - null for none or wrong type</a>
+    public T Context<T>(string name) where T : class => context[name].Value as T;
+
+    /// <a href="http://bit.ly/2RUcL2S">Set the context to an instance of a type</a>
+    public Fiber Context<T>(string name, T value) where T : class {
+      (context[name].Value as IDisposable)?.Dispose();
+      context.Add(name, value);
+      return this;
+    }
+    private readonly Map context = Map.Instance;
     #endregion
 
     #region Queues
@@ -97,7 +105,8 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2DBVWCe">Abort fiber processing immediately, cleaning up as we go</a>
     public Fiber Exit() {
-      action = actions.First;
+      Aborted = true;
+      action  = actions.First;
       return this;
     }
 
@@ -105,7 +114,8 @@ namespace Askowl {
     public Fiber Exit(Fiber fiber) {
       AddAction(
         _ => {
-          fiber.action = fiber.actions.First;
+          fiber.Aborted = true;
+          fiber.action  = fiber.actions.First;
           node.MoveTo(Queue.Update);
           Update(fiber);
         });
@@ -234,6 +244,7 @@ namespace Askowl {
         fiber.actions.Dispose();
         fiber.blockStack.Dispose();
         fiber.OnComplete.Dispose();
+        fiber.CancelOnAborted();
       };
 
       internal static void Reactivation(Node node) {
@@ -242,7 +253,7 @@ namespace Askowl {
         fiber.actions    = Cache<ActionList>.Instance;
         fiber.AddAction(_ => { }, "Start");
         fiber.blockStack = Fifo<LinkedList<ActionItem>.Node>.Instance;
-        fiber.Running    = false;
+        fiber.Running    = fiber.Aborted = false;
       }
 
       internal static readonly Queue Update = new Queue

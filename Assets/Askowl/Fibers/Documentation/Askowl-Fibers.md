@@ -8,7 +8,7 @@ Download from the [Unity Store](https://assetstore.unity.com/packages/slug/13309
 
 # [Executive Summary](http://www.askowl.net/unity-fibers)
 
-Coroutines are the core mechanism in Unity3d MonoBehaviour classes to provide independent processing as a form of co-operative multi-tasking. Activities that must occur in order use `yield return myCoroutine();` to wait on completion before continuing. Yield instructions must reside in methods that have an IEnumerator return type. C# turns them into a state machine. These state machines are not resettable, so they must be discarded once complete. Since every call generates a new state machine, this puts a heavy load on the garbage collector. Using coroutines in abundance can cause glitches in the running of VR and mobile applications.
+Coroutines are the core mechanism in Unity3d MonoBehaviour classes to provide independent processing as a form of co-operative multi-tasking. Activities that must occur in order use `yield return myCoroutine();` to wait on completion before continuing. Yield instructions must reside in methods that ha z ve an IEnumerator return type. C# turns them into a state machine. These state machines are not resettable, so they must be discarded once complete. Since every call generates a new state machine, this puts a heavy load on the garbage collector. Using coroutines in abundance can cause glitches in the running of VR and mobile applications.
 
 ***Fibers*** provides an alternative co-operative multi-tasking approach to Coroutines with less overhead. It is not a drop-in replacement but is intended for heavy usage situations.
 
@@ -18,7 +18,11 @@ On another subject, some unity packages, specifically FireBase, use C# 4+ Tasks,
 >
 > The Doxygen pages [here](https://paulmarrington.github.io/Unity-Documentation/Fibers/Doxygen/html/annotated.html)
 
-
+# Videos
+* [An Introduction to Fibers](https://youtu.be/0spg5a7cWBs) (v1.0)
+* [Basic Fibers Commands](https://youtu.be/4FxZEKfrV_g) (v1.0)
+* [Fibers in Pooling - A Real-World Example](https://youtu.be/WIEL9aJlwbc) (v1.0)
+* [Precompiled Fibers for High Performance Applications](https://youtu.be/8poMA8zg8ec) (v2.0)
 
 # The Structure of a Fiber Operation
 
@@ -147,6 +151,7 @@ var fiber2 = Fiber.Instance
 ```
 
 ### Instance
+[Precompilation Video](https://youtu.be/8poMA8zg8ec)
 `Instance` allows a fiber to be compiled to be run later with `Go()`, `WaitFor(Fiber)` or `AsCoroutine()`. Precompilation is good since all functions provided as parameters to `Do()`, `WaitFor()` and others compile to an anonymous class instantiated on creation. By function, I mean lambdas, inner functions or references to members of an existing class.
 
 So, the **only** way to take the load from the garbage collector is to precompile fibers and reuse them. It does not apply to infinite loops since they only ever have one instance.

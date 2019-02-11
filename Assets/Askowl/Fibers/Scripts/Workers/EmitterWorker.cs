@@ -22,14 +22,20 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2B9DZrU">Cancel/Abort/Exit current fiber if an emitter fires</a>
     public Fiber CancelOn(Emitter emitter) {
-      if (exit == default) exit = ExitOnFire;
-      emitter.Listen(exit);
+      if (cancelOnFired == default) cancelOnFired = ExitOnFire;
+      emitter.Listen(cancelOnFired);
+      cancelOnEmitter = emitter;
       return this;
     }
-    private Emitter.Action exit;
+    private Emitter        cancelOnEmitter;
+    private Emitter.Action cancelOnFired;
     private void ExitOnFire(Emitter emitter) {
       Exit();
-      emitter.StopListening();
+      emitter.Remove(cancelOnFired);
+    }
+    private void CancelOnAborted() {
+      cancelOnEmitter?.Remove(cancelOnFired);
+      cancelOnEmitter = default;
     }
 
     private class EmitterWorker : Worker<Emitter> {
