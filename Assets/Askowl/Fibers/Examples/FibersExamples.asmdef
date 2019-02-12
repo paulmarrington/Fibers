@@ -2,7 +2,8 @@
     "name": "Tests",
     "references": [
         "Able",
-        "Fibers"
+        "Fibers",
+        "AbleEditor"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
