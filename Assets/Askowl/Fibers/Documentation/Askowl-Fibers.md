@@ -23,6 +23,8 @@ On another subject, some unity packages, specifically FireBase, use C# 4+ Tasks,
 * [Basic Fibers Commands](https://youtu.be/4FxZEKfrV_g) (v1.0)
 * [Fibers in Pooling - A Real-World Example](https://youtu.be/WIEL9aJlwbc) (v1.0)
 * [Precompiled Fibers for High Performance Applications](https://youtu.be/8poMA8zg8ec) (v2.0)
+* [Keeping Context in Fibers](https://youtu.be/gRcM59FcFnU)
+* [Using Emitters with Fibers](https://youtu.be/qObY_7jFe88)
 
 # The Structure of a Fiber Operation
 
@@ -47,6 +49,8 @@ Note that each step in a fiber is passed a reference. This is mostly so that you
 Once a Fiber terminates it is placed in a recycle bin for later reuse. The section below includes functions that allow loops, repeats and conditional exits.
 
 ## Built-in Fiber Commands
+### Aborted
+`Aborted` is a boolean that set if a fiber is terminated by a timeout or an external source using `Exit` or `CancelOn`.
 ### AsCoroutine
 Place at the end of a Fiber command to integrate Fibers into traditional coroutines.
 ``` c#
@@ -298,6 +302,14 @@ If we run fiber in a class scope, we can keep context in the class. When it runs
   }
 ```
 
+A fiber can store many context objects. They need to be of different classes or be specifically named.
+
+``` c#
+fiber.Context("name here", "this is a string object");
+// ...
+string stringInContext = fiber.Context<string>("name here");
+```
+
 If a new context replaces the old, the former is disposed of first.
 
 
@@ -401,6 +413,14 @@ If we respond to an emitter from a class scope, we can keep context in the class
 ```
 
  `Emitter.Dispose()' calls dispose on the context if and only if the context is `IDisposable`.
+
+ An emitter can store many context objects. They need to be of different classes or be specifically named.
+
+``` c#
+emitter.Context("name here", "this is a string object");
+// ...
+string stringInContext = emitter.Context<string>("name here");
+```
 
 ### Emitter.Firings
 An emitter keeps a count of the number of times it has been fired. It is particularly useful to check if an emitter has fired before a listener has been attacked.
