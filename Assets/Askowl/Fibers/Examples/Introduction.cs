@@ -1,12 +1,14 @@
 ﻿// Copyright 2019 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 using Askowl;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 /// Servicing "Introduction to Fibers" scene
 public class Introduction : MonoBehaviour {
   [SerializeField] private Toggle testsAvailable = default;
-  void Start() {
+
+  private void Start() {
     #if AskowlFibers
     testsAvailable.isOn = true;
     #else
@@ -15,7 +17,10 @@ public class Introduction : MonoBehaviour {
   }
 
   /// Checkbox to enable or disable tests
-  public void EnableTests(bool testsEnabled) => DefineSymbols.AddOrRemoveDefines(testsEnabled, "AskowlFibers;Fibers");
+  public void EnableTests() {
+    DefineSymbols.AddOrRemoveDefines(testsAvailable.isOn, "AskowlFibers;Fibers");
+    AssetDatabase.Refresh();
+  }
 
   /// When "Home Page" button is pressed
   public void HomePageButton() => Application.OpenURL("http://www.askowl.net/unity-fibers");

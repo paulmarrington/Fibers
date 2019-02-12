@@ -4,4 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Askowl/Fibers/Introduction to Fibers.unity
+    guid: 5e8c9d2ffab8d4dae9075408bb7f1f62
+  m_configObjects: {}
