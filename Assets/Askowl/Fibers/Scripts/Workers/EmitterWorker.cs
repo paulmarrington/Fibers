@@ -20,6 +20,12 @@ namespace Askowl {
       return this;
     }
 
+    /// <a href="http://bit.ly/2BeoK0X">Fire an emitter at this point in the Fiber sequence</a>
+    public Fiber Fire(Func<Fiber, Emitter> getEmitter) {
+      AddAction(_ => getEmitter(this).Fire());
+      return this;
+    }
+
     /// <a href="http://bit.ly/2B9DZrU">Cancel/Abort/Exit current fiber if an emitter fires</a>
     public Fiber CancelOn(Emitter emitter) {
       if (cancelOnFired == default) cancelOnFired = ExitOnFire;
