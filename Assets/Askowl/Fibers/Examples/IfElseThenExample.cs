@@ -7,8 +7,8 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-#if UNITY_EDITOR && AskowlFibers
-namespace Askowl.Examples {
+#if AskowlTests
+namespace Askowl.Fibers.Examples {
   public sealed class IfElseThenExample {
     [UnityTest, Timeout(10000)] public IEnumerator IfThen() {
       int mark = 0;

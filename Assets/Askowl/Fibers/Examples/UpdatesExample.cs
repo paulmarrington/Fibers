@@ -4,9 +4,9 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 
-namespace Askowl.Examples {
+namespace Askowl.Fibers.Examples {
   public class UpdatesExample {
     private int counter;
 

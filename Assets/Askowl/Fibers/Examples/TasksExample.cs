@@ -2,8 +2,8 @@
 
 // ReSharper disable MissingXmlDoc
 
-#if UNITY_EDITOR && AskowlFibers
-namespace Askowl.Examples {
+#if AskowlTests
+namespace Askowl.Fibers.Examples {
   using System.Collections;
   using System.Threading.Tasks;
   using NUnit.Framework;

@@ -6,9 +6,9 @@ using UnityEngine.TestTools;
 
 // ReSharper disable MissingXmlDoc
 
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 
-namespace Askowl.Examples {
+namespace Askowl.Fibers.Examples {
   public class Precompile {
     private float start, end;
     private float secondsToDelay;

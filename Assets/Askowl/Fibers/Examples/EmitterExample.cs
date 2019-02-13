@@ -5,11 +5,11 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 
 // ReSharper disable MissingXmlDoc
 
-namespace Askowl.Examples {
+namespace Askowl.Fibers.Examples {
   public class EmitterExample {
     private        bool    emitterFired;
     private static Emitter emitter;

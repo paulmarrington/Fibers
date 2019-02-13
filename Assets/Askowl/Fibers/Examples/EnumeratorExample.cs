@@ -4,11 +4,11 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 
 // ReSharper disable MissingXmlDoc
 
-namespace Askowl.Examples {
+namespace Askowl.Fibers.Examples {
   public class EnumeratorExample {
     private int counter;
 

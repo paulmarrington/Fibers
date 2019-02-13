@@ -7,8 +7,8 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-#if UNITY_EDITOR && AskowlFibers
-namespace Askowl.Examples {
+#if AskowlTests
+namespace Askowl.Fibers.Examples {
   public sealed class ContextExample {
     private class FiberContext : IDisposable {
       public int  Number;

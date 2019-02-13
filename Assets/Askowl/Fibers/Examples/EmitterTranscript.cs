@@ -2,10 +2,10 @@
 
 //- The Emitter class has been moved from Able to Fibers and given a bit of an overhaul. As the primary inter-fiber communications method it holds more prominence in release 2.0 of fibers.
 using NUnit.Framework;
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 // ReSharper disable MissingXmlDoc
 
-namespace Askowl.Transcripts {
+namespace Askowl.Fibers.Transcripts {
   public class EmitterTranscript {
     //- On the face of it an emitter has one function. Accept listeners and call them when fire is called.
     [Test] public void Basic() {

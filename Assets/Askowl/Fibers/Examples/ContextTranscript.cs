@@ -4,10 +4,10 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine.TestTools;
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 // ReSharper disable MissingXmlDoc
 
-namespace Askowl.Transcripts {
+namespace Askowl.Fibers.Transcripts {
   public class ContextTranscript {
     //- All service method responses can be assigned in the constructor. The anonymous classes created to generate method references all happen here and hence only once for the containing class instance. If the class is cached, this will only happen once per app execution.
     public ContextTranscript() => serviceMethodResponse = ServiceMethodResponse;

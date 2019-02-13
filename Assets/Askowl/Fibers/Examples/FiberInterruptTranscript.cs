@@ -5,10 +5,10 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 // ReSharper disable MissingXmlDoc
 
-namespace Askowl.Transcripts {
+namespace Askowl.Fibers.Transcripts {
   public class FiberInterruptTranscript {
     //- The first option is a simple timeout. Once the time has expired the calling fiber is terminated.
     [UnityTest] public IEnumerator TimeoutExample() {

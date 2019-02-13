@@ -5,11 +5,11 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 // ReSharper disable InconsistentNaming
 // ReSharper disable MissingXmlDoc
 
-namespace Askowl.Examples {
+namespace Askowl.Fibers.Examples {
   public class WaitForSecondsExample : PlayModeTests {
     private float start;
 

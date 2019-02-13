@@ -5,11 +5,11 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-#if UNITY_EDITOR && Fibers
+#if AskowlTests
 
 // ReSharper disable ClassNeverInstantiated.Local ClassNeverInstantiated.Global MissingXmlDoc
 
-namespace Askowl.Examples {
+namespace Askowl.Fibers.Examples {
   public class CustomWorkerExample {
     [UnityTest] public IEnumerator CustomTypeWorkerExample() {
       CustomTypeWorkerClass.Disposed = false;
