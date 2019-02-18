@@ -27,6 +27,7 @@ namespace Askowl {
         fiber.disposeOnComplete = false;
         fiber.node              = node;
         fiber.id                = ++nextId;
+        fiber.resetOnError      = false;
         return fiber;
       }
     }
@@ -36,6 +37,7 @@ namespace Askowl {
       (context as IDisposable)?.Dispose();
       actions.Dispose();
       node.Recycle();
+      if (resetOnError) onError = Debug.LogError;
     }
 
     /// <a href="http://bit.ly/2DDvnwP">Prepare a Fiber and place it on the Update queue</a>
@@ -232,8 +234,21 @@ namespace Askowl {
     public Fiber WaitFor(Func<Fiber, Fiber> getFiber) => AddAction(_ => WaitFor(getFiber(this)));
     #endregion
 
-    /// <a href="http://bit.ly/2DDvmZN">Displays Do() and action events on Unity console</a>
-    public static bool Debugging = false;
+    #region Error Management
+    /// <a href=""></a> //#TBD#//
+    public Fiber OnError(Action<string> actor) {
+      onError      = actor;
+      resetOnError = true;
+      return this;
+    }
+    /// <a href=""></a> //#TBD#//
+    public Fiber Error(string message) {
+      onError(message);
+      return this;
+    }
+    private        bool           resetOnError;
+    private static Action<string> onError = Debug.LogError;
+    #endregion
 
     #region Support
     /// <a href="http://bit.ly/2DF6QHw">Container for different update queues</a> <inheritdoc />
@@ -265,7 +280,9 @@ namespace Askowl {
       internal static readonly Queue Waiting = new Queue
         {Name = "Fiber Waiting Queue", DeactivateItem = Deactivation, ReactivateItem = Reactivation};
     }
+    #endregion
 
+    #region Action
     private static string ActionName(ActionItem actionItem) {
       var   name  = actionItem.Name ?? actionItem.Actor.Method.Name;
       Match match = getRe.Match(name);
@@ -279,7 +296,11 @@ namespace Askowl {
 
     private static void NextAction(Fiber fiber) {
       if (fiber.action?.Previous != null) {
-        fiber.SetAction(fiber.action.Previous).Item.Actor(fiber);
+        try {
+          fiber.SetAction(fiber.action.Previous).Item.Actor(fiber);
+        } catch (Exception e) {
+          onError(e.ToString());
+        }
       } else {
         #if UNITY_EDITOR
         if (Debugging) Log.Debug($"OnComplete: for {fiber.node}");
@@ -309,11 +330,7 @@ namespace Askowl {
     internal       Action                            Update;
 
     private Fiber AddAction(Action newAction, string name = null) {
-//      if (Running) {
-//        newAction(this);
-//      } else {
       actions.Add(new ActionItem {Name = name, Actor = newAction});
-//      }
       return this;
     }
 
@@ -327,6 +344,9 @@ namespace Askowl {
     #endregion
 
     #region Debugging
+    /// <a href="http://bit.ly/2DDvmZN">Displays Do() and action events on Unity console</a>
+    public static bool Debugging = false;
+
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Queue: {node?.Owner}";
 
