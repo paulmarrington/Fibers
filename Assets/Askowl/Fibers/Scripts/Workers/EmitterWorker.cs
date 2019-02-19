@@ -54,7 +54,7 @@ namespace Askowl {
       protected override void          Recycle() => Cache<EmitterWorker>.Dispose(this);
 
       protected override bool Prepare() {
-        if ((Seed != null) && (Seed.Firings == 0)) {
+        if (Seed != null) {
           Seed.Listen(onNext);
           return true;
         }

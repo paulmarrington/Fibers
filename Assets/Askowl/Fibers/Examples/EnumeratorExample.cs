@@ -50,8 +50,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator EnumeratorSeconds() {
-      Fiber.Debugging = false;
-      counter         = 0;
+      counter = 0;
 
       IEnumerator sampleSecondsEnumeratorCoroutine() {
         while (counter++ < 5) yield return 0.3f;

@@ -4,7 +4,6 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
-
 #if AskowlTests
 
 // ReSharper disable MissingXmlDoc
@@ -12,7 +11,6 @@ using UnityEngine.TestTools;
 namespace Askowl.Fibers.Examples {
   public class WaitForFramesExample {
     [UnityTest] public IEnumerator WaitForFrames() {
-      Fiber.Debugging = false;
       var frame = 0;
       void reset(Fiber _) => frame = Time.frameCount + 1;
 

@@ -25,7 +25,6 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest, Timeout(10000)] public IEnumerator IfElseThen() {
-      Fiber.Debugging = false;
       int mark = 0;
       // ReSharper disable once AccessToModifiedClosure
       var fiber = Fiber.Instance.If(_ => mark == 1).Do(_ => mark = 2).Else.Do(_ => mark = 3).Then;

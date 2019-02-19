@@ -100,8 +100,9 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2B6jpZl">Call when we are done with this emitter.</a> <inheritdoc />
     public void Dispose() {
-      listeners.Dispose();
+      RemoveAllListeners();
       (context as IDisposable)?.Dispose();
+      isSingleFire = false;
       Cache<Emitter>.Dispose(this);
     }
 

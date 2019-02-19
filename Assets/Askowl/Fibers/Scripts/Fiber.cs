@@ -24,10 +24,8 @@ namespace Askowl {
         var node = Queue.Waiting.GetRecycledOrNew();
         Queue.Reactivation(node);
         var fiber = node.Item;
-        fiber.disposeOnComplete = false;
-        fiber.node              = node;
-        fiber.id                = ++nextId;
-        fiber.resetOnError      = false;
+        fiber.node = node;
+        fiber.id   = ++nextId;
         return fiber;
       }
     }
@@ -246,8 +244,9 @@ namespace Askowl {
       onError(message);
       return this;
     }
-    private        bool           resetOnError;
-    private static Action<string> onError = Debug.LogError;
+    private bool resetOnError;
+//    private static Action<string> onError = Debug.LogError;
+    private static Action<string> onError = msg => Debug.LogError($"onError: {msg}");
     #endregion
 
     #region Support
@@ -268,7 +267,7 @@ namespace Askowl {
         fiber.actions    = Cache<ActionList>.Instance;
         fiber.AddAction(_ => { }, "Start");
         fiber.blockStack = Fifo<LinkedList<ActionItem>.Node>.Instance;
-        fiber.Running    = fiber.Aborted = false;
+        fiber.Running    = fiber.Aborted = fiber.resetOnError = fiber.disposeOnComplete = false;
       }
 
       internal static readonly Queue Update = new Queue
@@ -303,7 +302,7 @@ namespace Askowl {
         }
       } else {
         #if UNITY_EDITOR
-        if (Debugging) Log.Debug($"OnComplete: for {fiber.node}");
+        if (fiber.Debugging) Log.Debug($"OnComplete: for {fiber.node}");
         #endif
         fiber.OnComplete.Fire();
         fiber.Running = false;
@@ -343,9 +342,9 @@ namespace Askowl {
     }
     #endregion
 
-    #region Debugging
+    #region Debugging Mode
     /// <a href="http://bit.ly/2DDvmZN">Displays Do() and action events on Unity console</a>
-    public static bool Debugging = false;
+    public bool Debugging;
 
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Queue: {node?.Owner}";

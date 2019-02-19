@@ -37,8 +37,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator BeginBreakAgain() {
-      Fiber.Debugging = false;
-      counter         = 0;
+      counter = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Do(Escape).Again.Do(IncrementCounter);
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
@@ -46,8 +45,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator BreakIf() {
-      Fiber.Debugging = false;
-      counter         = 0;
+      counter = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).BreakIf(_ => counter > 5).Again.Do(IncrementCounter);
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
@@ -55,8 +53,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator BeginUntil() {
-      Fiber.Debugging = false;
-      counter         = 0;
+      counter = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Until(_ => counter > 5).Do(IncrementCounter);
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
@@ -72,8 +69,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator BeginAgainExit() {
-      Fiber.Debugging = false;
-      counter         = 0;
+      counter = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Do(Exit).Again.Do(IncrementCounter);
       yield return fiber.AsCoroutine();
       yield return new WaitForSeconds(0.3f);
@@ -89,8 +85,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator BeginRepeat() {
-      Fiber.Debugging = false;
-      counter         = 0;
+      counter = 0;
       var fiber = Fiber.Start.Begin.Do(IncrementCounter).Repeat(5).Do(IncrementCounter);
       Debug.Log($"BeginRepeat {fiber}");
       yield return fiber.AsCoroutine();
