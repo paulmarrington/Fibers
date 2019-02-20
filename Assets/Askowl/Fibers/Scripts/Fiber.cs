@@ -240,13 +240,20 @@ namespace Askowl {
       return this;
     }
     /// <a href=""></a> //#TBD#//
+    public Fiber ExitOnError {
+      get {
+        exitOnError = true;
+        return this;
+      }
+    }
+    /// <a href=""></a> //#TBD#//
     public Fiber Error(string message) {
       onError(message);
       return this;
     }
-    private bool resetOnError;
-//    private static Action<string> onError = Debug.LogError;
+    private        bool           resetOnError;
     private static Action<string> onError = msg => Debug.LogError($"onError: {msg}");
+    private        bool           exitOnError;
     #endregion
 
     #region Support
@@ -267,7 +274,7 @@ namespace Askowl {
         fiber.actions    = Cache<ActionList>.Instance;
         fiber.AddAction(_ => { }, "Start");
         fiber.blockStack = Fifo<LinkedList<ActionItem>.Node>.Instance;
-        fiber.Running    = fiber.Aborted = fiber.resetOnError = fiber.disposeOnComplete = false;
+        fiber.Running    = fiber.Aborted = fiber.resetOnError = fiber.disposeOnComplete = fiber.exitOnError = false;
       }
 
       internal static readonly Queue Update = new Queue
@@ -299,6 +306,7 @@ namespace Askowl {
           fiber.SetAction(fiber.action.Previous).Item.Actor(fiber);
         } catch (Exception e) {
           onError(e.ToString());
+          if (fiber.exitOnError) fiber.Exit();
         }
       } else {
         #if UNITY_EDITOR
