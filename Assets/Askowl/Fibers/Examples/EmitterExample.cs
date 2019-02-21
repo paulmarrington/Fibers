@@ -24,6 +24,15 @@ namespace Askowl.Fibers.Examples {
       }
     }
 
+    [UnityTest] public IEnumerator EmitterFireAction() {
+      using (emitter = Emitter.Instance) {
+        emitterFired = false;
+        Fiber.Start.WaitFor(emitter).Do(fiber => emitterFired = true);
+        yield return Fiber.Start.WaitRealtime(0.2f).Fire(_ => emitter).AsCoroutine();
+        Assert.IsTrue(emitterFired);
+      }
+    }
+
     [UnityTest] public IEnumerator WaitForFiber() {
       var sleeper = Fiber.Instance.WaitFor(seconds: 0.1f).Do(_ => sleeperDone = true);
       Fiber.Start.Do(_ => sleeperDone = false).WaitFor(sleeper.OnComplete);

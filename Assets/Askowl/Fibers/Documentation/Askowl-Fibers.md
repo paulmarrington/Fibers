@@ -10,7 +10,7 @@ Download from the [Unity Store](https://assetstore.unity.com/packages/slug/13309
 
 Coroutines are the core mechanism in Unity3d MonoBehaviour classes to provide independent processing as a form of co-operative multi-tasking. Activities that must occur in order use `yield return myCoroutine();` to wait on completion before continuing. Yield instructions must reside in methods that ha z ve an IEnumerator return type. C# turns them into a state machine. These state machines are not resettable, so they must be discarded once complete. Since every call generates a new state machine, this puts a heavy load on the garbage collector. Using coroutines in abundance can cause glitches in the running of VR and mobile applications.
 
-***Fibers*** provides an alternative co-operative multi-tasking approach to Coroutines with less overhead. It is not a drop-in replacement but is intended for heavy usage situations.
+***Fibers*** provides an alternative co-operative multi-tasking approach to Coroutines with less overhead. It is not a drop-in replacement but is intended for heavy usage situations. The **only** way to take the load from the garbage collector is to [precompile](#instance) fibers and reuse them.
 
 On another subject, some unity packages, specifically FireBase, use C# 4+ Tasks, a preemptive multitasking interface. Anything using Task callbacks must be treated as independent threads with semaphores and the like to protect against data corruption. The Askowl Tasks class mergest tasks into Fibers so that they fit better and more safely into the Unity system.
 
@@ -48,6 +48,32 @@ Fiber.Start
 Note that each step in a fiber is passed a reference. This is mostly so that you can call `fiber.Break()` if needed.
 
 Once a Fiber terminates it is placed in a recycle bin for later reuse. The section below includes functions that allow loops, repeats and conditional exits.
+
+## Precompiling Fibers for the Greater Good
+Most fiber commands take a function. On reference each function creates an anonymous class. It is the same for methods, lambdas or inner functions. By precompiling a fiber and reusing it we avoid the associated garbage collection. When a function reference is created, all data except enclosing class fields are frozen. Also, fibers run over time. Be careful not to run the same fiber while a previous one is still going. The absolute best pattern uses an inner class.
+
+``` c#
+class MyFiber : Fiber.Server<(Tuple)> { // A
+  protected override void Activities(Fiber fiber) => // B
+    fiber.Do(_ => WhatYouDoSoWell()); // C
+}
+// ... and to get a free instance and run it ...
+MyFiber.Go((Tuple)); // D
+```
+
+And here is an example as used in CustomAsset.Service.
+
+``` c#
+public Emitter CallService(Service service) => CallServiceFiber.Go((this, Instance<TS>(), service));
+
+private class CallServiceFiber : Fiber.Server<(Services<TS, TC> manager, TS server, Service service)> {
+  protected override void Activities(Fiber fiber) =>
+    fiber.Begin
+         .WaitFor(_ => MethodCache.Call(scope.server, "Call", new object[] {scope.service.Reset()}) as Emitter)
+         .Until(_ => !scope.service.Error || ((scope.server = scope.manager.Next<TS>()) == null));
+}
+```
+
 
 ## Built-in Fiber Commands
 ### Aborted
@@ -121,10 +147,12 @@ Fiber.Start.WaitFor(seconds: 2).Exit(otherFiber)
 
 ### Fire
 
-Fire an emitter in a way that fits into a fiber stream.
+Fire an emitter in a way that fits into a fiber stream. Use lambda version if the emitter is likely to be changed by other code before it is to be used.
 
 ``` c#
 Fiber.Start.Begin.WaitFor(seconds: 5.0f).Fire(FiveSecondWarningEmitter).Again;
+// Lambda version for variable emitter reference
+Fiber.Start.Begin.WaitFor(seconds: 5.0f).Fire(_ => FiveSecondWarningEmitter).Again;
 ```
 
 

@@ -73,6 +73,51 @@ namespace Askowl {
     }
     #endregion
 
+    #region Closures
+    /// <a href=""></a> //#TBD#//
+    public interface IClosure {
+      /// <a href=""></a> //#TBD#//
+      Emitter OnComplete { get; }
+    }
+
+    /// <a href=""></a> //#TBD#//
+    public abstract class Closure<TS, TTuple> : DelayedCache<Closure<TS, TTuple>>, IClosure
+      where TS : DelayedCache<Closure<TS, TTuple>> {
+      /// <a href=""></a> //#TBD#//
+      public TTuple Scope;
+      /// <a href=""></a> //#TBD#//
+      public Emitter OnComplete => onComplete;
+      private Emitter onComplete;
+
+      protected Closure() {
+        fiber = Fiber.Instance;
+        // ReSharper disable once VirtualMemberCallInConstructor
+        Activities(fiber);
+        fiber.Do(_ => Dispose());
+      }
+      private readonly Fiber fiber;
+
+      /// <a href=""></a> //#TBD#//
+      protected abstract void Activities(Fiber fiberToUpdate);
+
+      /// <a href=""></a> //#TBD#//
+      public static Closure<TS, TTuple> Go(TTuple scope) {
+        var instance = Cache<TS>.Instance as Closure<TS, TTuple>;
+        // ReSharper disable once PossibleNullReferenceException
+        instance.Scope      = scope;
+        instance.onComplete = instance.fiber.OnComplete;
+        instance.fiber.Go();
+        return instance;
+      }
+    }
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber WaitFor(IClosure closure) {
+      WaitFor(closure.OnComplete, "WaitFor(Closure)");
+      return this;
+    }
+    #endregion
+
     #region Context
     /// <a href="http://bit.ly/2RUcL2S">Retrieve the context as a class type - null for none or wrong type</a>
     public T Context<T>() where T : class => context[typeof(T)].Value as T;
@@ -234,9 +279,14 @@ namespace Askowl {
 
     #region Error Management
     /// <a href=""></a> //#TBD#//
-    public Fiber OnError(Action<string> actor) {
-      onError      = actor;
+    public Fiber GlobalOnError(Action<string> actor) {
+      onError      = globalOnError = actor;
       resetOnError = true;
+      return this;
+    }
+    /// <a href=""></a> //#TBD#//
+    public Fiber OnError(Action<string> actor) {
+      onError = actor;
       return this;
     }
     /// <a href=""></a> //#TBD#//
@@ -251,8 +301,15 @@ namespace Askowl {
       onError(message);
       return this;
     }
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber Error(Func<Fiber, string> messageLambda) {
+      onError(messageLambda(this));
+      return this;
+    }
     private        bool           resetOnError;
-    private static Action<string> onError = msg => Debug.LogError($"onError: {msg}");
+    private        Action<string> onError       = msg => globalOnError(msg);
+    private static Action<string> globalOnError = msg => Debug.LogError($"onError: {msg}");
     private        bool           exitOnError;
     #endregion
 
@@ -305,12 +362,12 @@ namespace Askowl {
         try {
           fiber.SetAction(fiber.action.Previous).Item.Actor(fiber);
         } catch (Exception e) {
-          onError(e.ToString());
+          fiber.onError(e.ToString());
           if (fiber.exitOnError) fiber.Exit();
         }
       } else {
         #if UNITY_EDITOR
-        if (fiber.Debugging) Log.Debug($"OnComplete: for {fiber.node}");
+        if (fiber.Debugging) fiber.Log($"OnComplete: for {fiber.node}");
         #endif
         fiber.OnComplete.Fire();
         fiber.Running = false;
@@ -344,7 +401,7 @@ namespace Askowl {
     private LinkedList<ActionItem>.Node SetAction(LinkedList<ActionItem>.Node nextAction) {
       action = nextAction;
       #if UNITY_EDITOR
-      if (Debugging) Log.Debug($"Run: {ActionName(action.Item),10} for {this}");
+      if (Debugging) Log($"Run: {ActionName(action.Item),10} for {this}");
       #endif
       return action;
     }
@@ -352,7 +409,7 @@ namespace Askowl {
 
     #region Debugging Mode
     /// <a href="http://bit.ly/2DDvmZN">Displays Do() and action events on Unity console</a>
-    public bool Debugging;
+    public bool Debugging = false;
 
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Queue: {node?.Owner}";
@@ -370,6 +427,16 @@ namespace Askowl {
         }
         return Csv.ToString(array);
       }
+    }
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber Log(string message, bool warning = false) {
+      if (warning) {
+        Debug.LogWarning($"{message}\n{this}");
+      } else {
+        Debug.Log(message);
+      }
+      return this;
     }
     #endregion
   }

@@ -1,4 +1,6 @@
-﻿//- After some research with the decompiler I worked out that all function references are created equal, no matter if it is a lambda, inner function or class method. An anonymous class is generated and instantiated whenever a reference is created. The best way to reduce the load on garbage collection is to precompile the fibers such that the classes are only instantiated once. Start still have value as we don't need to precompile for fibers that are only used once or monitors that remain in an infinite loop.
+﻿//- Copyright 2019 (C) paul@marrington.net http://www.askowl.net/unity-packages
+
+//- After some research with the decompiler I worked out that all function references are created equal, no matter if it is a lambda, inner function or class method. An anonymous class is generated and instantiated whenever a reference is created. The best way to reduce the load on garbage collection is to precompile the fibers such that the classes are only instantiated once. Start still have value as we don't need to precompile for fibers that are only used once or monitors that remain in an infinite loop.
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;

@@ -62,7 +62,8 @@ namespace Askowl {
               nextStepFrame = Time.frameCount + frames;
               break;
             case YieldInstruction _:
-              Log.Error($"YieldInstruction {Seed.Enumerator.Current.GetType()} only works with Unity coroutines");
+              Debug.LogWarning(
+                $"YieldInstruction {Seed.Enumerator.Current.GetType()} only works with Unity coroutines");
               break;
             case null: break; // step again on next frame
           }
