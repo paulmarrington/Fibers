@@ -49,6 +49,16 @@ Note that each step in a fiber is passed a reference. This is mostly so that you
 
 Once a Fiber terminates it is placed in a recycle bin for later reuse. The section below includes functions that allow loops, repeats and conditional exits.
 
+## Logging
+
+As I keep saying, fibers are asynchronous. When developing with fibers we often need to write to the Unity Log before or after some action or command. While we can use a `Do(_ => Debug.Log("..."))`, it is clunky and messy. Better to have a built-in. `Log` has a second optional boolean parameter `warning`.
+
+``` c#
+Fiber.Start.Log("Ordinary Log Message");
+
+Fiber.Start.Log("Warning Log Message", warning: true);
+```
+
 ## Precompiling Fibers for the Greater Good
 Most fiber commands take a function. On reference each function creates an anonymous class. It is the same for methods, lambdas or inner functions. By precompiling a fiber and reusing it we avoid the associated garbage collection. When a function reference is created, all data except enclosing class fields are frozen. Also, fibers run over time. Be careful not to run the same fiber while a previous one is still going. The absolute best pattern uses an inner class.
 

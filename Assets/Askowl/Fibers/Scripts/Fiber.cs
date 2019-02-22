@@ -431,8 +431,9 @@ namespace Askowl {
 
     /// <a href=""></a> //#TBD#//
     public Fiber Log(string message, bool warning = false) {
+      message = $"{message}\n{this}";
       if (warning) {
-        Debug.LogWarning($"{message}\n{this}");
+        Debug.LogWarning(message);
       } else {
         Debug.Log(message);
       }
