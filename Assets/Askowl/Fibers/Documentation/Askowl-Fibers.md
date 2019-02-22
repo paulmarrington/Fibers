@@ -84,6 +84,42 @@ private class CallServiceFiber : Fiber.Server<(Services<TS, TC> manager, TS serv
 }
 ```
 
+## Exception Management
+In a sequential program a thrown exception bubbles up the call stack until it can be handled. This is a problem for fibers since the calling code had moved on. It is no longer available to catch an exception. The answer is to leave some code around to respond to exceptions if and when they happen.
+
+### GlobalOnError
+If a fiber has not been given a local `OnError`, then this global one is triggered if an exception is thrown. By default it writes an error message to the Unity console. It is primarily used by test frameworks.
+
+``` c#
+fiber.GlobalOnError(msg => DoSomethingWith(msg)).Do(more);
+```
+
+### OnError
+`OnError` sets an error trap for the current fiber and any fibers invoked in the list with `WaitFor`.
+
+``` c#
+fiber.OnError(msg => DoSomethingWith(msg)).Do(more).WaitFor(anotherFiber);
+```
+
+### Error
+`OnError` is normally triggered by throwing an exception. Sometime a simpler construct is useful, particularly when the errors have meaning to be processed later.
+
+``` c#
+fiber.Error("mandatory field missed");
+```
+
+
+### ExitOnError
+Catching errors will continue with the following fiber steps unless `ExitOnError` is specified. `Aborted` is set if a fiber exits on an exception thrown.
+
+``` c#
+fiber.ExitOnError.Do(something).WaitFor(somethingElse);
+if (fiber.Aborted) DoSomethingOnError();
+
+yield return fiber.ExitOnError.Do(something).WaitFor(somethingElse).AsCoroutine;
+```
+
+`AsCoroutine` is executed even if many of the preceding steps are skipped.
 
 ## Built-in Fiber Commands
 ### Aborted

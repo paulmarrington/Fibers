@@ -257,7 +257,8 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed</a>
     public Fiber WaitFor(Fiber anotherFiber) {
-      if (anotherFiber == null) return this;
+      if (anotherFiber         == null) return this;
+      if (anotherFiber.onError == globalOnError) anotherFiber.onError = onError;
       Do(_ => anotherFiber.Go());
       WaitFor(anotherFiber.OnComplete, "WaitFor(Fiber)");
       return this;
