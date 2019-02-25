@@ -74,48 +74,48 @@ namespace Askowl {
     #endregion
 
     #region Closures
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2NjSGNX">Interface used by WaitFor(IClosure)</a>
     public interface IClosure {
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2NjSGNX">A reference to closure.Fiber.OnComplete</a>
       Emitter OnComplete { get; }
+      Fiber Fiber { get; }
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2NjSGNX">Closure super-class that does all the smarts</a>
     public abstract class Closure<TS, TTuple> : DelayedCache<Closure<TS, TTuple>>, IClosure
       where TS : DelayedCache<Closure<TS, TTuple>> {
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2NjSGNX">Scope is available for 10 frames after OnComplete in case it holds response data</a>
       public TTuple Scope;
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2NjSGNX">Emitter that is fired when the fiber completes all actions</a>
       public Emitter OnComplete => onComplete;
       private Emitter onComplete;
 
       protected Closure() {
         fiber = Fiber.Instance;
         // ReSharper disable once VirtualMemberCallInConstructor
-        Activities(fiber);
-        fiber.Do(_ => Dispose());
+        Activities(Fiber);
+        Fiber.Do(_ => Dispose());
       }
+      /// <a href="http://bit.ly/2NjSGNX">Fiber that will run / is running / has run in the context of this closure</a>
+      public Fiber Fiber => fiber;
       private readonly Fiber fiber;
 
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2NjSGNX">Add all the steps you need to this override. It is called by the constructor.</a>
       protected abstract void Activities(Fiber fiberToUpdate);
 
-      /// <a href=""></a> //#TBD#//
+      /// <a href="http://bit.ly/2NjSGNX">Calling this static will fetch a prepared fiber, add scope and run it.</a>
       public static Closure<TS, TTuple> Go(TTuple scope) {
         var instance = Cache<TS>.Instance as Closure<TS, TTuple>;
         // ReSharper disable once PossibleNullReferenceException
         instance.Scope      = scope;
-        instance.onComplete = instance.fiber.OnComplete;
-        instance.fiber.Go();
+        instance.onComplete = instance.Fiber.OnComplete;
+        instance.Fiber.Go();
         return instance;
       }
     }
 
-    /// <a href=""></a> //#TBD#//
-    public Fiber WaitFor(IClosure closure) {
-      WaitFor(closure.OnComplete, "WaitFor(Closure)");
-      return this;
-    }
+    /// <a href="http://bit.ly/2NjSGNX">Helper that is the same as fiber.WaitFor(closure.OnComplete)</a>
+    public Fiber WaitFor(IClosure closure) => WaitFor(closure.Fiber);
     #endregion
 
     #region Context
@@ -279,31 +279,30 @@ namespace Askowl {
     #endregion
 
     #region Error Management
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2NsjMml">Set a global (app-wide) error catch lambda. All fibers without a local override will come here. The default is to write to the Unity console.</a>
     public Fiber GlobalOnError(Action<string> actor) {
       onError      = globalOnError = actor;
       resetOnError = true;
       return this;
     }
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2NlxMy3">The catch lambda will be called for any exceptions from this fiber or any fibers called with WaitFor</a>
     public Fiber OnError(Action<string> actor) {
       onError = actor;
       return this;
     }
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2Nn2xCx">Exceptions in this fiber will cause the fiber to exit</a>
     public Fiber ExitOnError {
       get {
         exitOnError = true;
         return this;
       }
     }
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2NjXMJZ"></a> //#TBD#//
     public Fiber Error(string message) {
       onError(message);
       return this;
     }
-
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2NjXMJZ"></a> //#TBD#//
     public Fiber Error(Func<Fiber, string> messageLambda) {
       onError(messageLambda(this));
       return this;
@@ -430,7 +429,7 @@ namespace Askowl {
       }
     }
 
-    /// <a href=""></a> //#TBD#//
+    /// <a href="http://bit.ly/2NjzIHg">Write to the Unity console (optionally as a warning entry)</a>
     public Fiber Log(string message, bool warning = false) {
       message = $"{message}\n{this}";
       if (warning) {

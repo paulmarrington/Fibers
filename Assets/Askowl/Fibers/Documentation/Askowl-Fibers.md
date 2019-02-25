@@ -63,20 +63,31 @@ Fiber.Start.Log("Warning Log Message", warning: true);
 Most fiber commands take a function. On reference each function creates an anonymous class. It is the same for methods, lambdas or inner functions. By precompiling a fiber and reusing it we avoid the associated garbage collection. When a function reference is created, all data except enclosing class fields are frozen. Also, fibers run over time. Be careful not to run the same fiber while a previous one is still going. The absolute best pattern uses an inner class.
 
 ``` c#
-class MyFiber : Fiber.Server<(Tuple)> { // A
+class MyFiber : Fiber.Closure<MyFiber, (Tuple)> { // A
   protected override void Activities(Fiber fiber) => // B
-    fiber.Do(_ => WhatYouDoSoWell()); // C
+    fiber.Do(_ => WhatYouDoSoWell());
 }
 // ... and to get a free instance and run it ...
-MyFiber.Go((Tuple)); // D
+var myFiber = MyFiber.Go((Tuple)); // C
+
+Fiber.Start.WaitFor(myFiber); // is the same as
+Fiber.Start.WaitFor(myFiber.OnComplete); // is the same as
+Fiber.Start.WaitFor(MyFiber.Go((Tuple)));
+
+var scope = myFiber.Scope; // D
 ```
+
+* **A**: The tuple holds the scope or context passed in on `Go`. It holds request and response data. Since it is a tuple it is passed by value so does not use heap space or the garbage collector.
+* **B**: There is one abstract method to override. Use it to add all the steps you need. It is called in the constructor, so only once per instance. There may be more than one instance if you need to run more than once copy concurrently.
+* **C**: `Go` is a static method that will get an instance of the precompiled fiber, load up the scope and start it running.
+* **D**: When a fiber is finished it will be placed back in recycling for reuse after 10 frames. Take a copy of the scope if it includes response data that is not an instance of an object (i.e. a string, integer, float, struct or tuple.
 
 And here is an example as used in CustomAsset.Service.
 
 ``` c#
 public Emitter CallService(Service service) => CallServiceFiber.Go((this, Instance<TS>(), service));
 
-private class CallServiceFiber : Fiber.Server<(Services<TS, TC> manager, TS server, Service service)> {
+private class CallServiceFiber : Fiber.Closure<CallServiceFiber,(Services<TS, TC> manager, TS server, Service service)> {
   protected override void Activities(Fiber fiber) =>
     fiber.Begin
          .WaitFor(_ => MethodCache.Call(scope.server, "Call", new object[] {scope.service.Reset()}) as Emitter)
@@ -102,10 +113,11 @@ fiber.OnError(msg => DoSomethingWith(msg)).Do(more).WaitFor(anotherFiber);
 ```
 
 ### Error
-`OnError` is normally triggered by throwing an exception. Sometime a simpler construct is useful, particularly when the errors have meaning to be processed later.
+`OnError` is normally triggered by throwing an exception. Sometime a simpler construct is useful, particularly when the errors have meaning to be processed later. There is a direct and lambda implementation.
 
 ``` c#
 fiber.Error("mandatory field missed");
+fiber.Error(_ => "mandatory field missed");
 ```
 
 
@@ -283,6 +295,16 @@ Fiber.Start.OnFixedUpdate.OnUpdate.Do(WhyDidIDoThat);
 The main reason for Fibers, Coroutines and Threads is that most tasks spend much more time waiting for something than actually doing anything. Enter `WaitFor` to the rescue. Most `WaitFor` commands come in two flavours - to provide the source directly or by calling a function. There is a method to this madness. If the resource is unavailable or likely to change in the Fiber compile phase, then the function approach must be used. Examples would include an emitter not yet have created or seconds that could change between fiber runs.
 
 The `WaitFor` commands here provide all basic usage. `WaitFor(Emitter)` can be used for almost any other case you require.
+
+#### WaitFor(Closure)
+
+Wait for the fiber inside the closure to complete operations. Operationally the same as `WaitFor(closure.OnComplete)`
+
+``` c#
+var myClosure = MyClosure.Go((12, 24));
+Fiber.Start.WaitFor(myClosure).Do(_ => somethingWith(myClosure.Scope));
+```
+
 
 #### WaitFor(Emitter) and WaitFor((fiber) => emitter)
 When used with Fibers, emitters are the key to inter-Fiber synchronisation. By giving external processes emitters, they allow Fibers to wait on asynchronous results.

@@ -1,5 +1,7 @@
 ﻿// Copyright 2019 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
+using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,18 +11,24 @@ namespace Askowl.Fibers.Examples {
   public class Introduction : MonoBehaviour {
     [SerializeField] private Toggle testsAvailable = default;
 
+    private bool inStart;
+
     private void Start() {
+      inStart = true;
       #if AskowlTests
       testsAvailable.isOn = true;
       #else
-    testsAvailable.isOn = false;
+      testsAvailable.isOn = false;
       #endif
+      inStart = false;
     }
 
     /// Checkbox to enable or disable tests
     public void EnableTests() {
-      DefineSymbols.AddOrRemoveDefines(testsAvailable.isOn, "AskowlTests");
-      AssetDatabase.Refresh();
+      if (inStart) return;
+      var value = testsAvailable.isOn ? 1 : 0;
+      File.WriteAllText("Assets/Askowl/Askowl.json", $"{{\"EnableTesting\": {value}\n\"Update\": \"{DateTime.Now}\"}}");
+      EditorApplication.isPlaying = false;
     }
 
     /// When "Home Page" button is pressed
@@ -40,5 +48,18 @@ namespace Askowl.Fibers.Examples {
 
     /// When "Home Page" button is pressed
     public void SupportButton() => Application.OpenURL("https://www.patreon.com/paulmarrington");
+  }
+
+  /// <inheritdoc />
+  [InitializeOnLoad] public sealed class AskowlTest : DefineSymbols {
+    static AskowlTest() => EditorApplication.playModeStateChanged += OnPlayModeState;
+    private static void OnPlayModeState(PlayModeStateChange state) {
+      if (state == PlayModeStateChange.EnteredEditMode) {
+        using (var json = Json.Instance.Parse(File.ReadAllText("Assets/Askowl/Askowl.json"))) {
+          var enableTests = json.Node.To("EnableTesting").Found && (json.Node.Long == 1);
+          AddOrRemoveDefines(enableTests, "AskowlTests");
+        }
+      }
+    }
   }
 }

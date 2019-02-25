@@ -1412,7 +1412,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Askowl Fibers includes a suite of integrity tests under Assets/Askowl/Fibers/Examples. Use the checkbox on the left to enable them. Open the Unity Test Runner to view and run them. Look at the code. It is your window into how to use fibers.
+  m_Text: This package includes a suite of integrity tests under Assets/Askowl/Fibers/Examples. Use the checkbox on the left to enable them. Open the Unity Test Runner to view and run them. Look at the code. It is your window into how to use this package.
 --- !u!222 &1165239098
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1435,7 +1435,7 @@ GameObject:
   - component: {fileID: 1172678010}
   - component: {fileID: 1172678014}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: Introduction
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1699,7 +1699,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 900, y: 450}
+  m_SizeDelta: {x: 281.6, y: 98.5}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1372674369
 MonoBehaviour:
@@ -2009,7 +2009,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Askowl Fibers is a cooperative multitasking package. It is an alternative to coroutines for high performance applications. Fibers can be run with minimal memory allocation / garbage collection, making it suitable for driving many short-lived script controlled visual effects.
+  m_Text: Askowl Fibers provides an alternative co-operative multi-tasking approach to Coroutines with less overhead. It is not a drop-in replacement but is intended for heavy usage situations. The <b>only</b> way to take the load from the garbage collector is to precompile fibers and reuse them.
 --- !u!222 &1469376766
 CanvasRenderer:
   m_ObjectHideFlags: 0

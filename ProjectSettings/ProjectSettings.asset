@@ -488,7 +488,7 @@ PlayerSettings:
   webGLLinkerTarget: 0
   webGLThreadsSupport: 0
   scriptingDefineSymbols:
-    1: Fibers;AskowlFibers;AskowlTests;Askowl
+    1: AskowlTests
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}
