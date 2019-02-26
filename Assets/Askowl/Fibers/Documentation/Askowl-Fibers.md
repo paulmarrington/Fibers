@@ -1,6 +1,6 @@
 ---
 title: Askowl Fibers for Unity3D
-description: Like Coroutines but reduced overhead
+description: Like Coroutines, Only Better
 ---
 * Table of Contents
 {:toc}
@@ -8,9 +8,9 @@ Download from the [Unity Store](https://assetstore.unity.com/packages/slug/13309
 
 # [Executive Summary](http://www.askowl.net/unity-fibers)
 
-Coroutines are the core mechanism in Unity3d MonoBehaviour classes to provide independent processing as a form of co-operative multi-tasking. Activities that must occur in order use `yield return myCoroutine();` to wait on completion before continuing. Yield instructions must reside in methods that ha z ve an IEnumerator return type. C# turns them into a state machine. These state machines are not resettable, so they must be discarded once complete. Since every call generates a new state machine, this puts a heavy load on the garbage collector. Using coroutines in abundance can cause glitches in the running of VR and mobile applications.
-
 ***Fibers*** provides an alternative co-operative multi-tasking approach to Coroutines with less overhead. It is not a drop-in replacement but is intended for heavy usage situations. The **only** way to take the load from the garbage collector is to [precompile](#instance) fibers and reuse them.
+
+Coroutines are the core mechanism in Unity3d MonoBehaviour classes to provide independent processing as a form of co-operative multi-tasking. Activities that must occur in order use `yield return myCoroutine();` to wait on completion before continuing. Yield instructions must reside in methods that have an IEnumerator return type. C# turns them into a state machine. These state machines are not resettable, so they must be discarded once complete. Since every call generates a new state machine, this puts a heavy load on the garbage collector. Using coroutines in abundance can cause glitches in the running of VR and mobile applications.
 
 On another subject, some unity packages, specifically FireBase, use C# 4+ Tasks, a preemptive multitasking interface. Anything using Task callbacks must be treated as independent threads with semaphores and the like to protect against data corruption. The Askowl Tasks class mergest tasks into Fibers so that they fit better and more safely into the Unity system.
 
@@ -59,8 +59,8 @@ Fiber.Start.Log("Ordinary Log Message");
 Fiber.Start.Log("Warning Log Message", warning: true);
 ```
 
-## Precompiling Fibers for the Greater Good
-Most fiber commands take a function. On reference each function creates an anonymous class. It is the same for methods, lambdas or inner functions. By precompiling a fiber and reusing it we avoid the associated garbage collection. When a function reference is created, all data except enclosing class fields are frozen. Also, fibers run over time. Be careful not to run the same fiber while a previous one is still going. The absolute best pattern uses an inner class.
+## Precompiling Fibers for the Good
+Most fiber commands take a function. On reference, each function creates an anonymous class. It is the same for methods, lambdas or inner functions. By precompiling a fiber and reusing it, we avoid the associated garbage collection. When creating a function reference, all data except enclosing class fields are frozen. Also, fibers run over time. Be careful not to run the same fiber while a previous one is still going. The absolute best pattern uses an inner class.
 
 ``` c#
 class MyFiber : Fiber.Closure<MyFiber, (Tuple)> { // A
@@ -77,12 +77,12 @@ Fiber.Start.WaitFor(MyFiber.Go((Tuple)));
 var scope = myFiber.Scope; // D
 ```
 
-* **A**: The tuple holds the scope or context passed in on `Go`. It holds request and response data. Since it is a tuple it is passed by value so does not use heap space or the garbage collector.
+* **A**: The tuple holds the scope or context passed in on `Go`. It holds request and response data. Tuple, it is passed by value so does not use heap space or the garbage collector.
 * **B**: There is one abstract method to override. Use it to add all the steps you need. It is called in the constructor, so only once per instance. There may be more than one instance if you need to run more than once copy concurrently.
-* **C**: `Go` is a static method that will get an instance of the precompiled fiber, load up the scope and start it running.
-* **D**: When a fiber is finished it will be placed back in recycling for reuse after 10 frames. Take a copy of the scope if it includes response data that is not an instance of an object (i.e. a string, integer, float, struct or tuple.
+* **C**: `Go` is a static method that gets an instance of the precompiled fiber, load up the scope and start it running.
+* **D**: A completed fiber returns to recycling for reuse after 10 frames.  Take a copy of the scope if it includes response data that is not an instance of an object (i.e. a string, integer, float, struct or tuple.
 
-And here is an example as used in CustomAsset.Service.
+Moreover, here is an example as used in CustomAsset.Service.
 
 ``` c#
 public Emitter CallService(Service service) => CallServiceFiber.Go((this, Instance<TS>(), service));
@@ -96,10 +96,10 @@ private class CallServiceFiber : Fiber.Closure<CallServiceFiber,(Services<TS, TC
 ```
 
 ## Exception Management
-In a sequential program a thrown exception bubbles up the call stack until it can be handled. This is a problem for fibers since the calling code had moved on. It is no longer available to catch an exception. The answer is to leave some code around to respond to exceptions if and when they happen.
+In a sequential program, a thrown exception bubbles up the call stack. For fibers, this cannot be since the calling code had moved on. It is no longer available to catch an exception. The answer is to leave some code around to respond to exceptions if and when they happen.
 
 ### GlobalOnError
-If a fiber has not been given a local `OnError`, then this global one is triggered if an exception is thrown. By default it writes an error message to the Unity console. It is primarily used by test frameworks.
+For a fiber without a local `OnError`, the global one is triggered on exception.  By default, it writes an error message to the Unity console.
 
 ``` c#
 fiber.GlobalOnError(msg => DoSomethingWith(msg)).Do(more);
@@ -113,7 +113,7 @@ fiber.OnError(msg => DoSomethingWith(msg)).Do(more).WaitFor(anotherFiber);
 ```
 
 ### Error
-`OnError` is normally triggered by throwing an exception. Sometime a simpler construct is useful, particularly when the errors have meaning to be processed later. There is a direct and lambda implementation.
+`OnError` is normally triggered by throwing an exception. Sometimes a simpler construct is useful, particularly when the errors have meaning to be processed later. There is a direct and lambda implementation.
 
 ``` c#
 fiber.Error("mandatory field missed");
@@ -122,7 +122,7 @@ fiber.Error(_ => "mandatory field missed");
 
 
 ### ExitOnError
-Catching errors will continue with the following fiber steps unless `ExitOnError` is specified. `Aborted` is set if a fiber exits on an exception thrown.
+Catching errors continues with the following fiber steps unless `ExitOnError` is specified. `Aborted`becomes true if a fiber exits on an exception thrown.
 
 ``` c#
 fiber.ExitOnError.Do(something).WaitFor(somethingElse);
@@ -131,11 +131,11 @@ if (fiber.Aborted) DoSomethingOnError();
 yield return fiber.ExitOnError.Do(something).WaitFor(somethingElse).AsCoroutine;
 ```
 
-`AsCoroutine` is executed even if many of the preceding steps are skipped.
+`AsCoroutine` is always executed.
 
 ## Built-in Fiber Commands
 ### Aborted
-`Aborted` is a boolean that set if a fiber is terminated by a timeout or an external source using `Exit` or `CancelOn`.
+The `Aborted` boolean becomes set if a fiber terminates by a timeout or an external source using `Exit` or `CancelOn`.
 ### AsCoroutine
 Place at the end of a Fiber command to integrate Fibers into traditional coroutines.
 ``` c#
@@ -205,7 +205,7 @@ Fiber.Start.WaitFor(seconds: 2).Exit(otherFiber)
 
 ### Fire
 
-Fire an emitter in a way that fits into a fiber stream. Use lambda version if the emitter is likely to be changed by other code before it is to be used.
+Fire an emitter in a way that fits into a fiber stream. Use lambda version if the emitter is likely to be changed.
 
 ``` c#
 Fiber.Start.Begin.WaitFor(seconds: 5.0f).Fire(FiveSecondWarningEmitter).Again;
@@ -243,7 +243,7 @@ var fiber2 = Fiber.Instance
 
 ### Instance
 [Precompilation Video](https://youtu.be/8poMA8zg8ec)
-`Instance` allows a fiber to be compiled to be run later with `Go()`, `WaitFor(Fiber)` or `AsCoroutine()`. Precompilation is good since all functions provided as parameters to `Do()`, `WaitFor()` and others compile to an anonymous class instantiated on creation. By function, I mean lambdas, inner functions or references to members of an existing class.
+`Instance` allows a fiber to be compiled to be run later with `Go()`, `WaitFor(Fiber)` or `AsCoroutine()`. Precompilation is good since all functions provided as parameters to `Do()`, `WaitFor()` and others compile to an anonymous class instantiated on creation. By function, I mean lambdas, internal functions or references to members of an existing class.
 
 So, the **only** way to take the load from the garbage collector is to precompile fibers and reuse them. It does not apply to infinite loops since they only ever have one instance.
 
@@ -274,7 +274,7 @@ For a complete implementation, look at the source to `ChangeOverTime` in this pa
 
 There is one trip-up for new players that I want to point out. Note `WaitFor(_ => changeInterval)` is a function rather than just a float reference. If we had said `WaitFor(changeInterval)` instead, the waiting time would have been zero since `ChangeInterval` was zero at the time of compile.
 
-Since all functions are compile-time generated, the steps are quite efficient when run.
+Fiber steps are quite efficient when running due to the compile-time nature.
 
 ### SkipFrames
 Each command in a Fiber list executes in a separate frame. If you want a short delay, it is efficient to call SkipFrames. The Fiber worker moves to a special queue and only processed when the shortest waiting frame count expires, reducing update overhead. The frame rate is usually 30 fps or 60 fps for Unity games.
@@ -343,8 +343,8 @@ A C# method with an IEnumerator return value is a state machine with each state 
 #### WaitFor(seconds), WaitFor((fiber) => seconds), WaitRealtime(seconds) and WaitRealtime((fiber) => seconds)
 Delay the Fiber for the specified time. `WaitForSeconds` is scaled by `Time.timeScale`, while `WaitForSecondsRealtime` isn't. The Fiber worker moves to a special queue and only processed when the shortest waiting frame count expires. It further minimises the processing load during updates.
 
-#### Waitfor(Task)
-C# and .NET Core provide support for Tasks - a preemptive thread-based multi-tasking approach. `Task` works fine with Unity except that a response happens at any time, not just in one of the update cycles. Attempting to do any Unity between frames is disastrous. Using this action within a Fiber synchronises to Update, LateUpdate or FixedUpdate as you require.
+#### WaitFor(Task)
+C# and .NET Core provide support for Tasks - a preemptive thread-based multi-tasking approach. `Task` works fine with Unity except that response happens at any time, not just in one of the update cycles. Attempting to do any Unity between frames is disastrous. Using this action within a Fiber synchronises to Update, LateUpdate or FixedUpdate as you require.
 ## Creating New Fiber Commands
 You should only need to create new Fiber commands when dealing with external asynchronous events.
 ### Using an Emitter
@@ -399,7 +399,7 @@ If we run fiber in a class scope, we can keep context in the class. When it runs
   }
 ```
 
-A fiber can store many context objects. They need to be of different classes or be specifically named.
+A fiber can store many context objects. They need to be of different classes or be explicitly named.
 
 ``` c#
 fiber.Context("name here", "this is a string object");
@@ -407,8 +407,7 @@ fiber.Context("name here", "this is a string object");
 string stringInContext = fiber.Context<string>("name here");
 ```
 
-If a new context replaces the old, the former is disposed of first.
-
+If a new context replaces the old, the former suffers disposal.
 
 ### Creating a Worker
 The only situation I can think of that you may need to resort to writing a new low-level Worker instance would be if you wanted to implement efficient polling, The example below is for `SkipFrames`, but `WaitFor(seconds)` uses a similar approach. The requesting fiber is in a new queue unique to this worker type, inserted in sorted order. Each update needs only to check and process items that are ready to run again.
@@ -511,7 +510,7 @@ If we respond to an emitter from a class scope, we can keep context in the class
 
  `Emitter.Dispose()' calls dispose on the context if and only if the context is `IDisposable`.
 
- An emitter can store many context objects. They need to be of different classes or be specifically named.
+ An emitter can store many context objects. They need to be of different classes or be individually named.
 
 ``` c#
 emitter.Context("name here", "this is a string object");
@@ -520,10 +519,10 @@ string stringInContext = emitter.Context<string>("name here");
 ```
 
 ### Emitter.Firings
-An emitter keeps a count of the number of times it has been fired. It is particularly useful to check if an emitter has fired before a listener has been attacked.
+An emitter keeps a count of the number of times fires. It is particularly useful to check if an emitter has fired before a listener is attached.
 
 ### Emitter.Remove
-If you still have a reference to the listener you used you can remove it again. alternatively you can remove from inside the listener with `emitter.
+If you still have a reference to the listener you used you can remove it again. Alternatively, you can remove from inside the listener with `emitter.
 StopListening()`;
 
 ``` c#
@@ -548,13 +547,13 @@ Does as it says.
 I find that in most cases I get an emitter from the cache, wait for one firing then dispose of it. Because this is an asynchronous process, it is messy. It is better for the emitter to dispose of itself.
 
 ### Emitter.StopListening
-This method is meant to be called inside a listener. The current or most recently accessed listener will be removed from the firing line.
+Call inside a listener. The current or most recently accessed listener is removed from the firing line.
 
 ### Emitter.Waiting
 Returns true if an emitter has one or more listeners registered.
 
 ## DelayedCache
-I have come across circumstances involving fibers where the ordinary Able cache is too limited. Consider an external service where the results are held in a cached data object. If the service call releases it then can be reused before client code runs on the next frame. A `DelayedCache` object does not return a DTO to the cache until after an interval has passed. The default is 10 frames, but it can be adjusted as needed.
+I have come across circumstances involving fibers where the ordinary Able cache is too limited. Consider an external service with the results in a cached data object. If the service call releases it then can be reused before client code runs on the next frame. A `DelayedCache` object does not return a DTO to the cache until after an interval has passed. The default is 10 frames, but it can be adjusted as needed.
 
 ``` c#
   public class Example {
