@@ -12,16 +12,16 @@ namespace Askowl {
       AddAction(_ => SecondsWorker.Instance.Load(fiber: this, data: seconds), "WaitFor(Seconds)");
 
     /// <a href="http://bit.ly/2RdEKtZ">Wait the specified time in game-seconds - value passed by function return</a>
-    public Fiber WaitFor(Func<Fiber, float> getter) =>
-      AddAction(_ => SecondsWorker.Instance.Load(fiber: this, getter(this)), "WaitFor(Seconds)");
+    public Fiber WaitFor(Func<Fiber, float> getSeconds) =>
+      AddAction(_ => SecondsWorker.Instance.Load(fiber: this, getSeconds(this)), "WaitFor(Seconds)");
 
     /// <a href="http://bit.ly/2RdEKtZ">Wait the specified time in real-world seconds</a>
     public Fiber WaitRealtime(float seconds) =>
       AddAction(_ => RealtimeWorker.Instance.Load(fiber: this, seconds), "WaitFor(Realtime Seconds)");
 
     /// <a href="http://bit.ly/2RdEKtZ">Wait the specified time in real-world seconds - value passed by function return</a>
-    public Fiber WaitRealtime(Func<Fiber, float> getter) =>
-      AddAction(_ => RealtimeWorker.Instance.Load(fiber: this, getter(this)), "WaitFor(Realtime Seconds)");
+    public Fiber WaitRealtime(Func<Fiber, float> getSeconds) =>
+      AddAction(_ => RealtimeWorker.Instance.Load(fiber: this, getSeconds(this)), "WaitFor(Realtime Seconds)");
 
     private class SecondsWorker : BaseTimeWorker {
       // ReSharper disable once MemberHidesStaticFromOuterClass

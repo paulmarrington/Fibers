@@ -18,14 +18,96 @@ On another subject, some unity packages, specifically FireBase, use C# 4+ Tasks,
 >
 > The Doxygen pages [here](https://paulmarrington.github.io/Unity-Documentation/Fibers/Doxygen/html/annotated.html)
 
+# Cheat-Sheet
+
+## Initialisation
+* ***The Best and Safest Fiber Definition***
+``` c#
+class MyFiber : Fiber.Closure<MyFiber, (Tuple)> {
+  protected override void Activities(Fiber fiber) =>
+    fiber.Do(_ => AddingSteps());
+}
+var myFiberClosure = MyFiber.Go((Tuple));
+anotherFiber.WaitFor(myFiberClosure);
+```
+
+* ***Precompiled Fiber***: Fiber.Instance.*AddStepsHere*;
+* ***Run Immediately***: Fiber.Start.Begin.*AddStepsHere*.Again;
+
+## Fiber State
+* if (fiber.***Aborted***) ExitOrTimeoutCalled();
+* ***Context***
+  * var instance = fiber.***Context***<type>();
+  * fiber.***Context***(type instance);
+  * var instance = fiber.***Context***<type>(string name);
+  * fiber.***Context***<type>(string name);
+* fiber.***Dispose()*** // places in recycling for reuse later
+* anotherFiber.WaitFor(emitter: fiber.***OnComplete***).Do(Something);
+* if (fiber.***Running***) Debug.Log("Fiber not complete yet");
+
+## Built-In Steps
+* ***Exit***
+  * fiber.Do(fiber => fiber.***Exit()*** );
+  * fiber.***Exit(anotherFiber)*** ;
+* yield return fiber.***AsCoroutine***()
+* fiber.***CancelOn(emitter)*** ;
+* fiber.***Do(_ => Anything())*** ;
+* Fiber.Start.Begin.Do(Something).Again.***Finish()***
+* fiber.***Fire(emitter)*** .***Fire(_ => emitter)*** ;
+* fiber.***Log***($"a {variable}").***Log***("a warning", warning: true);
+* fiber.***SkipFrames(10)*** .***SkipFrames(_ => framesToSkip)*** ;
+* fiber.***Timeout(seconds: 1.5f)***
+* fiber.***WaitFor(closure: myFiberClosure)***
+* fiber.***WaitFor(emitter: myEmitter)*** .***WaitFor(_ => myEmitter)*** ;
+* fiber.***WaitFor(enumerator: myIEnumerator)*** .***WaitFor(_ => myIEnumerator)*** ;
+* fiber.***WaitFor(fiber: myFiber)***
+* fiber.***WaitFor(seconds: 0.2f)*** .***WaitFor(_ => timeToLive)*** ;
+* fiber.***WaitFor(task: myTask)*** .***WaitFor(_ => myTask)***
+* fiber.***WaitRealtime(0.3f)*** .***WaitFor(_ => timeToLive)***
+
+## Blocks, Decisions and Loops
+* Fiber.Start.Begin.Do(Something).WaitFor(seconds: 2.5f).***Again***
+* fiber.***Begin***.Do(Something).End
+* fiber.Begin.Do(fiber => fiber.***Break()***).End.Do(After);
+* fiber.Begin.***Break(after: 2)***.Do(Something).End.Do(After);
+* fiber.Begin.***BreakIf(_ => isTrue)***.Do(Something).Again
+* fiber.Begin.Do(Something).***End***
+* fiber.***If(_ => isTrue)*** .Do(IfTrue).***Else*** .Do(IfFalse).***Then***.Do(After)
+* fiber.Begin.Do(Something).***Repeat(count: 5)***
+* fiber.***Skip(after: 1)*** .Do(DoesntDo).Do(doesDo);
+* fiber.Begin.Do(Something).***Until(_ => isTrue)***
+
+## Management of Exceptions
+* fiber.***ExitOnError***.Do(_ => throw new Exception()).Do(WontDo);
+* Fiber.***GlobalOnError(errmsg => DoSomethingOnError(errmsg))*** ;
+* fiber.***OnError(errmsg => OverrideErrorProcessing(errmsg))*** ;
+
+## Support
+* fiber.***Debugging*** = true; // logs fiber state changes
+* class MyDto : ***DelayedCache<MyDto>*** {}
+  * using (var myDto = MyDto.Instance) { ... }
+  * var myDto = MyDto.Instance; ...; myDto.***Dispose()*** ;
+* ***Emitter***
+  * using (var emitter = Emitter.Instance) { ... }
+  * var emitter = Emitter.Instance; ...; emitter.***Dispose()***
+  * emitter.***Fire()*** ;
+  * if (emitter.***Firings*** > 0) Debug.Log("fired already");
+  * emitter.***Listen***(emitter => DoWhenFired());
+  * emitter.Listen(DoWhenFired); ...; emitter.***Remove***(DoWhenFired);
+  * emitter.***RemoveAllListeners()*** ;
+  * emitter.Listen(emitter => { DoSomething(); emitter.***StopListening()*** ; });
+  * if (emitter.***Waiting***) Debug.Log("at least one listener");
+
 # Videos
 * [An Introduction to Fibers](https://youtu.be/0spg5a7cWBs) (v1.0)
+* [Fiber Closures - the way forward](https://youtu.be/FRPBmxCsRcg) (v2.1)
 * [Basic Fibers Commands](https://youtu.be/4FxZEKfrV_g) (v1.0)
 * [Fibers in Pooling - A Real-World Example](https://youtu.be/WIEL9aJlwbc) (v1.0)
+* [Using Emitters with Fibers](https://youtu.be/qObY_7jFe88) (v1.0)
 * [Precompiled Fibers for High Performance Applications](https://youtu.be/8poMA8zg8ec) (v2.0)
-* [Interrupting Running Fibers](https://youtu.be/yAm7ajpiTRI)
-* [Keeping Context in Fibers](https://youtu.be/gRcM59FcFnU)
-* [Using Emitters with Fibers](https://youtu.be/qObY_7jFe88)
+* [Why Use Lambdas](https://youtu.be/OVa4s1aX1-I) (v2.0)
+* [Interrupting Running Fibers](https://youtu.be/yAm7ajpiTRI) (v2.0)
+* [Keeping Context in Fibers](https://youtu.be/gRcM59FcFnU) (v2.0)
 
 # The Structure of a Fiber Operation
 
@@ -60,6 +142,8 @@ Fiber.Start.Log("Warning Log Message", warning: true);
 ```
 
 ## Precompiling Fibers for the Good
+[Why Use Lambdas Turorial](https://youtu.be/OVa4s1aX1-I)
+
 Most fiber commands take a function. On reference, each function creates an anonymous class. It is the same for methods, lambdas or inner functions. By precompiling a fiber and reusing it, we avoid the associated garbage collection. When creating a function reference, all data except enclosing class fields are frozen. Also, fibers run over time. Be careful not to run the same fiber while a previous one is still going. The absolute best pattern uses an inner class.
 
 ``` c#

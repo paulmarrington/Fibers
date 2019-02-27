@@ -16,7 +16,7 @@ namespace Askowl {
     public Fiber WaitFor(Func<Fiber, IEnumerator> getter) =>
       AddAction(_ => LoadWithPayload(getter(this), 0), "WaitFor(IEnumerator)");
 
-    /// <a href=""></a>
+    /// <a href=""></a> //#TBD#//
     public Fiber WaitFor(int framesBetweenChecks, IEnumerator enumerator) =>
       AddAction(_ => LoadWithPayload(enumerator, framesBetweenChecks), "WaitFor(framesBetweenChecks, IEnumerator)");
 
@@ -25,14 +25,14 @@ namespace Askowl {
       return EnumeratorWorker.Instance.Load(this, payload);
     }
 
-    /// <a href=""></a> <inheritdoc />
+    /// <a href=""></a> <inheritdoc /> //#TBD#//
     private class EnumeratorWorker : Worker<EnumeratorWorker.Payload> {
 //      static EnumeratorWorker() => NeedsUpdates = false;
       // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      EnumeratorWorker Instance  => Cache<EnumeratorWorker>.Instance;
       protected override void             Recycle() => Cache<EnumeratorWorker>.Dispose(this);
 
-      /// <a href=""></a>
+      /// <a href=""></a> //#TBD#//
       public struct Payload {
         internal IEnumerator Enumerator;
         internal int         SkipFrames;
