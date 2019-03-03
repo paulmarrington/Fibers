@@ -411,6 +411,12 @@ namespace Askowl {
     /// <a href="http://bit.ly/2DDvmZN">Displays Do() and action events on Unity console</a>
     public bool Debugging = false;
 
+    /// <a href=""></a> //#TBD#//
+    public Fiber DebugLog(bool on = true) {
+      Debugging = @on;
+      return this;
+    }
+
     /// <a href="http://bit.ly/2DDvmZN">Return Fiber contents and current state</a><inheritdoc />
     public override string ToString() => $"Id: {id} // Actions: {ActionNames} // Queue: {node?.Owner}";
 
@@ -431,12 +437,29 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2NjzIHg">Write to the Unity console (optionally as a warning entry)</a>
     public Fiber Log(string message, bool warning = false) {
-      message = $"{message}\n{this}";
-      if (warning) {
-        Debug.LogWarning(message);
-      } else {
-        Debug.Log(message);
-      }
+      AddAction(
+        _ => {
+          var msg = $"{message}\n{this}";
+          if (warning) {
+            Debug.LogWarning(msg);
+          } else {
+            Debug.Log(msg);
+          }
+        });
+      return this;
+    }
+
+    /// <a href=""></a> //#TBD#//
+    public Fiber Log(Func<Fiber, string> messageLambda, bool warning = false) {
+      AddAction(
+        _ => {
+          var msg = $"{messageLambda(_)}\n{this}";
+          if (warning) {
+            Debug.LogWarning(msg);
+          } else {
+            Debug.Log(msg);
+          }
+        });
       return this;
     }
     #endregion
