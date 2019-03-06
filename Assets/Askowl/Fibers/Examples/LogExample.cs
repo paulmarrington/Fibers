@@ -6,7 +6,7 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.TestTools;
-#if AskowlTests
+#if !ExcludeAskowlTests
 namespace Askowl.Fibers.Examples {
   public sealed class LogExample : PlayModeTests {
     [UnityTest] public IEnumerator FiberLog() {

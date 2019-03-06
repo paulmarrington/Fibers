@@ -6,7 +6,7 @@ using UnityEngine.TestTools;
 
 // ReSharper disable MissingXmlDoc
 
-#if AskowlTests
+#if !ExcludeAskowlTests
 
 namespace Askowl.Fibers.Examples {
   public class Precompile {

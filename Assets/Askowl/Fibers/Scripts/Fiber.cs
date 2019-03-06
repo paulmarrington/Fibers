@@ -188,11 +188,16 @@ namespace Askowl {
     public Fiber Again => AddAction(_ => action = blockStack.Top).AddAction(NextAction).End;
 
     /// <a href="http://bit.ly/2DDvp7V">Begin/Repeat loop for a specific number of times</a>
-    public Fiber Repeat(int count) {
-      count += 1;
+    public Fiber Repeat(int count) => Repeat(_ => count);
+
+    /// <a href="http://bit.ly/2DDvp7V">Begin/Repeat loop for a specific number of times</a>
+    public Fiber Repeat(Func<Fiber, int> countLambda) {
+      var count   = 0;
       int counter = 0;
       return AddAction(
         _ => {
+          if (count == 0) count = countLambda(this) + 1;
+          if (count == 0) return;
           var begin                            = blockStack.Top;
           if ((++counter % count) != 0) action = begin;
         }, "Repeat").End;
@@ -367,7 +372,7 @@ namespace Askowl {
         }
       } else {
         #if UNITY_EDITOR
-        if (fiber.Debugging) fiber.Log($"OnComplete: for {fiber.node}");
+        if (fiber.Debugging) Debug.Log($"OnComplete: for {fiber.node}");
         #endif
         fiber.OnComplete.Fire();
         fiber.Running = false;
@@ -401,7 +406,7 @@ namespace Askowl {
     private LinkedList<ActionItem>.Node SetAction(LinkedList<ActionItem>.Node nextAction) {
       action = nextAction;
       #if UNITY_EDITOR
-      if (Debugging) Log($"Run: {ActionName(action.Item),10} for {this}");
+      if (Debugging) Debug.Log($"Run: {ActionName(action.Item),10} for {this}");
       #endif
       return action;
     }

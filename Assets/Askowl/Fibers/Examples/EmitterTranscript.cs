@@ -2,7 +2,7 @@
 
 //- The Emitter class has been moved from Able to Fibers and given a bit of an overhaul. As the primary inter-fiber communications method it holds more prominence in release 2.0 of fibers.
 using NUnit.Framework;
-#if AskowlTests
+#if !ExcludeAskowlTests
 // ReSharper disable MissingXmlDoc
 
 namespace Askowl.Fibers.Transcripts {

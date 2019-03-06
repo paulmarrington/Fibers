@@ -2,7 +2,7 @@
 
 // ReSharper disable MissingXmlDoc
 
-#if AskowlTests
+#if !ExcludeAskowlTests
 namespace Askowl.Fibers.Examples {
   using System.Collections;
   using System.Threading.Tasks;

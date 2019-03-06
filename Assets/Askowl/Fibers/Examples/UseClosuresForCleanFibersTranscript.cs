@@ -5,7 +5,7 @@ using System;
 using System.Collections;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
-#if AskowlTests
+#if !ExcludeAskowlTests
 // ReSharper disable MissingXmlDoc
 
 namespace Askowl.Fibers.Transcripts {
@@ -37,7 +37,7 @@ namespace Askowl.Fibers.Transcripts {
     }
   }
 
-  //- I'll finish up with a real-world example. It is production code taken from the CustomAsset package for calling external asynchronous services. 
+  //- I'll finish up with a real-world example. It is production code taken from the CustomAsset package for calling external asynchronous services.
   public class Services<TS, TC> {
     public class Service {
       public Boolean Error = false;

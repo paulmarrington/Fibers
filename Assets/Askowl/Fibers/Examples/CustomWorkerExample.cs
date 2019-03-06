@@ -5,7 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-#if AskowlTests
+#if !ExcludeAskowlTests
 
 // ReSharper disable ClassNeverInstantiated.Local ClassNeverInstantiated.Global MissingXmlDoc
 

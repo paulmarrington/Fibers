@@ -7,7 +7,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-#if AskowlTests
+#if !ExcludeAskowlTests
 namespace Askowl.Fibers.Examples {
   public sealed class IfElseThenExample {
     [UnityTest, Timeout(10000)] public IEnumerator IfThen() {

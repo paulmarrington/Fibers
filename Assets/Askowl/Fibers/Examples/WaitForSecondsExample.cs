@@ -5,7 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-#if AskowlTests
+#if !ExcludeAskowlTests
 // ReSharper disable InconsistentNaming
 // ReSharper disable MissingXmlDoc
 

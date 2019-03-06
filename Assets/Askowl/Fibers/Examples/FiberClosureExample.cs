@@ -6,7 +6,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
-#if AskowlTests
+#if !ExcludeAskowlTests
 namespace Askowl.Fibers.Examples {
   public sealed class FiberClosureExample {
     private class SampleClosure : Fiber.Closure<SampleClosure, (int number, string text)> {

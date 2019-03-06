@@ -4,7 +4,7 @@
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine.TestTools;
-#if AskowlTests
+#if !ExcludeAskowlTests
 // ReSharper disable MissingXmlDoc
 
 namespace Askowl.Fibers.Transcripts {
