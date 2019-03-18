@@ -39,22 +39,38 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2RUcL2S">Set the context to an instance of a type</a>
     public Emitter Context<T>(string name, T value) where T : class {
-      (context[name].Value as IDisposable)?.Dispose();
-      context.Add(name, value);
+      context.Remove(name).Add(name, value);
       return this;
     }
     private readonly Map context = Map.Instance;
     #endregion
 
-    private readonly LinkedList<Action> listeners = new LinkedList<Action>();
+    #region Listener
+    private delegate void Driver(Emitter emitter, Listener listener);
+
+    private struct Listener {
+      public Driver                     driver;
+      public Action                     action;
+      public (string key, string value) validation;
+      public bool                       once;
+      public Emitter                    validatedEmitter;
+    }
+    private readonly Driver basicDriver = (emitter, listener) => listener.action(emitter);
+    private readonly Driver validDriver = (emitter, listener) => {
+      if (emitter.Context<string>(listener.validation.key) == listener.validation.value)
+        listener.validatedEmitter.Fire();
+    };
+
+    private readonly LinkedList<Listener> listeners = new LinkedList<Listener>();
 
     /// <a href="http://bit.ly/2B6jpZl">The owner shoots and all the listeners hear</a>
     public void Fire() {
       Firings++;
-      LinkedList<Action>.Node next;
+      LinkedList<Listener>.Node next;
       for (node = listeners.First; node != null; node = next) {
         next = node.Next;
-        node.Item(this);
+        node.Item.driver(this, node.Item);
+        if (node.Item.once) StopListening();
       }
       if (isSingleFire) {
         Firings      = 0;
@@ -67,15 +83,25 @@ namespace Askowl {
     public int Firings;
 
     /// <a href="http://bit.ly/2B6jpZl">Ask an emitter to tell me too</a>
-    public Emitter Listen(Action action) {
-      listeners.Add(action);
+    public Emitter Listen(Action action, bool once) {
+      listeners.Add(new Listener {action = action, once = once, driver = basicDriver});
       return this;
     }
+
+    /// <a href="http://bit.ly/2B6jpZl">Ask an emitter to tell me too</a>
+    public Emitter Listen((string key, string value) validation, bool once) {
+      Emitter validatedEmitter = Emitter.SingleFireInstance;
+      void action(Emitter emitter) => validatedEmitter.Fire();
+      listeners.Add(
+        new Listener {validation = validation, once = once, driver = validDriver, validatedEmitter = validatedEmitter});
+      return validatedEmitter;
+    }
+    #endregion
 
     /// <a href="http://bit.ly/2TpBXuR">Remove a listener if it is in the list</a>
     public Emitter Remove(Action action) {
       for (node = listeners.First; node != null; node = node.Next) {
-        if (node.Item != action) continue;
+        if (node.Item.action != action) continue;
         node.Recycle();
         break;
       }
@@ -87,7 +113,7 @@ namespace Askowl {
       node.Recycle();
       return this;
     }
-    private LinkedList<Action>.Node node;
+    private LinkedList<Listener>.Node node;
 
     /// <a href="http://bit.ly/2B6jpZl">Removes all listeners</a>
     public void RemoveAllListeners() {

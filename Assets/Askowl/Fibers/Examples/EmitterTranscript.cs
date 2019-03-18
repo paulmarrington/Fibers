@@ -11,12 +11,9 @@ namespace Askowl.Fibers.Transcripts {
     [Test] public void Basic() {
       bool emitterFired = false;
       //- A listener function is called when the emitter is fired. It is given a reference to the emitter in case it is called out of context. If it returns false it is removed from the list and never called again.
-      void emitterAction(Emitter emitter) {
-        emitterFired = true;
-        emitter.StopListening();
-      }
+      void emitterAction(Emitter emitter) => emitterFired = true;
       //- An emitter is cached and disposable. In practice a `using` statement is unlikely in an asynchronous world.
-      using (var emitter = Emitter.Instance.Listen(emitterAction)) {
+      using (var emitter = Emitter.Instance.Listen(emitterAction, once: true)) {
         Assert.IsFalse(emitterFired);
         emitter.Fire();
         Assert.IsTrue(emitterFired);
@@ -26,13 +23,10 @@ namespace Askowl.Fibers.Transcripts {
     //- There is a problem with the example above. Emitters need to be efficient as they may be called hundreds of times a seconds. The problem here is `Listen(emitterAction)`. Whenever a function is turned into a delegate an anonymous class is created, exercising the garbage collector. Any form of delegate acts the same - lambdas, inner functions, instance or static members, anything. Unless you are absolutely certain that Listen will not be called often it is best to cache the delegate.
     private static bool emitterFiredStatic;
     //- The anonymous class is only instantiated once when the class is first loaded, then reused as needed.
-    private static readonly Emitter.Action emitterActionStatic = emitter => {
-      emitterFiredStatic = true;
-      emitter.StopListening();
-    };
+    private static readonly Emitter.Action emitterActionStatic = emitter => emitterFiredStatic = true;
 
     [Test] public void StaticListener() {
-      using (var emitter = Emitter.Instance.Listen(emitterActionStatic)) {
+      using (var emitter = Emitter.Instance.Listen(emitterActionStatic, once: true)) {
         emitter.Fire();
         Assert.IsTrue(emitterFiredStatic);
       }
@@ -45,13 +39,10 @@ namespace Askowl.Fibers.Transcripts {
 
     [Test] public void InstanceListener() {
       if (emitterActionInstance == default) {
-        emitterActionInstance = emitter => {
-          emitterFiredInstance = true;
-          emitter.StopListening();
-        };
+        emitterActionInstance = emitter => emitterFiredInstance = true;
       }
       emitterFiredInstance = false;
-      using (var emitter = Emitter.Instance.Listen(emitterActionInstance)) {
+      using (var emitter = Emitter.Instance.Listen(emitterActionInstance, once: true)) {
         emitter.Fire();
         Assert.IsTrue(emitterFiredInstance);
       }
@@ -61,14 +52,12 @@ namespace Askowl.Fibers.Transcripts {
     private class TransferData : Cached<TransferData> {
       public bool EmitterFired;
     }
-    private static readonly Emitter.Action emitterActionWithContext = emitter => {
-      emitter.Context<TransferData>().EmitterFired = true;
-      emitter.StopListening();
-    };
+    private static readonly Emitter.Action emitterActionWithContext =
+      emitter => emitter.Context<TransferData>().EmitterFired = true;
     [Test] public void ContextListener() {
       var data = Cache<TransferData>.Instance;
       data.EmitterFired = false;
-      using (var emitter = Emitter.Instance.Listen(emitterActionWithContext)) {
+      using (var emitter = Emitter.Instance.Listen(emitterActionWithContext, once: true)) {
         emitter.Context(data);
         emitter.Fire();
         Assert.IsTrue(data.EmitterFired);
@@ -79,7 +68,7 @@ namespace Askowl.Fibers.Transcripts {
     [Test] public void SingleFireInstance() {
       var data = Cache<TransferData>.Instance;
       data.EmitterFired = false;
-      var emitter = Emitter.SingleFireInstance.Listen(emitterActionWithContext);
+      var emitter = Emitter.SingleFireInstance.Listen(emitterActionWithContext, once: true);
       emitter.Context(data);
       emitter.Fire();
       Assert.IsTrue(data.EmitterFired);

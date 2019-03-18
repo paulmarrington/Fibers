@@ -66,7 +66,7 @@ namespace Askowl.Fibers.Examples {
 
     [Test] public void ActionEmitter() {
       counter = 0;
-      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(isSame)) {
+      using (emitter = Emitter.Instance.Listen(incrementCounter, once: false).Listen(isSame, once: false)) {
         Assert.AreEqual(expected: 0, actual: counter);
         emitter.Fire();
         Assert.AreEqual(expected: 1, actual: counter);
@@ -75,7 +75,7 @@ namespace Askowl.Fibers.Examples {
 
     [Test] public void Remove() {
       counter = 0;
-      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(removeMyself)) {
+      using (emitter = Emitter.Instance.Listen(incrementCounter, once: false).Listen(removeMyself, once: false)) {
         emitter.Fire();
         Assert.AreEqual(expected: 2, actual: counter);
         emitter.Remove(incrementCounter);
@@ -86,14 +86,16 @@ namespace Askowl.Fibers.Examples {
 
     [Test] public void ListenOnce() {
       counter = 0;
-      using (emitter = Emitter.Instance.Listen(incrementCounter).Listen(incrementCounter)) {
+      using (emitter = Emitter.Instance.Listen(incrementCounter, once: false).Listen(incrementCounter, once: false)) {
         Assert.AreEqual(expected: 0, actual: counter);
         emitter.Fire();
         emitter.Fire();
         Assert.AreEqual(expected: 4, actual: counter);
       }
       counter = 0;
-      using (emitter = Emitter.Instance.Listen(incrementCounterOnce).Listen(incrementCounterOnce)) {
+      using (emitter = Emitter.Instance.Listen(incrementCounterOnce, once: false).Listen(
+               incrementCounterOnce
+             , once: false)) {
         Assert.AreEqual(expected: 0, actual: counter);
         emitter.Fire();
         emitter.Fire();
@@ -124,7 +126,7 @@ namespace Askowl.Fibers.Examples {
       var emitterContext = new EmitterContext {Number = 12};
       var namedContext   = "named context string reference";
       using (emitter = Emitter.Instance.Context(emitterContext).Context("name here", namedContext)) {
-        emitter.Listen(em => Assert.AreEqual(12, em.Context<EmitterContext>().Number));
+        emitter.Listen(em => Assert.AreEqual(12, em.Context<EmitterContext>().Number), once: false);
         emitter.Fire();
         Assert.AreEqual(12,                               emitter.Context<EmitterContext>().Number);
         Assert.AreEqual("named context string reference", emitter.Context<string>("name here"));

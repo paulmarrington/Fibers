@@ -29,16 +29,13 @@ namespace Askowl {
     /// <a href="http://bit.ly/2B9DZrU">Cancel/Abort/Exit current fiber if an emitter fires</a>
     public Fiber CancelOn(Emitter emitter) {
       if (cancelOnFired == default) cancelOnFired = ExitOnFire;
-      emitter.Listen(cancelOnFired);
+      emitter.Listen(cancelOnFired, once: true);
       cancelOnEmitter = emitter;
       return this;
     }
     private Emitter        cancelOnEmitter;
     private Emitter.Action cancelOnFired;
-    private void ExitOnFire(Emitter emitter) {
-      Exit();
-      emitter.Remove(cancelOnFired);
-    }
+    private void           ExitOnFire(Emitter emitter) => Exit();
     private void CancelOnAborted() {
       cancelOnEmitter?.Remove(cancelOnFired);
       cancelOnEmitter = default;
@@ -55,7 +52,7 @@ namespace Askowl {
 
       protected override bool Prepare() {
         if (Seed != null) {
-          Seed.Listen(onNext);
+          Seed.Listen(onNext, once: true);
           return true;
         }
         Recycle();
@@ -63,10 +60,7 @@ namespace Askowl {
       }
 
       private readonly Emitter.Action onNext;
-      private void OnNext(Emitter emitter) {
-        emitter.StopListening();
-        Dispose();
-      }
+      private          void           OnNext(Emitter emitter) => Dispose();
     }
   }
 }
