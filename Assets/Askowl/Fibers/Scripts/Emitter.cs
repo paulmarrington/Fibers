@@ -1,6 +1,7 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 using System;
+using UnityEngine;
 
 namespace Askowl {
   /// <a href="http://bit.ly/2B6jpZl">Cached C# Action instances using the observer pattern</a>
@@ -56,6 +57,8 @@ namespace Askowl {
     }
     private readonly Driver basicDriver = (emitter, listener) => listener.action(emitter);
     private readonly Driver validDriver = (emitter, listener) => {
+      if (emitter.Context<string>(listener.validation.key) == listener.validation.value)
+        Debug.Log($"*** validDriver '{listener.validation.key}'"); //#DM#// 
       if (emitter.Context<string>(listener.validation.key) == listener.validation.value)
         listener.validatedEmitter.Fire();
     };
