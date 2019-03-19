@@ -1,7 +1,6 @@
 ﻿// Copyright 2018 (C) paul@marrington.net http://www.askowl.net/unity-packages
 
 using System;
-using UnityEngine;
 
 namespace Askowl {
   /// <a href="http://bit.ly/2B6jpZl">Cached C# Action instances using the observer pattern</a>
@@ -90,8 +89,7 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2B6jpZl">Ask an emitter to tell me too</a>
     public Emitter Listen((string key, string value) validation, bool once) {
-      Emitter validatedEmitter = Emitter.SingleFireInstance;
-      void action(Emitter emitter) => validatedEmitter.Fire();
+      Emitter validatedEmitter = SingleFireInstance;
       listeners.Add(
         new Listener {validation = validation, once = once, driver = validDriver, validatedEmitter = validatedEmitter});
       return validatedEmitter;
