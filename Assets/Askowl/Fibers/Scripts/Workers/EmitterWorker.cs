@@ -3,6 +3,7 @@
 // ReSharper disable ClassNeverInstantiated.Local, ClassNeverInstantiated.Global
 
 using System;
+using UnityEngine;
 
 namespace Askowl {
   public partial class Fiber {
@@ -44,7 +45,7 @@ namespace Askowl {
     private class EmitterWorker : Worker<Emitter> {
       static EmitterWorker() => NeedsUpdates = false;
 
-      public EmitterWorker() => onNext = OnNext;
+      public EmitterWorker() : base() => onNext = OnNext;
 
       // ReSharper disable once MemberHidesStaticFromOuterClass
       public static      EmitterWorker Instance  => Cache<EmitterWorker>.Instance;

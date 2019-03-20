@@ -54,6 +54,8 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2Ptbf6V">Worker with payload</a> <inheritdoc />
     public abstract class Worker<T> : Worker {
+      protected Worker() : base() => activateWorker = ActivateWorker;
+
       /// <a href="http://bit.ly/2Ptbf6V">Payload</a>
       public T Seed;
 
@@ -79,6 +81,7 @@ namespace Askowl {
         From = (Queue) fiber.node.Owner;
         fiber.node.MoveTo(Queue);
       }
+      private Action activateWorker;
 
       internal static readonly Queue Queue = new Queue {CompareItem = Compare, DeactivateItem = Deactivate};
 
