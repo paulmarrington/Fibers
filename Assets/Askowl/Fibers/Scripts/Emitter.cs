@@ -57,8 +57,7 @@ namespace Askowl {
     }
     private readonly Driver basicDriver = (emitter, listener) => listener.action(emitter);
     private readonly Driver validDriver = (emitter, listener) => {
-      if (emitter.Context<string>(listener.validation.key) == listener.validation.value)
-        Debug.Log($"*** validDriver '{listener.validation.key}'"); //#DM#// 
+      Debug.Log($"*** validDriver '{listener.validation.key}' == '{listener.validation.value}'"); //#DM#//
       if (emitter.Context<string>(listener.validation.key) == listener.validation.value)
         listener.validatedEmitter.Fire();
     };
@@ -92,6 +91,7 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2B6jpZl">Ask an emitter to tell me too</a>
     public Emitter Listen((string key, string value) validation, bool once) {
+      Debug.Log($"*** Listen '{this}'"); //#DM#//
       Emitter validatedEmitter = SingleFireInstance;
       listeners.Add(
         new Listener {validation = validation, once = once, driver = validDriver, validatedEmitter = validatedEmitter});
@@ -133,6 +133,7 @@ namespace Askowl {
       Cache<Emitter>.Dispose(this);
     }
 
-    public override string ToString() => $"Firings: {Firings}, Listeners: {listeners.Count}, Context: {context}";
+    public override string ToString() =>
+      $"{this.GetHashCode()}: Firings: {Firings}, Listeners: {listeners.Count}, Context: {context}";
   }
 }

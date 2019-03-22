@@ -262,10 +262,8 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed</a>
     public Fiber WaitFor(Fiber anotherFiber) {
-      if (anotherFiber         == null) return this;
-      if (anotherFiber.onError == globalOnError) anotherFiber.onError = onError;
+      WaitFor(PrepareAnotherFiber(anotherFiber).OnComplete, "WaitFor(Fiber)");
       Do(_ => anotherFiber.Go());
-      WaitFor(anotherFiber.OnComplete, "WaitFor(Fiber)");
       return this;
     }
 
@@ -280,7 +278,18 @@ namespace Askowl {
     private Fiber timeoutFiber;
 
     /// <a href="http://bit.ly/2CV0RNn">Wait for another fiber to complete, starting it if needed - value set by return value of a function</a>
-    public Fiber WaitFor(Func<Fiber, Fiber> getFiber) => AddAction(_ => WaitFor(getFiber(this)));
+//    public Fiber WaitFor(Func<Fiber, Fiber> getFiber) => AddAction(_ => WaitFor(getFiber(this)));
+    public Fiber WaitFor(Func<Fiber, Fiber> getFiber) => AddAction(
+      _ => {
+        var anotherFiber = PrepareAnotherFiber(getFiber(this)).Go();
+        EmitterWorker.Instance.Load(this, anotherFiber.OnComplete);
+      });
+
+    private Fiber PrepareAnotherFiber(Fiber anotherFiber) {
+      if (anotherFiber         == null) return null;
+      if (anotherFiber.onError == globalOnError) anotherFiber.onError = onError;
+      return anotherFiber;
+    }
     #endregion
 
     #region Error Management
