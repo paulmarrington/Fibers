@@ -10,7 +10,8 @@ public class DelayedCache<T> : IDisposable where T : DelayedCache<T> {
   /// <a href="http://bit.ly/2BkDrzH">How many Unity frames do we delay for (default 10)</a>
   public int Frames = 10;
 
-  protected DelayedCache() => disposalFiber = Fiber.Instance.SkipFrames(Frames).Do(_ => Cache<T>.Dispose(this as T));
+  protected DelayedCache() =>
+    disposalFiber = Fiber.Instance().SkipFrames(Frames).Do(_ => Cache<T>.Dispose(this as T));
 
   private readonly Fiber disposalFiber;
 

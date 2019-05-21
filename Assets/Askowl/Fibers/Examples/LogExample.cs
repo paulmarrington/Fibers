@@ -10,11 +10,11 @@ using UnityEngine.TestTools;
 namespace Askowl.Fibers.Examples {
   public sealed class LogExample : PlayModeTests {
     [UnityTest] public IEnumerator FiberLog() {
-      yield return Fiber.Start.Log("Ordinary Log Message").AsCoroutine();
+      yield return Fiber.Start().Log("Ordinary Log Message").AsCoroutine();
       LogAssert.Expect(LogType.Log, new Regex("Ordinary Log Message"));
     }
     [UnityTest] public IEnumerator FiberLogWarning() {
-      yield return Fiber.Start.Log("Warning Log Message", warning: true).AsCoroutine();
+      yield return Fiber.Start().Log("Warning Log Message", warning: true).AsCoroutine();
       LogAssert.Expect(LogType.Warning, new Regex("Warning Log Message.*"));
     }
   }

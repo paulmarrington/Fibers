@@ -14,10 +14,10 @@ namespace Askowl.Fibers.Transcripts {
     private static float secondsToDelay;
 
     //- Precompiled fibers are created with Instance instead of start
-    private readonly Fiber fiber300Ms = Fiber.Instance.WaitFor(seconds: 0.3f);
+    private readonly Fiber fiber300Ms = Fiber.Instance().WaitFor(seconds: 0.3f);
 
     //- If we want to change a variable as a parameter we need to wrap it in a function so that the current value is picked up
-    private readonly Fiber fiberVarMs = Fiber.Instance.WaitFor(_ => secondsToDelay);
+    private readonly Fiber fiberVarMs = Fiber.Instance().WaitFor(_ => secondsToDelay);
 
     //- Here is a test for the fixed 300ms precompiled fiber
     [UnityTest] public IEnumerator InstanceGo() {
@@ -49,9 +49,9 @@ namespace Askowl.Fibers.Transcripts {
 
     //- One more important use for precompiled fibers is reusable code similar to functions in sequential programming
     [UnityTest] public IEnumerator WaitForFiber() {
-      var fiber1 = Fiber.Instance.WaitFor(0.3f);
+      var fiber1 = Fiber.Start().WaitFor(0.3f);
       //- THe second fiber will wait until the first is done. In real code we may want to wait for one action to complete before starting another.
-      var fiber2 = Fiber.Instance.Do(_ => start = Time.realtimeSinceStartup)
+      var fiber2 = Fiber.Instance().Do(_ => start = Time.realtimeSinceStartup)
                         .WaitFor(fiber1).Do(_ => end = Time.realtimeSinceStartup);
       yield return fiber2.AsCoroutine();
       Assert.AreEqual(0.3f, end - start, 0.09f);

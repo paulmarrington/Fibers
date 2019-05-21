@@ -11,7 +11,7 @@ namespace Askowl.Fibers.Examples {
   public sealed class TimeoutExample {
     [UnityTest] public IEnumerator Timeout() {
       var start = Time.realtimeSinceStartup;
-      yield return Fiber.Start.Timeout(seconds: 0.2f).Begin.WaitFor(seconds: 0.5f).AsCoroutine();
+      yield return Fiber.Start().Timeout(seconds: 0.2f).Begin.WaitFor(seconds: 0.5f).AsCoroutine();
       var elapsed = Time.realtimeSinceStartup - start;
       Assert.AreEqual(0.2f, elapsed, 0.05f);
     }

@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 namespace Askowl.Fibers.Transcripts {
   public class UseClosuresForCleanFibersTranscript {
     //- I create an inner class to provide a closure for the fiber to run in. It inherits from the Fiber.Closure generic. The first generic argument is the new class so that underlying code can create it or reuse it from a cache. The second generic argument can be a struct, class or tuple. The latter is the most convenient. Like a struct it does not use the heap or garbage collector, but it doesn't need to be defined separately. A tuple is created with a list of items in brackets.
-    private class SampleClosure : Fiber.Closure<SampleClosure, (int number, string text)> {
+    private class SampleClosure : Fiber.Closure<SampleClosure,(int number, string text)> {
       //- Add and fill in the one abstract method
       protected override void Activities(Fiber fiber) =>
         //- And top up the already created fiber instance with the work you want to perform. The parameters provided when the fiber starts are available in Scope. Fiber step actions can be lambdas or references to methods. In both cases it takes a single parameter fiber and does not have a return value.
@@ -28,7 +28,7 @@ namespace Askowl.Fibers.Transcripts {
       // sampleClosure = SampleClosure.Go((number: 33, text: ""));
 
       //- A fiber closure exposes the the OnComplete emitter and the fiber that was run. For WaitFor, neither is needed as there is a closure override.
-      yield return Fiber.Start.WaitFor(sampleClosure).AsCoroutine();
+      yield return Fiber.Start().WaitFor(sampleClosure).AsCoroutine();
 
       //- If we need the results later we will need to take a copy of the scope. Because a tuple is a struct, the assignment is a copy, not a reference.
       var scope = sampleClosure.Scope;
@@ -50,7 +50,7 @@ namespace Askowl.Fibers.Transcripts {
     public Emitter CallService(Service service) => ServiceFiber.Go((this, Instance<TS>(), service)).OnComplete;
 
     //- The precompiled fiber wrapper is of type DelayedCache so that is can return itself to the recycling queue after completing it's task.
-    private class ServiceFiber : Fiber.Closure<ServiceFiber, (Services<TS, TC> manager, TS server, Service service)> {
+    private class ServiceFiber : Fiber.Closure<ServiceFiber,(Services<TS, TC> manager, TS server, Service service)> {
       //- We create the precompiled fiber in the Activities called from the constructor. Since this class is cached, there will only be as many copies as the maximum number of concurrent calls.
       protected override void Activities(Fiber fiber) =>
         fiber.Begin

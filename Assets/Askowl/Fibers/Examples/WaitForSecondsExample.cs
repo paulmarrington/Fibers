@@ -22,7 +22,7 @@ namespace Askowl.Fibers.Examples {
       void setStartTime(Fiber fiber) => start = Time.timeSinceLevelLoad;
       void check300ms(Fiber   fiber) => checkElapsed(0.3f);
 
-      yield return Fiber.Start.Begin.Do(setStartTime).WaitFor(seconds: 0.3f).Do(check300ms).Repeat(5).AsCoroutine();
+      yield return Fiber.Start().Begin.Do(setStartTime).WaitFor(seconds: 0.3f).Do(check300ms).Repeat(5).AsCoroutine();
     }
 
     [UnityTest] public IEnumerator WaitForSecondsRealtime() {
@@ -34,7 +34,7 @@ namespace Askowl.Fibers.Examples {
       void setStartTime(Fiber fiber) => start = Time.realtimeSinceStartup;
       void check300ms(Fiber   fiber) => checkElapsed(0.3f);
 
-      yield return Fiber.Start.Begin
+      yield return Fiber.Start().Begin
                         .Do(setStartTime).WaitRealtime(seconds: 0.3f).Do(check300ms)
                         .Repeat(5).AsCoroutine();
     }

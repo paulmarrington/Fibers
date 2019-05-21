@@ -16,7 +16,7 @@ namespace Askowl.Fibers.Transcripts {
     [UnityTest] public IEnumerator ServiceMethod() {
       var context = ServiceMethodContext.Instance;
       context.Number = 12;
-      yield return Fiber.Start.Context(context).WaitFor(seconds: 0.1f).Do(serviceMethodResponse).AsCoroutine();
+      yield return Fiber.Start().Context(context).WaitFor(seconds: 0.1f).Do(serviceMethodResponse).AsCoroutine();
     }
     //- Here is a simple context with only one value. Typically it will be data from both the service communications as well as the service if all is well.
     private class ServiceMethodContext : Cached<ServiceMethodContext> {

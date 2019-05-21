@@ -13,8 +13,8 @@ namespace Askowl.Fibers.Transcripts {
     //- This example works because the emitter is set before either fiber is built.
     [UnityTest] public IEnumerator FireSuccess() {
       emitter = Emitter.SingleFireInstance;
-      Fiber.Start.WaitFor(seconds: 0.1f).Fire(emitter);
-      var fiber = Fiber.Start.WaitFor(emitter);
+      Fiber.Start().WaitFor(seconds: 0.1f).Fire(emitter);
+      var fiber = Fiber.Start().WaitFor(emitter);
       yield return fiber.AsCoroutine();
       Assert.IsFalse(fiber.Aborted);
     }
@@ -22,10 +22,10 @@ namespace Askowl.Fibers.Transcripts {
     //- On the other hand this one fails because each fiber is using a different emitter.
     [UnityTest] public IEnumerator FireFailure() {
       emitter = Emitter.SingleFireInstance;
-      Fiber.Start.WaitFor(seconds: 0.1f).Fire(emitter);
+      Fiber.Start().WaitFor(seconds: 0.1f).Fire(emitter);
       emitter = Emitter.SingleFireInstance;
       // - This fiber will only exit once the timeout is reached - and the aborted flag set.
-      var fiber = Fiber.Start.Timeout(seconds: 0.2f).WaitFor(emitter);
+      var fiber = Fiber.Start().Timeout(seconds: 0.2f).WaitFor(emitter);
       yield return fiber.AsCoroutine();
       Assert.IsTrue(fiber.Aborted);
     }
@@ -33,10 +33,10 @@ namespace Askowl.Fibers.Transcripts {
     [UnityTest] public IEnumerator FireWithLambda() {
       emitter = Emitter.SingleFireInstance;
 
-      Fiber.Start.WaitFor(seconds: 0.1f).Fire(_ => emitter);
+      Fiber.Start().WaitFor(seconds: 0.1f).Fire(_ => emitter);
 
       emitter = Emitter.SingleFireInstance;
-      var fiber = Fiber.Start.WaitFor(emitter);
+      var fiber = Fiber.Start().WaitFor(emitter);
       yield return fiber.AsCoroutine();
       Assert.IsFalse(fiber.Aborted);
 

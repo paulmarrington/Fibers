@@ -23,7 +23,7 @@ namespace Askowl.Fibers.Examples {
     [UnityTest, Timeout(10000)] public IEnumerator EmitOnComplete() {
       counter = 0;
       Task task = Delay(500);
-      yield return Fiber.Start.WaitFor(task).AsCoroutine();
+      yield return Fiber.Start().WaitFor(task).AsCoroutine();
 
       Assert.AreEqual(counter, 1);
     }

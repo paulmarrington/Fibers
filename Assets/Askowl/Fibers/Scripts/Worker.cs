@@ -61,7 +61,7 @@ namespace Askowl {
 
       /// <a href="http://bit.ly/2Ptbf6V">Load happens when we are building up a list of actions</a>
       public Fiber Load(Fiber fiber, T data) {
-        if (NeedsUpdates) Instance.Go(onUpdate); // hook into update if this worker needs it
+        if (NeedsUpdates) Instance(GetType().Name).Go(onUpdate); // hook into update if this worker needs it
         NeedsUpdates = false;
 
         Name  = $"{GetType()}-{Uid += 1}";

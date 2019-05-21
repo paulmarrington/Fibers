@@ -23,7 +23,7 @@ namespace Askowl.Fibers.Examples {
       void check0(Fiber  _) => check(0);
       void check10(Fiber _) => check(10);
 
-      yield return Fiber.Start.Do(reset).Do(check0).SkipFrames(10).Do(check10).AsCoroutine();
+      yield return Fiber.Start().Do(reset).Do(check0).SkipFrames(10).Do(check10).AsCoroutine();
     }
   }
 }

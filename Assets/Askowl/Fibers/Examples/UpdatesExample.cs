@@ -12,28 +12,28 @@ namespace Askowl.Fibers.Examples {
 
     [UnityTest] public IEnumerator StartExample() {
       counter = 0;
-      yield return Fiber.Start.Do(Check).AsCoroutine();
+      yield return Fiber.Start().Do(Check).AsCoroutine();
 
       Assert.AreEqual(1, counter);
     }
 
     [UnityTest] public IEnumerator OnUpdatesExample() {
       counter = 0;
-      yield return Fiber.Start.OnLateUpdates.OnUpdates.Do(Check).AsCoroutine();
+      yield return Fiber.Start().OnLateUpdates.OnUpdates.Do(Check).AsCoroutine();
 
       Assert.AreEqual(1, counter);
     }
 
     [UnityTest] public IEnumerator OnLateUpdatesExample() {
       counter = 0;
-      yield return Fiber.Start.OnLateUpdates.Do(Check).AsCoroutine();
+      yield return Fiber.Start().OnLateUpdates.Do(Check).AsCoroutine();
 
       Assert.AreEqual(1, counter);
     }
 
     [UnityTest] public IEnumerator OnFixedUpdatesExample() {
       counter = 0;
-      yield return Fiber.Start.OnFixedUpdates.Do(Check).AsCoroutine();
+      yield return Fiber.Start().OnFixedUpdates.Do(Check).AsCoroutine();
       Assert.AreEqual(1, counter);
     }
 

@@ -12,14 +12,14 @@ namespace Askowl.Fibers.Examples {
     private string errorMessage = "";
 
     [UnityTest] public IEnumerator OnError() {
-      yield return Fiber.Start.OnError(msg => errorMessage = msg)
+      yield return Fiber.Start().OnError(msg => errorMessage = msg)
                         .Do(_ => throw new Exception("OnError Exception Thrown"))
                         .AsCoroutine();
       Assert.IsTrue(errorMessage.Contains("OnError Exception Thrown"));
     }
 
     [UnityTest] public IEnumerator GlobalOnError() {
-      yield return Fiber.Start.GlobalOnError(msg => errorMessage = msg)
+      yield return Fiber.Start().GlobalOnError(msg => errorMessage = msg)
                         .Do(_ => throw new Exception("Global OnError Thrown"))
                         .AsCoroutine();
       Assert.IsTrue(errorMessage.Contains("Global OnError Thrown"));
@@ -29,14 +29,14 @@ namespace Askowl.Fibers.Examples {
 
     [UnityTest] public IEnumerator ExitOnError() {
       note = "unchanged";
-      yield return Fiber.Start.OnError(msg => errorMessage = msg)
+      yield return Fiber.Start().OnError(msg => errorMessage = msg)
                         .Do(_ => throw new Exception("ExitOnError Exception"))
                         .Do(_ => note = "reached")
                         .AsCoroutine();
       Assert.AreEqual("reached", note);
 
       note = "unchanged";
-      yield return Fiber.Start.ExitOnError
+      yield return Fiber.Start().ExitOnError
                         .Do(_ => throw new Exception("ExitOnError Exception"))
                         .Do(_ => note = "reached")
                         .AsCoroutine();
@@ -44,7 +44,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator Error() {
-      yield return Fiber.Start.OnError(_ => errorMessage = _).Error(_ => "Error Called").AsCoroutine();
+      yield return Fiber.Start().OnError(_ => errorMessage = _).Error(_ => "Error Called").AsCoroutine();
       Assert.IsTrue(errorMessage.Contains("Error Called"));
     }
   }

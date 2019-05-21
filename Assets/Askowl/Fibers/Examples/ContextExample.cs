@@ -17,7 +17,7 @@ namespace Askowl.Fibers.Examples {
 
     [UnityTest] public IEnumerator Context() {
       var fiberContext = new FiberContext {Number = 12};
-      var fibre = Fiber.Start.Context(fiberContext).Context("name here", "a string").WaitFor(seconds: 0.1f).Do(
+      var fibre = Fiber.Start().Context(fiberContext).Context("name here", "a string").WaitFor(seconds: 0.1f).Do(
         fiber => {
           var context = fiber.Context<FiberContext>();
           Assert.AreEqual(12,         context.Number);

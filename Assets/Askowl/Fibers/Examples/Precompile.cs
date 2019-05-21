@@ -21,7 +21,7 @@ namespace Askowl.Fibers.Examples {
     [UnityTest] public IEnumerator InstanceGo() {
       start = Time.realtimeSinceStartup;
 
-      var fiber = Fiber.Instance.WaitFor(seconds: 0.3f);
+      var fiber = Fiber.Instance().WaitFor(seconds: 0.3f);
       fiber.Go(); // in this case superfluous since AsCoroutine() calls it implicitly (as does WaitFor(Fiber))
 
       yield return fiber.AsCoroutine();
@@ -30,7 +30,7 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator WaitForFunc() {
-      var compiledFiber = Fiber.Instance.Begin.Do(_ => start = Time.timeSinceLevelLoad)
+      var compiledFiber = Fiber.Instance().Begin.Do(_ => start = Time.timeSinceLevelLoad)
                                .WaitFor(_ => secondsToDelay)
                                .Do(_ => CheckElapsed(secondsToDelay)).Repeat(5);
 
@@ -42,8 +42,8 @@ namespace Askowl.Fibers.Examples {
     }
 
     [UnityTest] public IEnumerator WaitForFiber() {
-      var fiber1 = Fiber.Instance.WaitFor(0.3f);
-      var fiber2 = Fiber.Instance.Do(_ => start = Time.realtimeSinceStartup, "Start time")
+      var fiber1 = Fiber.Start().WaitFor(0.3f);
+      var fiber2 = Fiber.Start().Do(_ => start = Time.realtimeSinceStartup, "Start time")
                         .WaitFor(fiber1).Do(_ => end = Time.realtimeSinceStartup, "End time");
       yield return fiber2.AsCoroutine();
       Assert.AreEqual(expected: 0.3f, actual: end - start, delta: 0.05f);

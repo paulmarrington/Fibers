@@ -17,13 +17,13 @@ namespace Askowl {
 
     /// <a href="http://bit.ly/2BeoK0X">Fire an emitter at this point in the Fiber sequence</a>
     public Fiber Fire(Emitter emitter) {
-      AddAction(_ => emitter.Fire());
+      AddSameFrameAction(_ => emitter.Fire());
       return this;
     }
 
     /// <a href="http://bit.ly/2BeoK0X">Fire an emitter at this point in the Fiber sequence</a>
     public Fiber Fire(Func<Fiber, Emitter> getEmitter) {
-      AddAction(_ => getEmitter(this).Fire());
+      AddSameFrameAction(_ => getEmitter(this).Fire());
       return this;
     }
 

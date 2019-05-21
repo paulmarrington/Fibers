@@ -14,7 +14,7 @@ namespace Askowl.Fibers.Examples {
     [UnityTest] public IEnumerator CustomTypeWorkerExample() {
       CustomTypeWorkerClass.Disposed = false;
       var start = Time.frameCount;
-      yield return Fiber.Start.CustomTypeWorker(3).AsCoroutine();
+      yield return Fiber.Start().CustomTypeWorker(3).AsCoroutine();
 
       Assert.AreEqual(3, Time.frameCount - start);
       Assert.IsTrue(CustomTypeWorkerClass.Disposed);
@@ -22,7 +22,7 @@ namespace Askowl.Fibers.Examples {
 
     [UnityTest] public IEnumerator CustomObjectWorkerExample() {
       CustomObjectWorkerClass.Payload payload = new CustomObjectWorkerClass.Payload {A = 5, B = 6};
-      yield return Fiber.Start.CustomObjectWorker(payload).AsCoroutine();
+      yield return Fiber.Start().CustomObjectWorker(payload).AsCoroutine();
 
       Assert.AreEqual(16, payload.A + payload.B);
     }

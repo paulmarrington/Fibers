@@ -18,8 +18,8 @@ namespace Askowl.Fibers.Examples {
     [UnityTest] public IEnumerator EmitterFire() {
       using (emitter = Emitter.Instance) {
         emitterFired = false;
-        Fiber.Start.WaitFor(emitter).Do(fiber => emitterFired = true);
-        yield return Fiber.Start.WaitRealtime(0.2f).Fire(emitter).AsCoroutine();
+        Fiber.Start().WaitFor(emitter).Do(fiber => emitterFired = true);
+        yield return Fiber.Start().WaitRealtime(0.2f).Fire(emitter).NextFrame.AsCoroutine();
         Assert.IsTrue(emitterFired);
       }
     }
@@ -27,15 +27,15 @@ namespace Askowl.Fibers.Examples {
     [UnityTest] public IEnumerator EmitterFireAction() {
       using (emitter = Emitter.Instance) {
         emitterFired = false;
-        Fiber.Start.WaitFor(emitter).Do(fiber => emitterFired = true);
-        yield return Fiber.Start.WaitRealtime(0.2f).Fire(_ => emitter).AsCoroutine();
+        Fiber.Start().WaitFor(emitter).Do(fiber => emitterFired = true);
+        yield return Fiber.Start().WaitRealtime(0.2f).Fire(_ => emitter).NextFrame.AsCoroutine();
         Assert.IsTrue(emitterFired);
       }
     }
 
     [UnityTest] public IEnumerator WaitForFiber() {
-      var sleeper = Fiber.Instance.WaitFor(seconds: 0.1f).Do(_ => sleeperDone = true);
-      Fiber.Start.Do(_ => sleeperDone = false).WaitFor(sleeper.OnComplete);
+      var sleeper = Fiber.Instance().WaitFor(seconds: 0.1f).Do(_ => sleeperDone = true);
+      Fiber.Start().Do(_ => sleeperDone = false).WaitFor(sleeper.OnComplete);
       yield return new WaitForSeconds(0.2f);
       Assert.IsFalse(sleeperDone);
       sleeper.Go();
@@ -54,7 +54,7 @@ namespace Askowl.Fibers.Examples {
     [UnityTest] public IEnumerator CancelOn() {
       using (emitter = Emitter.Instance) {
         counter = 0;
-        Fiber.Start.CancelOn(emitter).Begin.Do(_ => counter++).WaitFor(seconds: 0.05f).Again.Finish();
+        Fiber.Start().CancelOn(emitter).Begin.Do(_ => counter++).WaitFor(seconds: 0.05f).Again.Finish();
         yield return new WaitForSeconds(0.5f);
         Assert.AreNotEqual(0, counter);
         var mark = counter;
